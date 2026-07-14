@@ -1,0 +1,432 @@
+<!-- TARJETA ETAPA 1 -->
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-500"></div>
+    <div>
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-sm">Etapa 1</span>
+            Estado de liquidación de Obra - Legajo
+        </h2>
+        <p class="text-slate-500 text-sm mt-1">Módulo <b>obligatorio</b> para depurar, cruzar y
+            verificar consumos del archivo BCMO crudo antes de la consolidación final.</p>
+    </div>
+    <button type="button" onclick="openBcmoModule()"
+        class="shrink-0 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-colors flex items-center gap-2 px-6 py-3 rounded-lg shadow-md border border-blue-700">
+        <i class="fa-solid fa-chart-pie"></i> Abrir Analizador BCMO
+    </button>
+</div>
+
+<!-- [SPLIT-MARKER] s1_bcmoModule begin -->
+<div id="s1_bcmoModule" class="hidden absolute inset-0 z-40 bg-slate-50 flex-col overflow-hidden">
+    <nav class="bg-white border-b border-slate-300 shadow-sm p-4 flex justify-between items-center z-20 relative shrink-0">
+        <div class="flex items-center gap-3">
+            <button onclick="closeBcmoModule()"
+                class="text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-colors mr-1 w-8 h-8 rounded-full flex items-center justify-center border border-slate-200"
+                title="Volver a Etapa 2">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <i class="fa-solid fa-chart-pie text-xl text-indigo-600"></i>
+            <h1 class="text-lg font-bold text-slate-800 tracking-wide">Analizador BCMO</h1>
+            <span
+                class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded ml-2 hidden sm:inline-block">Auditoría
+                de Obras</span>
+        </div>
+        <div>
+            <button onclick="s1_toggleConfigPanel()"
+                class="text-slate-500 hover:text-indigo-600 text-sm font-medium transition-colors flex items-center gap-1">
+                <i class="fa-solid fa-sliders"></i> <span class="hidden sm:inline">Ajustes y Memoria</span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="s1_configBackdrop"
+        class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-30 hidden transition-opacity opacity-0"
+        onclick="s1_toggleConfigPanel()"></div>
+
+    <aside id="s1_configPanel"
+        class="fixed inset-y-0 right-0 w-full sm:w-96 bg-white shadow-2xl z-40 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col border-l border-slate-200">
+        <div class="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+            <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-gears text-blue-600 mr-2"></i>Ajustes
+                del Sistema</h2>
+            <button onclick="s1_toggleConfigPanel()"
+                class="text-slate-400 hover:text-red-500 hover:bg-red-50 w-8 h-8 rounded-lg flex items-center justify-center transition-colors">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div class="flex-grow overflow-y-auto p-5 space-y-6">
+            <!-- Memoria -->
+            <div class="bg-blue-50 border border-blue-100 rounded-xl p-4">
+                <h3 class="text-sm font-bold text-blue-900 mb-2 border-b border-blue-200 pb-1"><i
+                        class="fa-solid fa-brain mr-2 text-blue-600"></i>Memoria de Auditoría</h3>
+                <div class="flex flex-col gap-2">
+                    <button onclick="s1_exportMemory()"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors text-sm shadow-sm flex items-center justify-center gap-2"><i
+                            class="fa-solid fa-download"></i> Exportar Memoria</button>
+                    <button onclick="document.getElementById('s1_memoryFileInput').click()"
+                        class="w-full bg-white hover:bg-slate-50 text-blue-700 border border-blue-300 font-semibold py-2 px-3 rounded-lg transition-colors text-sm shadow-sm flex items-center justify-center gap-2"><i
+                            class="fa-solid fa-upload"></i> Cargar Memoria</button>
+                    <input type="file" id="s1_memoryFileInput" accept=".json" class="hidden"
+                        onchange="s1_importMemory(event)">
+                </div>
+            </div>
+
+            <!-- Exclusiones -->
+            <div>
+                <h3 class="text-sm font-bold text-slate-700 mb-3"><i
+                        class="fa-solid fa-filter mr-2 text-slate-400"></i>Reglas de Exclusión</h3>
+                <div class="space-y-3">
+                    <div><label class="block text-xs font-semibold text-slate-500 mb-1">Tareas a
+                            excluir</label><textarea id="s1_excludedTasks" rows="3"
+                            class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
+                    </div>
+                    <div><label class="block text-xs font-semibold text-slate-500 mb-1">Materiales a
+                            excluir</label><textarea id="s1_excludedMaterials" rows="2"
+                            class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtros -->
+            <div id="s1_filtersPanel" class="opacity-50 pointer-events-none transition-opacity">
+                <h3 class="text-sm font-bold text-slate-700 mb-3"><i
+                        class="fa-solid fa-eye mr-2 text-slate-400"></i>Parámetros y Vista</h3>
+                <div class="mb-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Límite para Verificar (%)</label>
+                    <input type="number" id="s1_umbralVerificacion" value="50" min="0" max="100"
+                        onchange="s1_recalculateStates()"
+                        class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-semibold">
+                </div>
+                <div class="space-y-3">
+                    <div><label class="block text-xs font-semibold text-slate-500 mb-1">Contratista</label><select
+                            id="s1_filterContratista" onchange="s1_renderTable()"
+                            class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                            <option value="ALL">Todos</option>
+                        </select></div>
+                    <div><label class="block text-xs font-semibold text-slate-500 mb-1">Estado Visual (Config
+                            Interna)</label><select id="s1_filterEstado" onchange="s1_syncFromPanel()"
+                            class="w-full text-sm p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                            <option value="ALL">Todos</option>
+                            <option value="Consumido">Consumido</option>
+                            <option value="Sin Consumo">Sin Consumo</option>
+                            <option value="Verificar Consumo">Verificar Consumo</option>
+                            <option value="Consumo Total">Consumo Total</option>
+                            <option value="Consumo Parcial">Consumo Parcial</option>
+                        </select></div>
+                    <button onclick="s1_clearFilters()"
+                        class="w-full text-blue-600 hover:text-blue-800 text-xs font-semibold py-1">Restablecer
+                        Filtros</button>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-slate-200 bg-slate-50"><button onclick="s1_applyLocalConfig()"
+                class="w-full bg-slate-800 hover:bg-slate-900 text-white font-semibold py-2 px-4 rounded-lg transition-colors text-sm shadow-sm flex items-center justify-center gap-2"><i
+                    class="fa-solid fa-check"></i> Aplicar Reglas Actuales</button></div>
+    </aside>
+
+    <main class="flex-grow p-4 md:p-6 mx-auto w-full flex flex-col z-0 overflow-y-auto custom-scrollbar">
+        <section class="flex-grow flex flex-col h-full space-y-4">
+
+            <div id="s1_uploadWrapper" class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full min-h-[400px]">
+                <!-- Dropzone BCMO / PM -->
+                <div class="flex flex-col gap-4">
+                    <div id="s1_dropZone" class="s1-drop-zone border-2 border-dashed border-blue-300 bg-white hover:bg-slate-50 rounded-2xl p-8 text-center cursor-pointer flex flex-col items-center justify-center flex-1 transition-colors shadow-sm">
+                        <i class="fa-solid fa-file-excel text-5xl text-blue-500 mb-4"></i>
+                        <h3 class="text-xl font-bold text-slate-700 mb-2">Carga de Archivos</h3>
+                        <p class="text-slate-500 text-sm mb-4">Suelte aquí o seleccione:<br><b>BCMO (Obligatorio)</b> y <b>PMOVXF (Opcional)</b></p>
+                        <input type="file" id="s1_fileInput" accept=".xlsx, .xls, .csv, .txt" multiple class="hidden">
+                        <button onclick="document.getElementById('s1_fileInput').click()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors shadow-sm">Explorar archivos</button>
+                    </div>
+                    <!-- Botón Analizar -->
+                    <button id="s1_btnAnalizar" onclick="s1_lanzarAnalisisBCMO()" disabled
+                        class="w-full bg-slate-200 text-slate-400 font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-slate-300">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i> Analizar BCMO
+                    </button>
+                </div>
+                <!-- Archivos Reconocidos -->
+                <div class="flex flex-col gap-4">
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex-1">
+                        <h4 class="text-base font-bold text-slate-700 border-b border-slate-200 pb-3 mb-4"><i class="fa-solid fa-list-check text-blue-600 mr-2"></i>Archivos Reconocidos</h4>
+                        <div class="space-y-4 text-sm">
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100" id="s1_statusBCMO">
+                                <span class="text-slate-600 font-medium"><i class="fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle"></i>Archivo BCMO</span>
+                                <span class="text-xs text-slate-400 italic file-date">Requerido</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100" id="s1_statusMateriales">
+                                <span class="text-slate-600 font-medium"><i class="fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle"></i>PMOVXF (Detalle PM)</span>
+                                <span class="text-xs text-slate-400 italic file-date">Opcional</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-400 mt-5 italic"><i class="fa-solid fa-circle-info mr-1"></i>Puede cargar ambos archivos antes de analizar.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="s1_loader"
+                class="hidden bg-white rounded-2xl p-8 text-center border border-slate-200 shadow-sm flex-grow flex flex-col items-center justify-center min-h-[400px]">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-blue-600 mb-4"></i>
+                <p class="text-slate-600 font-semibold">Procesando y agrupando datos...</p>
+            </div>
+
+            <div id="s1_resultsWorkspace" class="hidden flex-col flex-grow h-full">
+                <div
+                    class="flex flex-col sm:flex-row justify-between items-end sm:items-center border-b border-slate-300 mb-4 pb-2 gap-4 shrink-0">
+                    <ul class="flex gap-1" id="s1_tabNavigation">
+                        <li><button onclick="s1_switchTabEtapa1('dashboard')" id="s1_btnTabDashboard"
+                                class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active"><i
+                                    class="fa-solid fa-table mr-1"></i> Dashboard Principal</button></li>
+                        <li>
+                            <button onclick="s1_switchTabEtapa1('verification')" id="s1_btnTabVerification"
+                                class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive relative">
+                                <i class="fa-solid fa-clipboard-check mr-1"></i> Verificar Consumo
+                                <span id="s1_pmRequiredBadge" class="ml-2 bg-amber-400 text-amber-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-amber-500">Requiere PM</span>
+                            </button>
+                        </li>
+                        <li><button onclick="s1_switchTabEtapa1('invalid')" id="s1_btnTabInvalid"
+                                class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive"><i
+                                    class="fa-solid fa-triangle-exclamation mr-1"></i> Nomenclatura Inválida<span id="s1_invalidCountBadge" class="tab-count-badge hidden"></span></button></li>
+                    </ul>
+                    <div class="flex gap-2">
+                        <button onclick="s1_resetUI()"
+                            class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-sm"
+                            title="Limpiar datos BCMO"><i class="fa-solid fa-trash-can"></i> Limpiar BCMO</button>
+                        <button onclick="s1_exportToExcel_Etapa1()"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-sm"><i
+                                class="fa-solid fa-file-excel"></i> Exportar BCMO</button>
+                        <button onclick="inyectarAlConsolidador()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-sm ml-2"><i
+                                class="fa-solid fa-share-from-square"></i> Inyectar al Consolidador</button>
+                    </div>
+                </div>
+
+                <div id="s1_tabDashboard"
+                    class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col min-h-[500px]">
+                    <div class="p-4 border-b shrink-0">
+                        <div class="flex flex-col md:flex-row justify-between items-start gap-4 mb-3">
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-800">Vista Previa Dinámica</h2>
+                                <p id="s1_statsText" class="text-sm text-slate-500">0 registros.</p>
+                            </div>
+                            <div class="w-full md:w-2/3 flex gap-2">
+                                <select id="s1_dashboardFilterEstado" onchange="s1_syncFromDashboard()"
+                                    class="w-1/3 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-slate-50 font-semibold text-slate-700">
+                                    <option value="ALL">Todos los Estados</option>
+                                    <option value="Consumido">Consumido</option>
+                                    <option value="Sin Consumo">Sin Consumo</option>
+                                    <option value="Verificar Consumo">Verificar Consumo</option>
+                                    <option value="Consumo Total">Consumo Total</option>
+                                    <option value="Consumo Parcial">Consumo Parcial</option>
+                                </select>
+                                <input type="text" id="s1_searchObraDashboard" oninput="s1_renderTable()"
+                                    placeholder="Buscar por Obra / Motivo..."
+                                    class="w-2/3 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            </div>
+                        </div>
+                        <div id="s1_dashboardStateSummary" class="flex flex-wrap gap-2 text-xs font-medium"></div>
+                    </div>
+                    <div class="p-0 table-container overflow-auto flex-grow relative">
+                        <table class="w-full text-left border-collapse min-w-max">
+                            <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
+                                <tr>
+                                    <th class="p-3 text-sm font-semibold border-b">Contratista</th>
+                                    <th class="p-3 text-sm font-semibold border-b">Obra / Motivo</th>
+                                    <th class="p-3 text-sm font-semibold border-b text-right">Entregado</th>
+                                    <th class="p-3 text-sm font-semibold border-b text-right">Consumido</th>
+                                    <th class="p-3 text-sm font-semibold border-b text-right">Diferencia</th>
+                                    <th class="p-3 text-sm font-semibold border-b text-center">% Consumo</th>
+                                    <th class="p-3 text-sm font-semibold border-b">Estado Liquidación</th>
+                                    <th class="p-3 text-sm font-semibold border-b text-center">Detalle</th>
+                                </tr>
+                            </thead>
+                            <tbody id="s1_tableBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="s1_tabVerification" class="hidden flex-grow flex-col min-h-[500px]">
+                    <div
+                        class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded-r-lg shadow-sm flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-blue-800 text-sm mb-1">Verificación y Memoria BCMO:</h3>
+                            <p class="text-sm text-blue-700">Guarda tus decisiones manuales en JSON para importarlas
+                                el próximo mes.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="document.getElementById('s1_memoryFileInputVerif').click()"
+                                class="bg-white border border-blue-300 text-blue-700 font-bold py-2 px-4 rounded shadow-sm text-sm"><i
+                                    class="fa-solid fa-upload"></i> Importar JSON</button>
+                            <input type="file" id="s1_memoryFileInputVerif" accept=".json" class="hidden"
+                                onchange="s1_importMemory(event)">
+                            <button onclick="s1_exportMemory()"
+                                class="bg-blue-600 text-white font-bold py-2 px-4 rounded shadow-sm text-sm"><i
+                                    class="fa-solid fa-download"></i> Exportar JSON</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 mb-4 flex flex-col">
+                        <div class="p-4 border-b flex justify-between items-center bg-slate-50 cursor-pointer"
+                            onclick="s1_toggleMassivePanel()">
+                            <h2 class="text-base font-bold text-slate-800"><i
+                                    class="fa-solid fa-paste mr-2 text-blue-600"></i>Asignación Masiva (Pegar Obras)
+                            </h2>
+                            <i class="fa-solid fa-chevron-down text-slate-500" id="s1_massivePanelIcon"></i>
+                        </div>
+                        <div id="s1_massivePanelContent" class="hidden p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-bold text-emerald-700 mb-2">Total</label><textarea
+                                    id="s1_massiveTotal" rows="4"
+                                    class="w-full text-sm p-3 border border-emerald-300 rounded-lg bg-emerald-50"></textarea>
+                            </div>
+                            <div><label class="block text-sm font-bold text-blue-700 mb-2">Parcial</label><textarea
+                                    id="s1_massiveParcial" rows="4"
+                                    class="w-full text-sm p-3 border border-blue-300 rounded-lg bg-blue-50"></textarea>
+                            </div>
+                            <div class="md:col-span-2 flex justify-end"><button onclick="s1_applyMassiveOverrides()"
+                                    class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-sm"><i
+                                        class="fa-solid fa-layer-group"></i> Aplicar Asignación</button></div>
+                        </div>
+                    </div>
+
+                    <div
+                        class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col min-h-0">
+                        <div class="p-4 border-b shrink-0">
+                            <div class="flex justify-between items-start gap-4 mb-3">
+                                <div>
+                                    <h2 class="text-lg font-bold text-slate-800">Obras a Verificar</h2>
+                                    <p id="s1_statsVerifText" class="text-sm text-slate-500">0 registros.</p>
+                                </div>
+                                <div class="w-full md:w-1/3"><input type="text" id="s1_searchObraVerif"
+                                        oninput="s1_renderVerificationTable()" placeholder="Buscar por Obra..."
+                                        class="w-full px-3 py-2 text-sm border rounded-lg"></div>
+                            </div>
+                            <div id="s1_verifStateSummary" class="flex gap-2 text-xs font-medium"></div>
+                        </div>
+                        <div class="p-0 table-container overflow-auto flex-grow relative min-h-[300px]">
+                            <table class="w-full text-left border-collapse min-w-max">
+                                <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
+                                    <tr>
+                                        <th class="p-3 text-sm font-semibold border-b">Contratista</th>
+                                        <th class="p-3 text-sm font-semibold border-b">Obra</th>
+                                        <th class="p-3 text-sm font-semibold border-b text-center">% Consumo</th>
+                                        <th class="p-3 text-sm font-semibold border-b">Decisión</th>
+                                        <th class="p-3 text-sm font-semibold border-b text-center">Detalle BCMO</th>
+                                        <th class="p-3 text-sm font-semibold border-b text-center">Detalle PM</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="s1_verificationTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="s1_tabInvalid" class="hidden flex-grow flex-col min-h-[500px]">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col min-h-0">
+                        <div class="p-4 border-b shrink-0 bg-rose-50 rounded-t-2xl flex justify-between items-center">
+                            <div>
+                                <h2 class="text-lg font-bold text-rose-800"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Nomenclatura Inválida</h2>
+                                <p class="text-sm text-rose-600">Obras excluidas por no tener la nomenclatura correcta.</p>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="s1_toggleInvalidConfigPanel()" class="bg-rose-100 hover:bg-rose-200 text-rose-700 border border-rose-300 font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm"><i class="fa-solid fa-gear"></i> Configurar Reglas</button>
+                            </div>
+                        </div>
+                        <div id="s1_invalidConfigPanel" class="hidden p-4 bg-rose-50 border-b border-rose-100">
+                            <label class="block text-sm font-bold text-rose-800 mb-2">Nomenclaturas a excluir (Una por línea):</label>
+                            <textarea id="s1_invalidNomenclaturesInput" rows="4" class="w-full text-sm p-3 border border-rose-300 rounded-lg bg-white mb-2"></textarea>
+                            <div class="flex justify-end">
+                                <button onclick="s1_applyInvalidNomenclatures()" class="bg-rose-600 hover:bg-rose-700 text-white font-semibold py-2 px-6 rounded-lg shadow-sm"><i class="fa-solid fa-save mr-2"></i> Guardar y Recalcular</button>
+                            </div>
+                        </div>
+                        <div class="p-0 table-container overflow-auto flex-grow relative min-h-[300px]">
+                            <table class="w-full text-left border-collapse min-w-max">
+                                <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
+                                    <tr>
+                                        <th class="p-3 text-sm font-semibold border-b">Contratista</th>
+                                        <th class="p-3 text-sm font-semibold border-b">Obra / Motivo</th>
+                                        <th class="p-3 text-sm font-semibold border-b text-right">Entregado</th>
+                                        <th class="p-3 text-sm font-semibold border-b text-right">Consumido</th>
+                                        <th class="p-3 text-sm font-semibold border-b text-center">Detalle</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="s1_invalidTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Detalle PM (PMOVXF) -->
+    <div id="s1_pmDetailsModal"
+        class="hidden fixed inset-0 bg-slate-900 bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-teal-50 rounded-t-xl">
+                <div>
+                    <h3 class="text-lg font-bold text-teal-800" id="s1_pmModalTitle">Detalle PM</h3>
+                    <p class="text-sm text-teal-600" id="s1_pmModalSubtitle">Movimientos del PMOVXF para esta obra</p>
+                </div>
+                <button onclick="s1_closePMModal()" class="text-slate-500 hover:text-slate-800 bg-white hover:bg-slate-100 w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="p-0 overflow-auto flex-grow table-container">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-teal-50 sticky top-0">
+                        <tr>
+                            <th class="p-2 px-4 text-xs font-semibold border-b text-teal-800">Motivo (Obra)</th>
+                            <th class="p-2 px-4 text-xs font-semibold border-b text-teal-800">Artículo</th>
+                            <th class="p-2 px-4 text-xs font-semibold border-b text-teal-800">Descripción Material</th>
+                            <th class="p-2 px-4 text-xs font-semibold border-b text-teal-800 text-right">Cant. Solicitada</th>
+                            <th class="p-2 px-4 text-xs font-semibold border-b text-teal-800 text-right">Cant. Entregada</th>
+                            <th class="p-2 px-4 text-xs font-semibold border-b text-teal-800">Fecha Entrega</th>
+                        </tr>
+                    </thead>
+                    <tbody id="s1_pmModalTableBody"></tbody>
+                </table>
+                <div id="s1_pmModalEmpty" class="hidden p-8 text-center text-slate-500">
+                    <i class="fa-solid fa-box-open text-4xl text-slate-300 mb-3"></i>
+                    <p class="font-semibold">No se encontraron movimientos en el PM para esta obra.</p>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-teal-50 flex justify-end">
+                <button onclick="s1_closePMModal()" class="bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalle BCMO Existente -->
+    <div id="s1_detailsModal"
+        class="hidden fixed inset-0 bg-slate-900 bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-slate-50 rounded-t-xl">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800" id="s1_modalTitle">Detalles</h3>
+                    <p class="text-sm text-slate-500" id="s1_modalSubtitle">Cargando...</p>
+                </div>
+                <button onclick="s1_closeModal()"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-0 overflow-auto flex-grow table-container">
+                <table class="w-full text-left border-collapse">
+                    <tbody id="s1_modalTableBody"></tbody>
+                </table>
+            </div>
+            <div class="p-4 border-t bg-slate-50 flex justify-end"><button onclick="s1_closeModal()"
+                    class="bg-slate-600 text-white font-semibold py-2 px-6 rounded-lg">Cerrar Detalles</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="s1_exportModal"
+        class="hidden fixed inset-0 bg-slate-900 bg-opacity-60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-md flex flex-col">
+            <div class="p-4 border-b flex justify-between items-center bg-slate-50">
+                <h3 class="text-lg font-bold text-slate-800">Exportar Memoria</h3><button
+                    onclick="s1_closeExportModal()"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6"><label class="block text-sm font-semibold mb-2">Nombre del archivo:</label><input
+                    type="text" id="s1_exportFileName" class="w-full p-2 border rounded-lg"
+                    value="Memoria_Auditoria"></div>
+            <div class="p-4 border-t bg-slate-50 flex justify-end gap-2"><button onclick="s1_closeExportModal()"
+                    class="bg-white border text-slate-700 py-2 px-4 rounded-lg">Cancelar</button><button
+                    onclick="s1_confirmExport()"
+                    class="bg-blue-600 text-white py-2 px-4 rounded-lg">Guardar</button></div>
+        </div>
+    </div>
+</div>

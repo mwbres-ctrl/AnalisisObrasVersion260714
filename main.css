@@ -1,0 +1,93 @@
+/* ==========================================================================
+   Estilos Generales y Comunes (css/main.css)
+   ========================================================================== */
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.formula-input {
+    font-family: 'Consolas', 'Courier New', monospace;
+}
+
+.drop-zone.dragover {
+    border-color: #4f46e5;
+    background-color: #eff6ff;
+}
+
+.s1-drop-zone {
+    border: 2px dashed #cbd5e1;
+    transition: all 0.3s ease;
+}
+
+.s1-drop-zone.dragover {
+    border-color: #3b82f6;
+    background-color: #eff6ff;
+}
+
+/* Transiciones de Secciones y Pestañas */
+#setupSection,
+#resultsSection,
+#s1_bcmoModule {
+    transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.fade-out-active {
+    opacity: 0;
+    transform: translateY(6px);
+}
+
+.fade-in-active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Overlay de Carga y Procesamiento */
+#globalLoadingOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(1px);
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    opacity: 0;
+    transition: opacity 0.18s ease;
+}
+
+#globalLoadingOverlay.visible {
+    display: flex;
+    opacity: 1;
+}
+
+.loading-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #4f46e5;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

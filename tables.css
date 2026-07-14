@@ -1,0 +1,11 @@
+/* ==========================================================================
+   Estilos de Tablas y Listados (css/tables.css)
+   ========================================================================== */
+
+.data-table tbody tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+
+.data-table tbody tr:hover {
+    background-color: #e0e7ff;
+}
