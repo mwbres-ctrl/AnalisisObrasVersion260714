@@ -36,10 +36,23 @@ function renderAuditTable() {
             <td class="p-3 text-center border-r border-slate-100">${statusBadge}</td>
             <td class="p-3 text-xs font-bold text-slate-800 border-r border-slate-100 ${isRev ? 'line-through text-slate-500' : ''}">${log.nodo}</td>
             <td class="p-3 text-xs font-bold text-indigo-700 border-r border-slate-100 ${isRev ? 'line-through text-slate-400' : ''}">
+                ${(log.changes && log.changes.length > 0) ? `
+                <div class="flex flex-col gap-1">
+                    ${log.changes.map(c => `
+                        <div class="text-[11px] leading-tight">
+                            <span class="font-bold text-slate-600">${c.campo}:</span>
+                            <span class="text-slate-400 line-through">${c.anterior}</span>
+                            <i class="fa-solid fa-arrow-right-long text-[9px] text-slate-400 mx-1"></i>
+                            <span class="text-indigo-700 font-bold">${c.nuevo}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                ` : `
                 ${log.correctedNodo ? `<div><i class="fa-solid fa-spell-check text-[10px] mr-1"></i>Renombrado a: ${log.correctedNodo}</div>` : ''}
                 ${log.newState ? `<div><i class="fa-solid fa-pen-nib text-[10px] mr-1"></i>Forzado a: ${log.newState}</div>` : ''}
                 ${log.newModality ? `<div><i class="fa-solid fa-tag text-[10px] mr-1"></i>Mod. a: ${log.newModality}</div>` : ''}
                 ${log.orphanJustification ? `<div><i class="fa-solid fa-shield-halved text-[10px] mr-1 text-slate-500"></i>Justificado: ${log.orphanJustification}</div>` : ''}
+                `}
             </td>
             <td class="p-3 text-xs text-slate-600 border-r border-slate-100">
                 ${log.newState ? `

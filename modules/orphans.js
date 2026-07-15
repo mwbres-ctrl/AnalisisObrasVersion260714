@@ -178,7 +178,7 @@ function renderOrphansTable() {
             <td class="p-3 border-r border-slate-100">${modHtml}</td>
             <td class="p-3 text-xs text-slate-600 border-r border-slate-100 text-center">${fInicioFormat}</td>
             <td class="p-3 text-center">
-                <button type="button" onclick="openEditModal('${nodoOriginal}', '${estadoOrig}', true)" class="text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 px-4 py-1.5 rounded text-xs font-bold transition-colors shadow-sm">
+                <button type="button" onclick="openEditModal('${nodoOriginal}', '${estadoOrig}', '${modLiquidacion}', true)" class="text-indigo-600 hover:text-white bg-indigo-50 hover:bg-indigo-600 border border-indigo-200 px-4 py-1.5 rounded text-xs font-bold transition-colors shadow-sm">
                     <i class="fa-solid fa-pen-to-square mr-1"></i> Corregir
                 </button>
             </td>
@@ -219,8 +219,14 @@ function togglePMRequisito() {
     }
 }
 
-function openEditModal(nodo, origState, isOrphan = false) {
+function openEditModal(nodo, origState, origModality = '', isOrphan = false) {
     currentEditNodo = nodo;
+    // Guardamos el "antes" para poder registrar valor anterior / nuevo valor en el historial
+    currentEditOriginals = {
+        nodo: nodo,
+        estado: origState || '',
+        modalidad: origModality || ''
+    };
     document.getElementById('editModalNodo').textContent = nodo;
     document.getElementById('editModalEstadoOrig').textContent = origState;
 
@@ -331,6 +337,7 @@ function openEditModal(nodo, origState, isOrphan = false) {
 function closeEditModal() {
     document.getElementById('editStateModal').classList.add('hidden');
     currentEditNodo = null;
+    currentEditOriginals = { nodo: null, estado: '', modalidad: '' };
 }
 
 function saveStateChange() {
@@ -418,6 +425,30 @@ function saveStateChange() {
         }
     });
 
+    // --- Construcción del detalle de cambios (Campo / Valor Anterior / Valor Nuevo) ---
+    // Esto es lo que alimenta el Historial de Cambios Manuales con trazabilidad completa.
+    const originals = currentEditOriginals || { nodo: currentEditNodo, estado: '', modalidad: '' };
+    const changes = [];
+
+    if (hasCorrection && correctedNodo !== originals.nodo) {
+        changes.push({ campo: 'Nodo', anterior: originals.nodo || '-', nuevo: correctedNodo });
+    }
+    if (hasForceState && newState !== originals.estado) {
+        changes.push({ campo: 'Estado', anterior: originals.estado || '-', nuevo: newState });
+    }
+    if (hasModChange && newMod !== originals.modalidad) {
+        changes.push({ campo: 'Modalidad', anterior: originals.modalidad || '-', nuevo: newMod });
+    }
+    if (hasForceState) {
+        changes.push({ campo: 'Fecha de Inicio', anterior: '-', nuevo: startDate || '-' });
+        changes.push({ campo: 'Fecha de Cierre Técnico', anterior: '-', nuevo: closeDate || '-' });
+        changes.push({ campo: 'Fecha de Correo (Respaldo)', anterior: '-', nuevo: mailDate || '-' });
+        changes.push({ campo: 'Autorizador', anterior: '-', nuevo: validator || '-' });
+    }
+    if (hasJustification) {
+        changes.push({ campo: 'Justificación', anterior: '-', nuevo: orphanJustification });
+    }
+
     stateOverrides[logId] = {
         nodo: currentEditNodo, // Identificador original
         correctedNodo: correctedNodo,
@@ -433,12 +464,17 @@ function saveStateChange() {
         auditor: auditor,
         timestamp: new Date().toLocaleString('es-AR'),
         reverted: false,
-        revertedTimestamp: null
+        revertedTimestamp: null,
+        // Valores originales, para poder mostrar "Valor Anterior" en el Historial
+        originalEstado: originals.estado || '',
+        originalModalidad: originals.modalidad || '',
+        // Detalle campo-a-campo (Nombre del campo, Valor anterior, Nuevo valor)
+        changes: changes
     };
 
     closeEditModal();
     showToast(`Cambios guardados exitosamente. Recalculando...`, "success");
-    // Refresh audit table immediately
+    // Refresh audit table immediately (el Historial se actualiza al instante, sin esperar al cierre de la edición)
     renderAuditTable();
     // Recalculate consolidations after a short delay
     setTimeout(() => procesarConsolidacion(), 300);

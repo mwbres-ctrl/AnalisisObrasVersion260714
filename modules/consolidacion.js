@@ -455,7 +455,7 @@ function renderPreview() {
             <td class="py-2 px-3 border-r border-slate-200 text-[11px] font-semibold text-blue-700 bg-blue-50/20">${item['Obra a considerar'] || '-'}</td>
             <td class="py-2 px-3 border-r border-slate-200 text-xs ${obs.includes('reclamar a Obras') || obs.includes('corregir el estado') || item['_ES_HUERFANO'] ? 'text-red-700 font-bold bg-red-50' : 'text-slate-600'} truncate max-w-[250px]" title="${obs}">${obs}</td>
             <td class="py-2 px-3 text-center flex justify-center gap-1">
-                <button type="button" onclick="openEditModal('${item['Nodo Original'] || item['Nodo'] || item['NODO']}', '${item['Estado (Original Excel)']}')" class="text-slate-400 hover:text-indigo-600 bg-slate-50 border border-slate-200 hover:bg-slate-100 w-6 h-6 rounded flex items-center justify-center transition-colors" title="Forzar Corrección">
+                <button type="button" onclick="openEditModal('${item['Nodo Original'] || item['Nodo'] || item['NODO']}', '${item['Estado (Original Excel)']}', '${modText}')" class="text-slate-400 hover:text-indigo-600 bg-slate-50 border border-slate-200 hover:bg-slate-100 w-6 h-6 rounded flex items-center justify-center transition-colors" title="Forzar Corrección">
                     <i class="fa-solid fa-pen"></i>
                 </button>
                 <button type="button" onclick="showDetails(${idx})" class="text-slate-400 hover:text-emerald-600 bg-slate-50 border border-slate-200 hover:bg-emerald-50 w-6 h-6 rounded flex items-center justify-center transition-colors" title="Ver Campos">
@@ -534,13 +534,19 @@ function exportToExcel() {
         "Estado Registro": log.reverted ? "REVERTIDO" : "ACTIVO",
         "Nodo/Obra Original": log.nodo,
         "Nodo Corregido A": log.correctedNodo || "-",
+        "Estado Original (Antes)": log.originalEstado || "-",
         "Estado Forzado A": log.newState || "-",
+        "Modalidad Original (Antes)": log.originalModalidad || "-",
+        "Modalidad Forzada A": log.newModality || "-",
         "Justificación de Descarte": log.orphanJustification || "-",
         "Fecha de Inicio Real": log.startDate || "-",
         "Fecha de Cierre Técnico": log.closeDate || "-",
         "Fecha Correo Respaldo": log.mailDate || "-",
         "Autorizado Por": log.validator || "-",
         "Auditor/Operador": log.auditor,
+        "Detalle de Cambios (Campo: Antes -> Después)": (log.changes && log.changes.length > 0)
+            ? log.changes.map(c => `${c.campo}: ${c.anterior} -> ${c.nuevo}`).join(" | ")
+            : "-",
         "Fec/Hora Creación": log.timestamp,
         "Fec/Hora Reversión": log.revertedTimestamp || "-"
     }));
