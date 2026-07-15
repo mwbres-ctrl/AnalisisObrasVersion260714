@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Inventario Obras v2</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS para Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Hojas de Estilos Modulares -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/tabs.css">
+    <link rel="stylesheet" href="css/modals.css">
+    <link rel="stylesheet" href="css/stepper.css">
+    <link rel="stylesheet" href="css/tables.css">
+    <!-- Interceptor DOMContentLoaded de Antigravity Loader -->
+    <script>
+        window._pendingDCL = [];
+        window._origAEL = EventTarget.prototype.addEventListener;
+        EventTarget.prototype.addEventListener = function (type, handler, options) {
+            if (this === document && type === 'DOMContentLoaded') {
+                window._pendingDCL.push({ handler, options });
+                return;
+            }
+            window._origAEL.call(this, type, handler, options);
+        };
+    </script>
+</head>
+
+<body class="bg-slate-100 text-slate-800 font-sans antialiased h-screen flex flex-col overflow-hidden">
+
+    <!-- NAVBAR -->
+    <header
+        class="bg-white border-b border-slate-300 shadow-sm h-16 flex items-center justify-between px-6 shrink-0 z-20">
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="showSetupSection()"
+                class="text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-sm font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-folder-open"></i> Archivos y Etapas
+            </button>
+            <button type="button" id="btnGoToResults" onclick="showResultsSection()"
+                class="hidden text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-sm font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-table"></i> Ver Resultados
+            </button>
+            <div class="w-px h-5 bg-slate-300 mx-1"></div>
+            <button type="button" onclick="toggleConfig()"
+                class="text-slate-500 hover:text-indigo-600 text-sm font-medium transition-colors flex items-center gap-1">
+                <i class="fa-solid fa-gear"></i> Ajustes / Memoria
+            </button>
+            <div class="w-px h-5 bg-slate-300 mx-1"></div>
+            <button type="button" onclick="resetApp()"
+                class="text-rose-500 hover:text-rose-700 text-sm font-medium transition-colors flex items-center gap-1"
+                title="Borrar todo">
+                <i class="fa-solid fa-trash-can"></i> Reiniciar Cruce
+            </button>
+        </div>
+
+        <!-- CONTROLES DE USUARIO Y FECHA VISIBLES -->
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg shadow-sm"
+                title="Datos obligatorios para procesar la auditoría">
+                <i class="fa-solid fa-user-tie text-indigo-700"></i>
+                <input type="text" id="auditorName" oninput="checkReadyToConsolidate()"
+                    placeholder="Analista / Auditor *"
+                    class="w-40 p-1 border-none focus:ring-0 outline-none text-sm font-bold bg-transparent text-indigo-900 placeholder-indigo-400">
+
+                <div class="w-px h-5 bg-indigo-300 mx-1"></div>
+
+                <i class="fa-solid fa-calendar-day text-indigo-700"></i>
+                <input type="date" id="globalAuditDate" onchange="checkReadyToConsolidate()"
+                    class="w-32 p-1 border-none focus:ring-0 outline-none text-sm font-bold bg-transparent text-indigo-900 cursor-pointer">
+            </div>
+
+            <button type="button" id="btnExportar" onclick="exportToExcel()"
+                class="hidden items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-1.5 rounded text-sm font-semibold transition-colors shadow-sm ml-2">
+                <i class="fa-solid fa-file-excel"></i> Exportar Maestro
+            </button>
+        </div>
+    </header>
+
+    <!-- STEPPER DE ETAPAS -->
+    <div class="bg-white border-b border-slate-200 px-6 py-2.5 shrink-0 flex items-center justify-center gap-0 z-10">
+        <div class="stepper-step flex items-center gap-2" onclick="openBcmoModule()">
+            <div class="stepper-dot" id="stepDot0">1</div>
+            <span class="stepper-label" id="stepLabel0">Etapa 1 · BCMO</span>
+        </div>
+        <div class="stepper-line" id="stepLine0"></div>
+        <div class="stepper-step flex items-center gap-2" onclick="showSetupSection()">
+            <div class="stepper-dot" id="stepDot1">2</div>
+            <span class="stepper-label" id="stepLabel1">Etapa 2 · Consolidación</span>
+        </div>
+        <div class="stepper-line" id="stepLine1"></div>
+        <div class="stepper-step flex items-center gap-2" onclick="showResultsSection()">
+            <div class="stepper-dot" id="stepDot2">3</div>
+            <span class="stepper-label" id="stepLabel2">Resultados</span>
+        </div>
+    </div>
+
+    <!-- OVERLAY DE CARGA / PROCESAMIENTO -->
+    <div id="globalLoadingOverlay">
+        <div class="loading-spinner"></div>
+        <p class="text-sm font-semibold text-slate-600" id="globalLoadingText">Procesando...</p>
+    </div>
+
+    <!-- PANEL DE CONFIGURACIÓN (Oculto por defecto) -->
+    <div id="configPanel"
+        class="hidden bg-white border-b border-slate-300 px-6 py-4 shadow-inner shrink-0 text-sm flex-col gap-4 z-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-4">
+                    <label class="font-bold text-slate-700 w-32">Fórmula Obra BF:</label>
+                    <input type="text" id="formulaInput" value='LEFT(SUBSTITUTE([Nodo], " ", ""), 7)'
+                        class="flex-1 p-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none formula-input text-xs text-indigo-700 bg-slate-50">
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="font-bold text-slate-700">Contratistas a ignorar (Corporativo):</label>
+                    <textarea id="configExcludedContratistas" rows="2"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none text-xs bg-slate-50">Suspendida, Sin obra, En hold, Cancelada, Obra suspendida, Sin obra EXT, PP, Compras, P. Propio, Obras, Tercero</textarea>
+                    <p class="text-[10px] text-slate-400">Separadas por comas. Estas opciones serán omitidas
+                        automáticamente en el selector del archivo Corporativo.</p>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-3">
+                <div class="flex flex-col gap-1 mt-auto">
+                    <label class="font-bold text-slate-700">Restauración y Sesión:</label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="exportFullSessionJSON()"
+                            class="bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded text-xs font-bold transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-download"></i> Guardar Sesión
+                        </button>
+                        <button type="button" onclick="document.getElementById('jsonFileInput').click()"
+                            class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded text-xs font-bold transition-colors flex items-center gap-2">
+                            <i class="fa-solid fa-upload"></i> Restaurar Sesión
+                        </button>
+                        <input type="file" id="jsonFileInput" accept=".json" class="hidden"
+                            onchange="importFullSessionJSON(event)">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ÁREA PRINCIPAL -->
+
+    <main class="flex-1 flex flex-col min-h-0 relative" id="mainContainer">
+
+        <!-- ESTADO INICIAL: Panel de Carga -->
+        <div id="setupSection"
+            class="p-6 shrink-0 border-b border-slate-200 bg-slate-50 z-10 flex-1 flex flex-col overflow-y-auto">
+            <div class="max-w-5xl mx-auto w-full flex flex-col gap-6 mt-4 mb-10">
+
+                <!-- === ETAPA 1 (tarjeta): Cargada dinamicamente === -->
+                <div id="etapa1-card-container"></div>
+
+                <!-- === ETAPA 2 (tarjeta): Cargada dinamicamente === -->
+                <div id="etapa2-card-container"></div>
+
+            </div>
+        </div>
+
+        <!-- resultsSection, modales y s1_bcmoModule se inyectan aqui por el loader -->
+        <div id="etapa2-results-container"></div>
+        <div id="etapa1-bcmo-container"></div>
+
+    </main>
+
+    <!-- CONTENEDOR DE NOTIFICACIONES TOAST -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <script src="modules/detallePM.js"></script>
+    <script src="modules/bcmoSinCruce.js"></script>
+    <script src="modules/caducidad.js"></script>
+    <script src="modules/orphans.js"></script>
+    <script src="modules/auditoria.js"></script>
+    <script src="modules/recategorizacion.js"></script>
+    <script src="modules/consolidacion.js"></script>
+    <script>
+        // ============================================================================
+        // LÓGICA DE LA ETAPA 2 (CONSOLIDACIÓN Y AUDITORÍA DE AVANCES)
+        // ============================================================================
+        // --- ESTADO GLOBAL Y MEMORIA ---
+        let dataAvance = null;
+        let tempAvanceData = [];
+        let tempAvanceHeaders = [];
+        let tempAvanceDateStr = "";
+
+        let dataAvanceCorporativo = null;
+        let dataCorporativoRaw = [];
+
+        let dataBCMO = null;
+        let dataTarea = null;
+        let dataMateriales = null;
+
+        let dataConsolidada = [];
+        let filteredConsolidada = [];
+        let headersAvance = [];
+
+        let fileUploadDates = { avance: null, bcmo: null, tarea: null, pmovxf: null, corporativo: null };
+
+        // Memoria de trazabilidad (JSON portable e Inmutable)
+        let stateOverrides = {};
+
+        // Reglas de Estandarización Dinámica (Punto 5)
+        let standardizationRules = {
+            'TERMINADO': 'TERMINADO',
+            'TERMINADA - CALDARA': 'FINALIZADO',
+            'CANCELADA': 'CANCELADA',
+            'SIC CANCELADA': 'CANCELADA',
+            'EN EJECUCIÓN': 'EN EJECUCIÓN',
+            'EN EJECUCION': 'EN EJECUCIÓN',
+            'A EJECUTAR': 'A EJECUTAR',
+            'CANCELADO': 'CANCELADA'
+        };
+        let standardizationDateLimit = '2023-01-01';
+
+        // Reglas Condicionales (Fecha Limite)
+        let conditionalRules = [
+            { org: 'CT PARCIAL', lt: 'FINALIZADO', gte: 'CIERRE TÉCNICO PARCIAL' }
+        ];
+
+        let ctRecategorizadosData = []; // Para la Pestaña de Recategorizaciones
+
+        // Filtros Múltiples
+        let activeStateFilters = [];
+        let activeModalityFilters = [];
+        let activeOrphansStateFilters = [];
+        let activeOrphansModFilters = [];
+
+        let currentEditNodo = null;
+        // Guarda el "antes" (Nodo/Estado/Modalidad) del registro que se está editando,
+        // para poder calcular Valor Anterior -> Nuevo Valor en el Historial de Cambios Manuales.
+        let currentEditOriginals = { nodo: null, estado: '', modalidad: '' };
+
+        const corporativoEstadoMapping = {
+            'CIERRE TÉCNICO': 'TERMINADO',
+            'CANCELADO': 'CANCELADA',
+            'SUSPENDIDA': 'SUSPENDIDA',
+            'A REASIGNAR': 'A REASIGNAR',
+            'FINALIZADA': 'TERMINADO',
+            'A EJECUTAR': 'A EJECUTAR',
+            'CT-OBRA CANCELADA': 'CANCELADA',
+            'EN EJECUCIÓN': 'EN EJECUCIÓN',
+            'EN EJECUCION': 'EN EJECUCIÓN',
+            'A CANCELAR': 'CANCELADA',
+            'CANCELADA': 'CANCELADA',
+            'SUSPENDIDO': 'SUSPENDIDA',
+            'PARCIAL FINALIZADO': 'TERMINADO'
+        };
+
+        // Estilos Categóricos Profesionales
+        const stateColorMap = {
+            'TERMINADO': { badge: 'bg-emerald-100 text-emerald-800 border-emerald-200', text: 'text-emerald-700 font-semibold' },
+            'FINALIZADA CON CONSUMO': { badge: 'bg-emerald-100 text-emerald-800 border-emerald-200', text: 'text-emerald-700 font-semibold' },
+            'FINALIZADA CON CONSUMO TOTAL': { badge: 'bg-emerald-200 text-emerald-900 border-emerald-300', text: 'text-emerald-800 font-bold' },
+            'FINALIZADA CON CONSUMO PARCIAL': { badge: 'bg-teal-100 text-teal-800 border-teal-200', text: 'text-teal-700 font-bold' },
+            'EN EJECUCION CON CONSUMO PARCIAL': { badge: 'bg-cyan-100 text-cyan-800 border-cyan-200', text: 'text-cyan-700 font-bold' },
+            'EN EJECUCION': { badge: 'bg-blue-100 text-blue-800 border-blue-200', text: 'text-blue-700 font-semibold' },
+            'EN EJECUCIÓN': { badge: 'bg-blue-100 text-blue-800 border-blue-200', text: 'text-blue-700 font-semibold' },
+            'A EJECUTAR': { badge: 'bg-slate-100 text-slate-700 border-slate-300', text: 'text-slate-600 font-semibold' },
+            'CANCELADA': { badge: 'bg-rose-100 text-rose-800 border-rose-200', text: 'text-rose-700 font-semibold' },
+            'SUSPENDIDA': { badge: 'bg-red-100 text-red-800 border-red-200', text: 'text-red-700 font-semibold' },
+            'A REASIGNAR': { badge: 'bg-orange-100 text-orange-800 border-orange-200', text: 'text-orange-700 font-semibold' },
+            'VERIFICAR: ¿A EJECUTAR o EN EJECUCION?': { badge: 'bg-amber-100 text-amber-800 border-amber-200', text: 'text-amber-700 font-bold' },
+            'DEFAULT': { badge: 'bg-purple-100 text-purple-800 border-purple-200', text: 'text-purple-700 font-semibold' }
+        };
+
+        // --- FUNCIONES UTILITARIAS Y UI ---
+
+        // Overlay de carga global: usar en cualquier procesamiento pesado
+        // para evitar que el cambio de vista se sienta como una recarga seca.
+        function showLoadingOverlay(msg) {
+            const overlay = document.getElementById('globalLoadingOverlay');
+            document.getElementById('globalLoadingText').textContent = msg || 'Procesando...';
+            overlay.classList.add('visible');
+        }
+
+        function hideLoadingOverlay() {
+            document.getElementById('globalLoadingOverlay').classList.remove('visible');
+        }
+
+        // Stepper de etapas: step = 0 (Etapa 1), 1 (Etapa 2), 2 (Resultados)
+        function updateStepper(step) {
+            for (let i = 0; i <= 2; i++) {
+                const dot = document.getElementById('stepDot' + i);
+                const label = document.getElementById('stepLabel' + i);
+                dot.classList.remove('done', 'active');
+                label.classList.remove('done', 'active');
+                if (i < step) {
+                    dot.classList.add('done');
+                    dot.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    label.classList.add('done');
+                } else if (i === step) {
+                    dot.classList.add('active');
+                    dot.textContent = (i + 1);
+                    label.classList.add('active');
+                } else {
+                    dot.textContent = (i + 1);
+                }
+            }
+            for (let i = 0; i <= 1; i++) {
+                document.getElementById('stepLine' + i).classList.toggle('done', i < step);
+            }
+        }
+
+        // Transición de cross-fade entre dos secciones, en vez de un toggle seco de "hidden"
+        function fadeSwapSection(hideEl, showEl, showDisplayClass) {
+            hideEl.classList.add('fade-out-active');
+            setTimeout(() => {
+                hideEl.classList.add('hidden');
+                if (showDisplayClass) hideEl.classList.remove(showDisplayClass);
+                hideEl.classList.remove('fade-out-active');
+
+                showEl.classList.remove('hidden');
+                if (showDisplayClass) showEl.classList.add(showDisplayClass);
+                showEl.classList.add('fade-out-active');
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        showEl.classList.remove('fade-out-active');
+                        showEl.classList.add('fade-in-active');
+                    });
+                });
+            }, 180);
+        }
+
+        // Actualiza el contador de una pestaña sin reescribir todo el botón
+        // (evita perder el ícono/estructura). El badge solo se muestra si count > 0.
+        function setTabBadge(spanId, count) {
+            const el = document.getElementById(spanId);
+            if (!el) return;
+            if (count > 0) {
+                el.textContent = count;
+                el.classList.remove('hidden');
+            } else {
+                el.textContent = '';
+                el.classList.add('hidden');
+            }
+            const diagBadgeIds = ['tabRecatCount', 'tabOrphansCount', 'tabBcmoSinCruceCount', 'tabCaducidadCount'];
+            if (diagBadgeIds.includes(spanId)) {
+                s1_updateDiagBadgeTotal();
+            }
+        }
+
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            const bg = type === 'error' ? 'bg-rose-600' : (type === 'success' ? 'bg-emerald-600' : 'bg-slate-800');
+            const icon = type === 'error' ? 'fa-triangle-exclamation' : (type === 'success' ? 'fa-check' : 'fa-info-circle');
+
+            toast.className = `px-4 py-3 rounded-lg shadow-lg text-white text-sm font-semibold flex items-center gap-3 transition-all duration-300 transform translate-y-10 opacity-0 pointer-events-auto ${bg}`;
+            toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${msg}</span>`;
+
+            container.appendChild(toast);
+            requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function toggleConfig() {
+            const panel = document.getElementById('configPanel');
+            panel.classList.toggle('hidden');
+            panel.classList.toggle('flex');
+        }
+
+        function toggleOrphansConfig() {
+            const panel = document.getElementById('orphansConfigPanel');
+            panel.classList.toggle('hidden');
+        }
+
+        function showSetupSection() {
+            const resultsEl = document.getElementById('resultsSection');
+            const setupEl = document.getElementById('setupSection');
+            if (resultsEl.classList.contains('hidden')) {
+                setupEl.classList.remove('hidden');
+            } else {
+                fadeSwapSection(resultsEl, setupEl, 'flex');
+            }
+            if (dataConsolidada.length > 0) {
+                document.getElementById('btnGoToResults').classList.remove('hidden');
+            }
+            updateStepper(1);
+        }
+
+        function showResultsSection() {
+            if (dataConsolidada.length > 0) {
+                const setupEl = document.getElementById('setupSection');
+                const resultsEl = document.getElementById('resultsSection');
+                fadeSwapSection(setupEl, resultsEl, 'flex');
+                updateStepper(2);
+            } else {
+                showToast("No hay resultados para mostrar. Debe procesar el cruce.", "error");
+            }
+        }
+
+        function switchTab(tab) {
+            const diagTabs = ['audit', 'orphans', 'recat', 'detallepm', 'bcmosincruce', 'caducidad'];
+
+            document.getElementById('tabDataContent').classList.toggle('hidden', tab !== 'data');
+            document.getElementById('tabAuditContent').classList.toggle('hidden', tab !== 'audit');
+            document.getElementById('tabOrphansContent').classList.toggle('hidden', tab !== 'orphans');
+            document.getElementById('tabRecatContent').classList.toggle('hidden', tab !== 'recat');
+            document.getElementById('tabDetallePMContent').classList.toggle('hidden', tab !== 'detallepm');
+            document.getElementById('tabBcmoSinCruceContent').classList.toggle('hidden', tab !== 'bcmosincruce');
+            document.getElementById('tabCaducidadContent').classList.toggle('hidden', tab !== 'caducidad');
+
+            document.getElementById('tabDataBtn').classList.toggle('active', tab === 'data');
+            document.getElementById('tabDiagBtn').classList.toggle('active', diagTabs.includes(tab));
+
+            document.querySelectorAll('.diag-menu-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('tabAuditBtn').classList.toggle('active', tab === 'audit');
+            document.getElementById('tabOrphansBtn').classList.toggle('active', tab === 'orphans');
+            document.getElementById('tabRecatBtn').classList.toggle('active', tab === 'recat');
+            document.getElementById('tabDetallePMBtn').classList.toggle('active', tab === 'detallepm');
+            document.getElementById('tabBcmoSinCruceBtn').classList.toggle('active', tab === 'bcmosincruce');
+            document.getElementById('tabCaducidadBtn').classList.toggle('active', tab === 'caducidad');
+
+            s1_closeDiagMenu();
+
+            const activeContentId = {
+                data: 'tabDataContent', audit: 'tabAuditContent', orphans: 'tabOrphansContent',
+                recat: 'tabRecatContent', detallepm: 'tabDetallePMContent',
+                bcmosincruce: 'tabBcmoSinCruceContent', caducidad: 'tabCaducidadContent'
+            }[tab];
+            if (activeContentId) {
+                const el = document.getElementById(activeContentId);
+                el.classList.remove('tab-content-fade');
+                void el.offsetWidth;
+                el.classList.add('tab-content-fade');
+            }
+
+            if (tab === 'audit') renderAuditTable();
+            if (tab === 'orphans') renderOrphansTable();
+            if (tab === 'recat') renderRecatTable();
+            if (tab === 'detallepm') initDetallePMTab();
+            if (tab === 'bcmosincruce') renderBcmoSinCruceTable();
+            if (tab === 'caducidad') renderCaducidadTable();
+        }
+
+        // Menú desplegable "Diagnóstico": agrupa las 6 vistas secundarias
+        function s1_toggleDiagMenu(evt) {
+            if (evt) evt.stopPropagation();
+            document.getElementById('diagMenuDropdown').classList.toggle('hidden');
+        }
+
+        function s1_closeDiagMenu() {
+            document.getElementById('diagMenuDropdown').classList.add('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('diagMenuDropdown');
+            const btn = document.getElementById('tabDiagBtn');
+            if (!dropdown || dropdown.classList.contains('hidden')) return;
+            if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                s1_closeDiagMenu();
+            }
+        });
+
+        // Suma los badges de las 6 vistas agrupadas para mostrar el total en "Diagnóstico"
+        function s1_updateDiagBadgeTotal() {
+            const ids = ['tabRecatCount', 'tabOrphansCount', 'tabBcmoSinCruceCount', 'tabCaducidadCount'];
+            let total = 0;
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                const n = el ? parseInt(el.textContent, 10) : 0;
+                if (!isNaN(n)) total += n;
+            });
+            setTabBadge('tabDiagCount', total);
+        }
+
+
+        function resetApp() {
+            if (!confirm("¿Desea iniciar un nuevo cruce? Se limpiarán los archivos cargados (sus modificaciones manuales se mantendrán en memoria).")) return;
+
+            dataAvance = dataAvanceCorporativo = dataBCMO = dataTarea = dataMateriales = null;
+            dataCorporativoRaw = [];
+            dataConsolidada = filteredConsolidada = [];
+            fileUploadDates = { avance: null, bcmo: null, tarea: null, pmovxf: null, corporativo: null };
+
+            actualizarEstadoUI('statusAvance', false);
+            actualizarEstadoUI('statusBCMO', false);
+            actualizarEstadoUI('statusTarea', false);
+            actualizarEstadoUI('statusMateriales', false);
+            actualizarEstadoUI('statusCorpInd', false);
+
+            document.getElementById('statusCorporativo').textContent = 'No cargado';
+            document.getElementById('btnDeleteCorp').classList.add('hidden');
+
+            document.getElementById('btnConsolidar').disabled = true;
+            document.getElementById('btnConsolidar').className = "w-full bg-slate-300 text-slate-500 font-bold py-3 rounded shadow-sm text-sm cursor-not-allowed transition-colors";
+
+            document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('resultsSection').classList.remove('flex');
+            document.getElementById('setupSection').classList.remove('hidden');
+            document.getElementById('btnExportar').classList.add('hidden');
+            document.getElementById('btnGoToResults').classList.add('hidden');
+
+            document.getElementById('fileInput').value = "";
+            document.getElementById('fileCorporativo').value = "";
+            switchTab('data');
+            showToast("Sesión reiniciada. Listo para nuevo cruce.", "info");
+        }
+
+        // --- JSON MEMORY (SESION COMPLETA) ---
+        function exportFullSessionJSON() {
+            if (!dataAvance && !dataAvanceCorporativo) {
+                showToast("No hay registros cargados para guardar.", "error");
+                return;
+            }
+
+            // Filtrar los descartes que son solo para la auditoria en curso (RECIENTE_SIN_PM)
+            const overridesToSave = {};
+            for (const [key, log] of Object.entries(stateOverrides)) {
+                if (log.justifType !== 'RECIENTE_SIN_PM') {
+                    overridesToSave[key] = log;
+                }
+            }
+
+            const data = {
+                version: "5.3_AuditCorpStrict",
+                exportDate: new Date().toISOString(),
+                overrides: overridesToSave,
+                dataAvance: dataAvance,
+                dataAvanceCorporativo: dataAvanceCorporativo,
+                dataBCMO: dataBCMO,
+                dataTarea: dataTarea,
+                dataMateriales: dataMateriales,
+                headersAvance: headersAvance,
+                fileUploadDates: fileUploadDates,
+                formulaObraBF: document.getElementById('formulaInput').value,
+                configExcludedContratistas: document.getElementById('configExcludedContratistas').value,
+                configCustomJustifications: document.getElementById('configCustomJustifications') ? document.getElementById('configCustomJustifications').value : ""
+            };
+
+            const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const dlNode = document.createElement('a');
+            dlNode.setAttribute("href", url);
+            dlNode.setAttribute("download", `Sesion_Auditoria_Obras_${new Date().getTime()}.json`);
+            document.body.appendChild(dlNode);
+            dlNode.click();
+            dlNode.remove();
+            URL.revokeObjectURL(url);
+
+            showToast("Sesión completa guardada exitosamente.", "success");
+        }
+
+        function importFullSessionJSON(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+
+                    if (parsed.version && parsed.version.includes("Audit")) {
+                        stateOverrides = parsed.overrides || {};
+                        dataAvance = parsed.dataAvance || null;
+                        dataAvanceCorporativo = parsed.dataAvanceCorporativo || null;
+                        dataBCMO = parsed.dataBCMO || null;
+                        dataTarea = parsed.dataTarea || null;
+                        dataMateriales = parsed.dataMateriales || null;
+                        headersAvance = parsed.headersAvance || [];
+                        fileUploadDates = parsed.fileUploadDates || { avance: null, bcmo: null, tarea: null, pmovxf: null, corporativo: null };
+
+                        if (parsed.formulaObraBF) document.getElementById('formulaInput').value = parsed.formulaObraBF;
+                        if (parsed.configExcludedContratistas) document.getElementById('configExcludedContratistas').value = parsed.configExcludedContratistas;
+                        if (parsed.configCustomJustifications !== undefined && document.getElementById('configCustomJustifications')) {
+                            document.getElementById('configCustomJustifications').value = parsed.configCustomJustifications;
+                        }
+
+                        if (dataAvance) actualizarEstadoUI('statusAvance', true, fileUploadDates.avance);
+                        if (dataAvanceCorporativo) {
+                            actualizarEstadoUI('statusCorpInd', true, fileUploadDates.corporativo);
+                            document.getElementById('statusCorporativo').textContent = `Cargado (Restaurado)`;
+                            document.getElementById('btnDeleteCorp').classList.remove('hidden');
+                        }
+                        if (dataBCMO) actualizarEstadoUI('statusBCMO', true, fileUploadDates.bcmo);
+                        if (dataTarea) actualizarEstadoUI('statusTarea', true, fileUploadDates.tarea);
+                        if (dataMateriales) actualizarEstadoUI('statusMateriales', true, fileUploadDates.pmovxf);
+
+                        showToast(`Sesión restaurada correctamente.`, "success");
+
+                        checkReadyToConsolidate();
+                        if ((dataAvance || dataAvanceCorporativo) && (dataBCMO || dataTarea)) {
+                            // Only trigger processing if auditor is set (requirement)
+                            if (document.getElementById('auditorName').value && document.getElementById('globalAuditDate').value) {
+                                procesarConsolidacion();
+                            }
+                        }
+                    } else {
+                        throw new Error("Formato inválido");
+                    }
+                } catch (err) {
+                    showToast("Error al cargar archivo de sesión.", "error");
+                }
+                document.getElementById('jsonFileInput').value = "";
+            };
+            reader.readAsText(file);
+        }
+
+        // --- FUNCIONES NUEVAS: CARGA CORPORATIVO ---
+        function eliminarCargaCorp() {
+            if (!confirm("¿Desea eliminar los datos importados del archivo Corporativo?")) return;
+            dataAvanceCorporativo = null;
+            dataCorporativoRaw = [];
+            fileUploadDates.corporativo = null;
+
+            actualizarEstadoUI('statusCorpInd', false);
+            document.getElementById('statusCorporativo').textContent = 'No cargado';
+            document.getElementById('fileCorporativo').value = '';
+            document.getElementById('btnDeleteCorp').classList.add('hidden');
+
+            checkReadyToConsolidate();
+
+            if (dataConsolidada.length > 0) {
+                procesarConsolidacion();
+                showToast("Archivo Corporativo eliminado. Cruce recalculado.", "info");
+            } else {
+                showToast("Archivo Corporativo eliminado.", "info");
+            }
+        }
+
+        function preAnalizarCorporativo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+
+                    // Priorizamos la hoja 'OBRAS'
+                    const sheetName = workbook.SheetNames.find(n => n.toUpperCase() === 'OBRAS') || workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+
+                    // Buscar la fila de cabecera que contenga 'Contratista' y 'Nodo'
+                    const aoa = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    let headerRowIdx = 0;
+                    for (let i = 0; i < Math.min(aoa.length, 50); i++) {
+                        const rowStr = (aoa[i] || []).join(' ').toLowerCase();
+                        if (rowStr.includes('nodo') && rowStr.includes('contratista')) {
+                            headerRowIdx = i;
+                            break;
+                        }
+                    }
+
+                    const json = XLSX.utils.sheet_to_json(worksheet, { range: headerRowIdx, defval: "" });
+                    dataCorporativoRaw = json;
+
+                    // Excluir contratistas por defecto
+                    const excludedText = document.getElementById('configExcludedContratistas').value || "";
+                    const excludedList = excludedText.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
+
+                    // Poblar modal con Contratistas únicos válidos
+                    const contratistas = [...new Set(json.map(r => r['Contratista']).filter(c => c && String(c).trim() !== ''))]
+                        .filter(c => !excludedList.includes(String(c).trim().toUpperCase()))
+                        .sort();
+
+                    const select = document.getElementById('selectContratistaCorp');
+                    select.innerHTML = contratistas.map(c => `<option value="${c}">${c}</option>`).join('');
+
+                    if (contratistas.length > 0) {
+                        document.getElementById('modalFiltroContratista').classList.remove('hidden');
+                    } else {
+                        showToast("No se encontraron contratistas válidas (todas fueron filtradas o el archivo está vacío).", "error");
+                    }
+                } catch (error) {
+                    showToast("No se pudo leer el archivo corporativo.", "error");
+                }
+                document.getElementById('fileCorporativo').value = '';
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function cancelarCargaCorp() {
+            document.getElementById('modalFiltroContratista').classList.add('hidden');
+            dataCorporativoRaw = [];
+        }
+
+        function getMinDate(d1, d2, d3) {
+            const dates = [d1, d2, d3]
+                .map(d => new Date(d))
+                .filter(d => !isNaN(d.getTime()));
+            return dates.length > 0 ? new Date(Math.min(...dates)) : null;
+        }
+
+        function confirmarCargaCorp() {
+            const selectElement = document.getElementById('selectContratistaCorp');
+            const selectedOptions = Array.from(selectElement.selectedOptions).map(opt => opt.value);
+
+            if (selectedOptions.length === 0) {
+                showToast("Por favor seleccione al menos una contratista.", "error");
+                return;
+            }
+
+            const filtered = dataCorporativoRaw.filter(r => selectedOptions.includes(r['Contratista']));
+
+            dataAvanceCorporativo = filtered.map(row => {
+                // Cálculo Fecha Cierre Mínima
+                const fFin = row['Fin'];
+                const fPuesta = row['Puesta en M.'];
+                const fCierre = row['Cierre Técnico'];
+                const fechaMinima = getMinDate(fFin, fPuesta, fCierre);
+
+                const fMinStr = fechaMinima ? fechaMinima.toLocaleDateString('es-AR') : "";
+
+                // Mapeo de Estado Corporativo según requerimiento
+                let rawEstado = String(row['ESTADO'] || '').trim();
+                let upperEstado = rawEstado.toUpperCase();
+                let estadoMapeado = corporativoEstadoMapping[upperEstado] || upperEstado;
+
+                return {
+                    ...row,
+                    '_N_NODO': String(row['Nodo'] || '').trim(),
+                    '_N_ESTADO': estadoMapeado,
+                    '_N_INICIO': row['Inicio'],
+                    '_N_CONTRATISTA': row['Contratista'],
+                    '_N_MODALIDAD_DE_LIQUIDACION': 'CORPORATIVO',
+                    '_N_FECHA_CIERRE_CALCULADA': fMinStr,
+                    '_ORIGEN': 'CORPORATIVO'
+                };
+            });
+
+            fileUploadDates.corporativo = new Date().toLocaleString('es-AR');
+            actualizarEstadoUI('statusCorpInd', true, fileUploadDates.corporativo);
+
+            let resumenNombres = selectedOptions.length <= 2 ? selectedOptions.join(', ') : `${selectedOptions.length} contratistas`;
+            document.getElementById('statusCorporativo').textContent = `Cargado: ${resumenNombres} (${dataAvanceCorporativo.length} res.)`;
+            document.getElementById('btnDeleteCorp').classList.remove('hidden');
+
+            document.getElementById('modalFiltroContratista').classList.add('hidden');
+            showToast(`Se importaron ${dataAvanceCorporativo.length} registros de ${resumenNombres}.`, "success");
+            checkReadyToConsolidate();
+        }
+
+        // --- MOTOR DE FÓRMULAS EXCEL ---
+        function evaluateExcelFormula(formula, context) {
+            try {
+                let f = formula.replace(/\[Nodo\]/gi, `'${context.nodo || ""}'`);
+                const funcs = {
+                    'LEFT': (s, n) => s.substring(0, n),
+                    'RIGHT': (s, n) => s.substring(s.length - n),
+                    'MID': (s, start, n) => s.substring(start - 1, (start - 1) + n),
+                    'SUBSTITUTE': (s, old, newVal) => s.replaceAll(old, newVal),
+                    'UPPER': (s) => s.toUpperCase(),
+                    'TRIM': (s) => s.trim()
+                };
+                return String(new Function(...Object.keys(funcs), `return ${f}`)(...Object.values(funcs)));
+            } catch (e) { return "ERR!"; }
+        }
+
+        // --- INICIALIZACIÓN ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const globalAuditInput = document.getElementById('globalAuditDate');
+            if (globalAuditInput) {
+                globalAuditInput.valueAsDate = new Date();
+            }
+
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+
+            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault(); dropZone.classList.remove('dragover');
+                if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+            });
+            fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFiles(e.target.files); });
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                        clasificarArchivo(json, Object.keys(json[0] || {}), file.name);
+                    } catch (error) { leerComoCSV(file); }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function leerComoCSV(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                let delimiter = text.split('\n')[0].includes('\t') ? '\t' : (text.split('\n')[0].includes(';') ? ';' : ',');
+                const lines = text.split('\n');
+                const headers = lines[0].split(delimiter).map(h => h.trim());
+                const json = [];
+                for (let i = 1; i < lines.length; i++) {
+                    if (!lines[i].trim()) continue;
+                    const values = lines[i].split(delimiter);
+                    const row = {};
+                    for (let j = 0; j < headers.length; j++) row[headers[j]] = values[j] ? values[j].trim() : "";
+                    json.push(row);
+                }
+                clasificarArchivo(json, headers, file.name);
+            };
+            reader.readAsText(file, 'ISO-8859-1');
+        }
+
+        function clasificarArchivo(data, headers, filename) {
+            if (data.length === 0) return;
+            const hStr = headers.join(' ').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const dateStr = new Date().toLocaleString('es-AR');
+
+            if (hStr.includes('MODALIDAD DE LIQUIDACION') || hStr.includes('ETAPA LOGICA')) {
+                tempAvanceData = normalizarDataset(data); 
+                tempAvanceHeaders = headers;
+                tempAvanceDateStr = dateStr;
+
+                const excludedText = document.getElementById('configExcludedContratistas') ? document.getElementById('configExcludedContratistas').value : "";
+                const excludedList = excludedText.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
+
+                const contratistas = [...new Set(tempAvanceData.map(r => r['_N_CONTRATISTA'] || r['CONTRATISTA'] || r['Contratista']).filter(c => c && String(c).trim() !== ''))]
+                    .filter(c => !excludedList.includes(String(c).trim().toUpperCase()))
+                    .sort();
+
+                const select = document.getElementById('selectContratistaAvance');
+                select.innerHTML = contratistas.map(c => `<option value="${c}">${c}</option>`).join('');
+
+                if (contratistas.length > 0) {
+                    document.getElementById('modalFiltroContratistaAvance').classList.remove('hidden');
+                } else {
+                    confirmarCargaAvanceFallback();
+                }
+                return; // Pausamos ejecución para Avance
+            } else if (hStr.includes('ESTADO DE LIQUIDACION') || (hStr.includes('ENTREGADO') && hStr.includes('CONSUMIDO') && hStr.includes('TAREA'))) {
+                showToast("El archivo BCMO debe procesarse e inyectarse obligatoriamente desde el módulo de la Etapa 1 (Arriba).", "error");
+            } else if (hStr.includes('OBRA BF') || hStr.includes('DETALLE TKT')) {
+                dataTarea = normalizarDataset(data);
+                fileUploadDates.tarea = dateStr;
+                actualizarEstadoUI('statusTarea', true, dateStr);
+            } else if (hStr.includes('MOTIVO') && hStr.includes('FECHA_TRX')) {
+                showToast("El archivo PMOVXF debe cargarse e inyectarse desde el módulo de la Etapa 1.", "error");
+            }
+            checkReadyToConsolidate();
+            if (typeof window.renderRecatTable === 'function') window.renderRecatTable();
+        }
+
+        function confirmarCargaAvanceFallback() {
+            dataAvance = tempAvanceData; 
+            headersAvance = tempAvanceHeaders;
+            aplicarEstandarizacionInPlace(dataAvance);
+            fileUploadDates.avance = tempAvanceDateStr;
+            actualizarEstadoUI('statusAvance', true, tempAvanceDateStr);
+            checkReadyToConsolidate();
+            if (typeof window.renderRecatTable === 'function') window.renderRecatTable();
+        }
+
+        function confirmarCargaAvance() {
+            const selectElement = document.getElementById('selectContratistaAvance');
+            const selectedOptions = Array.from(selectElement.selectedOptions).map(opt => opt.value);
+
+            if (selectedOptions.length === 0) {
+                showToast("Por favor seleccione al menos una contratista.", "error");
+                return;
+            }
+
+            dataAvance = tempAvanceData.filter(r => {
+                let c = String(r['_N_CONTRATISTA'] || r['CONTRATISTA'] || r['Contratista'] || "").trim();
+                return selectedOptions.includes(c);
+            });
+            
+            headersAvance = tempAvanceHeaders;
+            aplicarEstandarizacionInPlace(dataAvance);
+            fileUploadDates.avance = tempAvanceDateStr;
+            actualizarEstadoUI('statusAvance', true, tempAvanceDateStr);
+            
+            document.getElementById('modalFiltroContratistaAvance').classList.add('hidden');
+            tempAvanceData = [];
+            
+            checkReadyToConsolidate();
+            if (typeof window.renderRecatTable === 'function') window.renderRecatTable();
+            showToast("Avance de Obras cargado exitosamente.", "success");
+        }
+
+        function cancelarCargaAvance() {
+            document.getElementById('modalFiltroContratistaAvance').classList.add('hidden');
+            tempAvanceData = [];
+            tempAvanceHeaders = [];
+        }
+
+        function normalizarDataset(data) {
+            const mapped = data.map(row => {
+                const newRow = { ...row, '_ORIGEN': 'PRINCIPAL' };
+                for (let key in row) {
+                    const cleanKey = key.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '_');
+                    newRow[`_N_${cleanKey}`] = row[key];
+
+                    if (cleanKey === 'ESTADO') {
+                        newRow['_PRISTINE_ESTADO'] = String(row[key]).trim().toUpperCase();
+                    }
+                }
+                return newRow;
+            });
+            return mapped;
+        }
+
+        // La función aplicarEstandarizacionInPlace fue extraída a modules/recategorizacion.js
+
+        function actualizarEstadoUI(id, success, date) {
+            const el = document.getElementById(id);
+            if (!el) return;
+
+            const labelMap = {
+                'statusAvance': 'Avance de Obras (Principal)',
+                'statusBCMO': 'BCMO (Inyectado desde Etapa 1)',
+                'statusTarea': 'Sistema TAREA',
+                'statusMateriales': 'PMOVXF',
+                'statusCorpInd': 'Avance Corporativo'
+            };
+            const title = labelMap[id] || id;
+
+            if (success) {
+                el.innerHTML = `<span class="text-slate-800 font-medium"><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i>${title}</span><span class="text-[10px] text-slate-400 italic">${date}</span>`;
+            } else {
+                el.innerHTML = `<span class="text-slate-500"><i class="fa-regular fa-circle mr-2"></i>${title}</span><span class="text-[10px] text-slate-400 italic"></span>`;
+            }
+        }
+
+        function checkReadyToConsolidate() {
+            const btn = document.getElementById('btnConsolidar');
+            const auditor = document.getElementById('auditorName').value.trim();
+            const auditDate = document.getElementById('globalAuditDate').value;
+
+            // Requerimos al menos Avance (Principal o Corp) y (BCMO o TAREA)
+            if ((dataAvance || dataAvanceCorporativo) && (dataBCMO || dataTarea)) {
+                if (auditor && auditDate) {
+                    btn.disabled = false;
+                    btn.className = "w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded shadow-md text-sm transition-colors";
+                    btn.textContent = "Procesar y Consolidar";
+                } else {
+                    btn.disabled = true;
+                    btn.className = "w-full bg-amber-500 text-white font-bold py-3 rounded shadow-sm text-sm cursor-not-allowed transition-colors";
+                    btn.textContent = "Complete Auditor y Fecha arriba para procesar";
+                }
+            } else {
+                btn.disabled = true;
+                btn.className = "w-full bg-slate-300 text-slate-500 font-bold py-3 rounded shadow-sm text-sm cursor-not-allowed transition-colors";
+                btn.textContent = "Procesar y Consolidar";
+            }
+        }
+
+        function getActiveOverride(nodo) {
+            let active = null;
+            Object.values(stateOverrides).forEach(log => {
+                if (log.nodo === nodo && !log.reverted) {
+                    active = log;
+                }
+            });
+            return active;
+        }
+
+        // --- PROCESAMIENTO CORE ---
+        // procesarConsolidacion(), _procesarConsolidacionCore(), toggleStateFilter(),
+        // toggleModalityFilter(), renderPreview() han sido extraídos a modules/consolidacion.js
+
+        window.toggleOrphanStateFilter = function (estado) {
+            const idx = activeOrphansStateFilters.indexOf(estado);
+            if (idx > -1) activeOrphansStateFilters.splice(idx, 1);
+            else activeOrphansStateFilters.push(estado);
+            renderOrphansTable();
+        };
+
+        window.toggleOrphanModFilter = function (mod) {
+            const idx = activeOrphansModFilters.indexOf(mod);
+            if (idx > -1) activeOrphansModFilters.splice(idx, 1);
+            else activeOrphansModFilters.push(mod);
+            renderOrphansTable();
+        };
+
+        // --- FUNCIONES DE ESTANDARIZACION UI ---
+        // Toda la lógica de estandarización, reglas y tabla recategorizada se encuentra en modules/recategorizacion.js
+
+        // ============================================================
+        // BCMO SIN CRUCE EN AVANCE DE OBRAS
+        // ============================================================
+        // La lógica de la SOLAPA BCMO SIN CRUCE ha sido migrada a modules/bcmoSinCruce.js
+
+        // ============================================================
+        // GESTOR DE CADUCIDAD
+        // ============================================================
+        // La lógica del GESTOR DE CADUCIDAD ha sido migrada a modules/caducidad.js
+
+        // ============================================================
+        // NODOS SIN REGISTRO (HUÉRFANOS) Y SISTEMA DE EDICIÓN
+        // ============================================================
+        // La lógica de HUÉRFANOS Y EDICIÓN DE ESTADO ha sido migrada a modules/orphans.js
+
+        function renderAuditTable() {
+            // Lógica migrada a modules/auditoria.js
+        }
+
+        function removeOverride(nodo) {
+            // Lógica migrada a modules/auditoria.js
+        }
+
+        // --- DETALLES ---
+        function showDetails(fIdx) {
+            // Lógica migrada a modules/auditoria.js
+        }
+
+        // La lógica de la SOLAPA DETALLE DE OBRAS (PM) ha sido migrada a modules/detallePM.js
+
+        function closeDetailsModal() {
+            // Lógica migrada a modules/auditoria.js
+        }
+
+        // --- EXPORTACIÓN EXCEL NATIVA ---
+        // exportToExcel() fue extraída a modules/consolidacion.js
+
+
+        // ============================================================================
+        // FUNCIONES PUENTE ENTRE ETAPA 1 Y ETAPA 2
+        // ============================================================================
+        function showToastGlobal(msg, type) {
+            showToast(msg, type);
+        }
+
+        function parseDecimalGlobal(val) {
+            if (val === undefined || val === null || val === '') return 0;
+            if (typeof val === 'number') return val;
+            let str = String(val).trim();
+            if (str.includes(',') && !str.includes('.')) str = str.replace(',', '.');
+            else if (str.includes(',') && str.includes('.')) {
+                if (str.lastIndexOf(',') > str.lastIndexOf('.')) str = str.replace(/\./g, '').replace(',', '.');
+                else str = str.replace(/,/g, '');
+            }
+            return parseFloat(str) || 0;
+        }
+
+        function openBcmoModule() {
+            const el = document.getElementById('s1_bcmoModule');
+            el.classList.remove('hidden');
+            el.classList.add('flex', 'fade-out-active');
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                el.classList.remove('fade-out-active');
+                el.classList.add('fade-in-active');
+            }));
+            updateStepper(0);
+        }
+
+        function closeBcmoModule() {
+            const el = document.getElementById('s1_bcmoModule');
+            el.classList.add('fade-out-active');
+            setTimeout(() => {
+                el.classList.add('hidden');
+                el.classList.remove('flex', 'fade-out-active', 'fade-in-active');
+            }, 180);
+            updateStepper(1);
+        }
+
+        function inyectarAlConsolidador() {
+            if (s1_processedData.length === 0) {
+                showToast("No hay datos del BCMO procesados para inyectar.", "error"); return;
+            }
+
+            dataBCMO = s1_processedData.map(item => ({
+                '_N_TAREA_/_OBRA': item.Obra,
+                '_N_ESTADO_DE_LIQUIDACION': item['Estado de liquidacion'],
+                '_N_%_CONSUMO': item.PorcentajeReal,
+                '_N_CONTRATISTA': item.Contratista,
+                '_N_ENTREGADO': item.Entregado
+            }));
+
+            fileUploadDates.bcmo = "Inyectado de Módulo BCMO: " + new Date().toLocaleString('es-AR');
+            actualizarEstadoUI('statusBCMO', true, fileUploadDates.bcmo);
+
+            if (s1_dataMateriales && s1_dataMateriales.length > 0) {
+                dataMateriales = s1_dataMateriales;
+                fileUploadDates.pmovxf = "Inyectado de Módulo Etapa 1: " + s1_fileUploadDates.pmovxf;
+                actualizarEstadoUI('statusMateriales', true, fileUploadDates.pmovxf);
+            }
+
+            checkReadyToConsolidate();
+            closeBcmoModule();
+
+            if (dataConsolidada.length > 0) {
+                procesarConsolidacion();
+                showToast("Resultados inyectados y cruce actualizado automáticamente.", "success");
+            } else {
+                showToast("Resultados inyectados correctamente al consolidador.", "success");
+            }
+        }
+
+
+        // ============================================================================
+        // LÓGICA ETAPA 1 (ANALIZADOR BCMO - ENCAPSULADA PARA NO AFECTAR ETAPA 2)
+        // ============================================================================
+        const s1_defaultTasks = ["BERISSO", "DEPO", "DEVO", "DEVOEDIF", "DEVOIMP", "DEVORED", "EDARM", "EDCORP", "EDIF", "HUB", "IMP", "INST", "MOVI", "MRED", "OTROS", "REDCORP", "REFRED", "RIMP", "RINST", "RMRED", "RSERV", "SERV", "SORED", "TPRO", "UHF"];
+        const s1_defaultMats = ["Precintos", "Separador de linga", "Manguitos protectores"];
+        const s1_defaultInvalid = ["PM-ETIQUETASTAPCAISA", "ETIQUETAS-CAISA", "STOCK PASAR A CONSUMIDO"];
+
+        let s1_currentRawData = [];
+        let s1_processedData = [];
+        let s1_filteredData = [];
+        let s1_manualOverrides = {};
+        let s1_invalidData = [];
+        let s1_dataMateriales = null;
+        let s1_fileUploadDates = { bcmo: null, pmovxf: null };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const sTasks = localStorage.getItem('excludedTasks');
+            const sMats = localStorage.getItem('excludedMaterials');
+            const sUmb = localStorage.getItem('umbralVerificacion');
+            const sInvalid = localStorage.getItem('invalidNomenclatures');
+
+            document.getElementById('s1_excludedTasks').value = sTasks !== null ? sTasks : s1_defaultTasks.join('\n');
+            document.getElementById('s1_excludedMaterials').value = sMats !== null ? sMats : s1_defaultMats.join('\n');
+            document.getElementById('s1_invalidNomenclaturesInput').value = sInvalid !== null ? sInvalid : s1_defaultInvalid.join('\n');
+            if (sUmb !== null) document.getElementById('s1_umbralVerificacion').value = sUmb;
+
+            s1_setupDragAndDrop();
+        });
+
+        function s1_toggleConfigPanel() {
+            const p = document.getElementById('s1_configPanel');
+            const bd = document.getElementById('s1_configBackdrop');
+            if (p.classList.contains('translate-x-full')) {
+                p.classList.remove('translate-x-full'); bd.classList.remove('hidden');
+                setTimeout(() => bd.classList.remove('opacity-0'), 10);
+            } else {
+                p.classList.add('translate-x-full'); bd.classList.add('opacity-0');
+                setTimeout(() => bd.classList.add('hidden'), 300);
+            }
+        }
+
+        function s1_exportMemory() {
+            const d = new Date(); const str = `${d.getFullYear()}${(d.getMonth() + 1).toString().padStart(2, '0')}${d.getDate().toString().padStart(2, '0')}`;
+            document.getElementById('s1_exportFileName').value = "Memoria_BCMO_" + str;
+            document.getElementById('s1_exportModal').classList.remove('hidden');
+        }
+
+        function s1_closeExportModal() { document.getElementById('s1_exportModal').classList.add('hidden'); }
+
+        function s1_confirmExport() {
+            let fn = document.getElementById('s1_exportFileName').value.trim() || "Memoria_BCMO";
+            const data = {
+                version: "1.0",
+                excludedTasks: document.getElementById('s1_excludedTasks').value,
+                excludedMaterials: document.getElementById('s1_excludedMaterials').value,
+                umbralVerificacion: document.getElementById('s1_umbralVerificacion').value,
+                manualOverrides: s1_manualOverrides
+            };
+            const dStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
+            const a = document.createElement('a'); a.setAttribute("href", dStr); a.setAttribute("download", fn.endsWith(".json") ? fn : fn + ".json");
+            document.body.appendChild(a); a.click(); a.remove();
+            s1_closeExportModal(); showToastGlobal("Memoria exportada correctamente", "success");
+        }
+
+        function s1_importMemory(event) {
+            const f = event.target.files[0]; if (!f) return;
+            const r = new FileReader();
+            r.onload = function (e) {
+                try {
+                    const mem = JSON.parse(e.target.result);
+                    if (mem.excludedTasks !== undefined) document.getElementById('s1_excludedTasks').value = mem.excludedTasks;
+                    if (mem.excludedMaterials !== undefined) document.getElementById('s1_excludedMaterials').value = mem.excludedMaterials;
+                    if (mem.umbralVerificacion !== undefined) document.getElementById('s1_umbralVerificacion').value = mem.umbralVerificacion;
+                    if (mem.manualOverrides !== undefined) s1_manualOverrides = mem.manualOverrides;
+                    showToastGlobal("Memoria BCMO cargada.", "success");
+                    localStorage.setItem('excludedTasks', document.getElementById('s1_excludedTasks').value);
+                    localStorage.setItem('excludedMaterials', document.getElementById('s1_excludedMaterials').value);
+                    localStorage.setItem('umbralVerificacion', document.getElementById('s1_umbralVerificacion').value);
+                    if (s1_currentRawData && s1_currentRawData.length > 0) { s1_analyzeData(s1_currentRawData); }
+                } catch (err) { showToastGlobal("Error al leer JSON de memoria BCMO.", "error"); }
+                event.target.value = "";
+            };
+            r.readAsText(f);
+        }
+
+        function s1_switchTabEtapa1(tab) {
+            const elDash = document.getElementById('s1_tabDashboard'); const elVerif = document.getElementById('s1_tabVerification'); const elInvalid = document.getElementById('s1_tabInvalid');
+            const btnDash = document.getElementById('s1_btnTabDashboard'); const btnVerif = document.getElementById('s1_btnTabVerification'); const btnInvalid = document.getElementById('s1_btnTabInvalid');
+            
+            // Bloquear acceso a Verificar si no hay PM cargado
+            if (tab === 'verification' && (!s1_dataMateriales || s1_dataMateriales.length === 0)) {
+                showToastGlobal("El PMOVXF es obligatorio para acceder a \"Obras a Verificar\". Cárguelo antes de analizar.", "error");
+                return;
+            }
+
+            elDash.classList.add('hidden'); elVerif.classList.add('hidden'); elInvalid.classList.add('hidden');
+            btnDash.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive";
+            btnVerif.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive relative";
+            if (btnInvalid) btnInvalid.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-rose-600 font-bold";
+
+            if (tab === 'dashboard') {
+                elDash.classList.remove('hidden');
+                btnDash.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active";
+            } else if (tab === 'verification') {
+                elVerif.classList.remove('hidden');
+                btnVerif.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active relative";
+            } else if (tab === 'invalid') {
+                if (elInvalid) elInvalid.classList.remove('hidden');
+                if (btnInvalid) btnInvalid.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-rose-700 font-bold border-b-2 border-rose-600";
+            }
+        }
+
+        function s1_applyLocalConfig() {
+            localStorage.setItem('excludedTasks', document.getElementById('s1_excludedTasks').value);
+            localStorage.setItem('excludedMaterials', document.getElementById('s1_excludedMaterials').value);
+            localStorage.setItem('umbralVerificacion', document.getElementById('s1_umbralVerificacion').value);
+            if (s1_currentRawData && s1_currentRawData.length > 0) {
+                s1_toggleConfigPanel();
+                document.getElementById('s1_resultsWorkspace').classList.add('hidden');
+                document.getElementById('s1_loader').classList.remove('hidden');
+                setTimeout(() => s1_analyzeData(s1_currentRawData), 200);
+                showToastGlobal("Configuración BCMO aplicada.", "success");
+            } else {
+                s1_toggleConfigPanel(); showToastGlobal("Configuración BCMO guardada.", "success");
+            }
+        }
+
+        function s1_setupDragAndDrop() {
+            const dz = document.getElementById('s1_dropZone'); const fi = document.getElementById('s1_fileInput');
+            dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+            dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+            dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('dragover'); if (e.dataTransfer.files.length) s1_handleFiles(e.dataTransfer.files); });
+            fi.addEventListener('change', (e) => { if (e.target.files.length) s1_handleFiles(e.target.files); });
+        }
+
+        function s1_handleFiles(files) {
+            Array.from(files).forEach(file => {
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (ext === 'csv' || ext === 'txt') {
+                    const textReader = new FileReader();
+                    textReader.onload = (e) => {
+                        try {
+                            const text = e.target.result; let delim = ',';
+                            const firstLine = text.split('\n')[0]; if (firstLine.includes('\t')) delim = '\t'; else if (firstLine.includes(';')) delim = ';';
+                            const lines = text.split('\n'); const headers = lines[0].split(delim).map(h => h.trim());
+                            const json = [];
+                            for (let i = 1; i < lines.length; i++) {
+                                if (!lines[i].trim()) continue;
+                                const values = lines[i].split(delim); const row = {};
+                                for (let j = 0; j < headers.length; j++) row[headers[j]] = values[j] ? values[j].trim() : "";
+                                json.push(row);
+                            }
+                            s1_clasificarArchivo(json, headers, file.name);
+                        } catch (error) { showToastGlobal("Error al procesar CSV en Etapa 1.", "error"); }
+                    };
+                    textReader.readAsText(file, 'ISO-8859-1');
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
+                            s1_clasificarArchivo(json, Object.keys(json[0] || {}), file.name);
+                        } catch (error) { showToastGlobal("Error al leer Excel en Etapa 1.", "error"); }
+                    };
+                    reader.readAsArrayBuffer(file);
+                }
+            });
+        }
+
+        function s1_clasificarArchivo(data, headers, filename) {
+            if (data.length === 0) return;
+            const hStr = headers.join(' ').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const dateStr = new Date().toLocaleString('es-AR');
+
+            if (hStr.includes('MOTIVO') && hStr.includes('FECHA_TRX')) {
+                // Es el PMOVXF
+                s1_dataMateriales = normalizarDataset(data);
+                s1_fileUploadDates.pmovxf = dateStr;
+                s1_actualizarEstadoUI('s1_statusMateriales', true, dateStr);
+                showToastGlobal("PMOVXF cargado exitosamente en Etapa 1.", "success");
+            } else if (hStr.includes('ESTADO DE LIQUIDACION') || (hStr.includes('ENTREGADO') && hStr.includes('CONSUMIDO') && hStr.includes('TAREA'))) {
+                // Es el BCMO - solo almacenar y habilitar botón, NO procesar aun
+                s1_currentRawData = data;
+                s1_fileUploadDates.bcmo = dateStr;
+                s1_actualizarEstadoUI('s1_statusBCMO', true, dateStr);
+                // Habilitar botón Analizar BCMO
+                const btn = document.getElementById('s1_btnAnalizar');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-sm border border-blue-800 shadow-md animate-pulse';
+                }
+                showToastGlobal("BCMO listo. Puede cargar el PMOVXF antes de analizar.", "success");
+            } else {
+                showToastGlobal(`El archivo ${filename} no es válido para la Etapa 1 (Se requiere BCMO o PMOVXF).`, "error");
+            }
+        }
+
+        function s1_lanzarAnalisisBCMO() {
+            if (!s1_currentRawData || s1_currentRawData.length === 0) {
+                showToastGlobal("Cargue primero el archivo BCMO.", "error"); return;
+            }
+            document.getElementById('s1_uploadWrapper').classList.add('hidden');
+            document.getElementById('s1_loader').classList.remove('hidden');
+            document.getElementById('s1_resultsWorkspace').classList.add('hidden');
+            setTimeout(() => s1_analyzeData(s1_currentRawData), 200);
+        }
+
+        function s1_actualizarEstadoUI(id, success, date) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (success) {
+                el.classList.remove('border-slate-100', 'bg-slate-50');
+                el.classList.add('border-emerald-200', 'bg-emerald-50');
+                const i = el.querySelector('i');
+                i.className = 'fa-solid fa-check-circle text-emerald-500 mr-2 text-lg align-middle';
+                el.querySelector('.file-date').textContent = date;
+            }
+        }
+
+        function s1_resetUI() {
+            s1_currentRawData = [];
+            s1_dataMateriales = null;
+            s1_fileUploadDates = { bcmo: null, pmovxf: null };
+            document.getElementById('s1_uploadWrapper').classList.remove('hidden');
+            document.getElementById('s1_loader').classList.add('hidden');
+            document.getElementById('s1_resultsWorkspace').classList.add('hidden');
+            document.getElementById('s1_filtersPanel').classList.add('opacity-50', 'pointer-events-none');
+            document.getElementById('s1_fileInput').value = ""; document.getElementById('s1_searchObraDashboard').value = ""; document.getElementById('s1_searchObraVerif').value = "";
+            if (document.getElementById('s1_massiveTotal')) document.getElementById('s1_massiveTotal').value = "";
+            if (document.getElementById('s1_massiveParcial')) document.getElementById('s1_massiveParcial').value = "";
+            // Restablecer botón Analizar
+            const btn = document.getElementById('s1_btnAnalizar');
+            if (btn) {
+                btn.disabled = true;
+                btn.className = 'w-full bg-slate-200 text-slate-400 font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-slate-300';
+            }
+            
+            ['s1_statusBCMO', 's1_statusMateriales'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.classList.add('border-slate-100', 'bg-slate-50');
+                    el.classList.remove('border-emerald-200', 'bg-emerald-50');
+                    el.querySelector('i').className = 'fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle';
+                    el.querySelector('.file-date').textContent = id === 's1_statusBCMO' ? 'Requerido' : 'Opcional';
+                }
+            });
+        }
+
+        function s1_formatLocalNumber(num) { return num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+
+        function s1_analyzeData(data) {
+            const tasksToExclude = document.getElementById('s1_excludedTasks').value.split('\n').map(t => t.trim().toUpperCase()).filter(t => t);
+            const materialsToExclude = document.getElementById('s1_excludedMaterials').value.split('\n').map(m => m.trim().toLowerCase()).filter(m => m);
+            const invalidNomenclatures = document.getElementById('s1_invalidNomenclaturesInput').value.split('\n').map(n => n.trim().toUpperCase()).filter(n => n);
+
+            const groupedRaw = {};
+            const invalidGroupedRaw = {};
+            const contratistasSet = new Set();
+
+            // PRIMERA PASADA: Agrupar todo sin omitir por lógica matemática (solo exclusión base .4001 y tareas nulas)
+            data.forEach(row => {
+                const nR = {};
+                for (let key in row) {
+                    if (!key) continue;
+                    const cK = key.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    nR[cK] = row[key]; nR[cK.replace(/\s+/g, '_')] = row[key];
+                }
+
+                // REGLA 1.A: EXCLUSIÓN DE LOCALIZADORES .4001
+                const locCod = String(nR['LOCALIZADOR_COD'] || nR['LOCALIZADOR COD'] || '');
+                if (locCod.includes('.4001')) return;
+
+                const contratista = nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || nR['NOMBRE_PROV'] || 'Sin Contratista';
+                const tarea = String(nR['TAREA'] || '').trim();
+                const obra = String(nR['MOTIVO_DE_OBRA'] || nR['MOTIVO DE OBRA'] || nR['MOTIVO'] || 'Sin Obra').trim();
+                
+                if (invalidNomenclatures.includes(obra.toUpperCase())) {
+                    const gK = `${contratista}|${obra}`;
+                    if (!invalidGroupedRaw[gK]) {
+                        invalidGroupedRaw[gK] = { Contratista: contratista, Obra: obra, Entregado: 0, Consumido: 0, Detalles: [] };
+                    }
+                    invalidGroupedRaw[gK].Entregado += parseDecimalGlobal(nR['ENTREGADO']);
+                    invalidGroupedRaw[gK].Consumido += parseDecimalGlobal(nR['CONSUMIDO']);
+                    
+                    invalidGroupedRaw[gK].Detalles.push({
+                        "Ítem": nR['ITEM'] || nR['CODIGO'] || '',
+                        "Descripción": String(nR['DESCRIPCION'] || '').trim(),
+                        "UM": nR['UM'] || '',
+                        "Entregado": parseDecimalGlobal(nR['ENTREGADO']),
+                        "Consumido": parseDecimalGlobal(nR['CONSUMIDO']),
+                        "Diferencia": parseDecimalGlobal(nR['DIFERENCIA']),
+                        "Excluido": false,
+                        "Ignorado": false,
+                        "FallbackRescatado": false
+                    });
+                    return;
+                }
+                const desc = String(nR['DESCRIPCION'] || '');
+                const descLower = desc.toLowerCase();
+                const ent = parseDecimalGlobal(nR['ENTREGADO']);
+                const con = parseDecimalGlobal(nR['CONSUMIDO']);
+                const dif = parseDecimalGlobal(nR['DIFERENCIA']);
+
+                if (!obra && !tarea) return;
+                if (tasksToExclude.includes(tarea.toUpperCase())) return;
+
+                let isExcludedMat = false;
+                for (let mat of materialsToExclude) { if (descLower.includes(mat)) { isExcludedMat = true; break; } }
+
+                const gK = `${contratista}|${obra}`;
+                if (!groupedRaw[gK]) {
+                    groupedRaw[gK] = { Contratista: contratista, Obra: obra, items: [] };
+                    contratistasSet.add(contratista);
+                }
+
+                groupedRaw[gK].items.push({
+                    "Ítem": nR['ITEM'] || nR['CODIGO'] || '',
+                    "Descripción": desc.trim(),
+                    "UM": nR['UM'] || '',
+                    "Entregado": ent,
+                    "Consumido": con,
+                    "Diferencia": dif,
+                    "Excluido": isExcludedMat
+                });
+            });
+
+            // SEGUNDA PASADA: Aplicación estricta de la regla matemática
+            const grouped = {};
+            for (const gK in groupedRaw) {
+                const group = groupedRaw[gK];
+                const totalItems = group.items.length;
+                const excludedItemsCount = group.items.filter(i => i.Excluido).length;
+
+                // Si la cantidad de ítems excluidos es IGUAL a la cantidad total de la obra, entonces SOLO tiene excluidos.
+                const onlyExcluded = (totalItems > 0 && excludedItemsCount === totalItems);
+
+                let finalEntregado = 0;
+                let finalConsumido = 0;
+                let finalDiferencia = 0;
+                const finalDetalles = [];
+
+                group.items.forEach(item => {
+                    let ignorarCalculo = false;
+
+                    // REGLA MATEMÁTICA: Si es un escenario MIXTO, los artículos excluidos se ignoran en la suma.
+                    if (!onlyExcluded && item.Excluido) {
+                        ignorarCalculo = true;
+                    }
+
+                    if (!ignorarCalculo) {
+                        finalEntregado += item.Entregado;
+                        finalConsumido += item.Consumido;
+                        finalDiferencia += item.Diferencia;
+                    }
+
+                    finalDetalles.push({ ...item, Ignorado: ignorarCalculo });
+                });
+
+                // REGLA DE FALLBACK: En escenario MIXTO, si los artículos activos tienen
+                // entrega=0 Y consumo=0 (no aportan datos reales), recalcular incluyendo
+                // los artículos excluidos para obtener un estado de liquidación verídico.
+                const hayItemsIgnorados = finalDetalles.some(i => i.Ignorado);
+                const activosEnCero = (finalEntregado === 0 && finalConsumido === 0);
+                let fallbackExcluidos = false;
+
+                if (!onlyExcluded && activosEnCero && hayItemsIgnorados) {
+                    // Recalcular sumando TODOS los ítems (activos + excluidos)
+                    finalEntregado = 0; finalConsumido = 0; finalDiferencia = 0;
+                    group.items.forEach(item => {
+                        finalEntregado += item.Entregado;
+                        finalConsumido += item.Consumido;
+                        finalDiferencia += item.Diferencia;
+                    });
+                    // Re-marcar todos los detalles: los antes-ignorados ya no se ignoran
+                    finalDetalles.forEach(d => { if (d.Ignorado) { d.Ignorado = false; d.FallbackRescatado = true; } });
+                    fallbackExcluidos = true;
+                }
+
+                grouped[gK] = {
+                    Contratista: group.Contratista,
+                    Obra: group.Obra,
+                    Entregado: finalEntregado,
+                    Consumido: finalConsumido,
+                    Diferencia: finalDiferencia,
+                    Detalles: finalDetalles,
+                    onlyExcluded: onlyExcluded,
+                    fallbackExcluidos: fallbackExcluidos
+                };
+            }
+
+            s1_processedData = Object.values(grouped).map(item => {
+                item.Entregado = Math.round(item.Entregado * 100) / 100;
+                item.Consumido = Math.round(item.Consumido * 100) / 100;
+                item.Diferencia = Math.round(item.Diferencia * 100) / 100;
+
+                let p = 0;
+                if (item.Entregado > 0) {
+                    p = item.Consumido / item.Entregado;
+                } else if (item.Consumido > 0) {
+                    // Sin entrega registrada pero con consumo: se considera 100% consumido
+                    p = 1;
+                }
+
+                item.OriginalPorcentajeReal = p;
+                item.PorcentajeReal = p;
+                item['% Consumo'] = (p * 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+
+                return item;
+            });
+
+            s1_populateContratistasDropdown(Array.from(contratistasSet).sort());
+            
+            s1_invalidData = Object.values(invalidGroupedRaw);
+            setTabBadge('s1_invalidCountBadge', s1_invalidData.length);
+            s1_renderInvalidTable();
+
+            document.getElementById('s1_filtersPanel').classList.remove('opacity-50', 'pointer-events-none');
+            document.getElementById('s1_loader').classList.add('hidden');
+            document.getElementById('s1_resultsWorkspace').classList.remove('hidden');
+            document.getElementById('s1_resultsWorkspace').classList.add('flex');
+            s1_recalculateStates();
+        }
+
+        function s1_renderInvalidTable() {
+            const tbody = document.getElementById('s1_invalidTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            s1_invalidData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100 hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-3 text-sm text-slate-700">${item.Contratista}</td>
+                    <td class="p-3 text-sm font-bold text-rose-700">${item.Obra}</td>
+                    <td class="p-3 text-sm text-slate-700 text-right">${s1_formatLocalNumber(item.Entregado)}</td>
+                    <td class="p-3 text-sm text-slate-700 text-right">${s1_formatLocalNumber(item.Consumido)}</td>
+                    <td class="p-3 text-sm text-center">
+                        <button onclick="s1_showInvalidDetails('${item.Contratista}|${item.Obra}')" class="text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 p-2 rounded-lg" title="Ver detalle de materiales excluidos">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function s1_populateContratistasDropdown(contratistas) {
+            const s = document.getElementById('s1_filterContratista'); s.innerHTML = '<option value="ALL">Todos los contratistas</option>';
+            contratistas.forEach(c => s.appendChild(new Option(c, c)));
+        }
+
+        function s1_recalculateStates() {
+            let umb = parseFloat(document.getElementById('s1_umbralVerificacion').value); if (isNaN(umb)) umb = 50;
+            let umbDec = umb / 100;
+            s1_processedData.forEach(item => {
+                let ns = "";
+                if (item.Diferencia <= 0.01 && item.Consumido > 0) ns = "Consumido";
+                else if (item.Consumido <= 0.01) ns = "Sin Consumo";
+                else if (item.OriginalPorcentajeReal >= umbDec) ns = "Consumido";
+                else ns = "Verificar Consumo";
+                item.naturalState = ns;
+                const gK = `${item.Contratista}|${item.Obra}`;
+                item['Estado de liquidacion'] = s1_manualOverrides[gK] || ns;
+                if (item.Entregado < 0 && (item['Estado de liquidacion'] === 'Consumido' || item['Estado de liquidacion'] === 'Consumo Total')) {
+                    item.PorcentajeReal = 1.0; item['% Consumo'] = "100,00%";
+                } else {
+                    item.PorcentajeReal = item.OriginalPorcentajeReal;
+                    item['% Consumo'] = (item.OriginalPorcentajeReal * 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+                }
+            });
+            s1_renderTable(); s1_renderVerificationTable();
+        }
+
+        function s1_toggleMassivePanel() {
+            const c = document.getElementById('s1_massivePanelContent'); const i = document.getElementById('s1_massivePanelIcon');
+            if (c.classList.contains('hidden')) { c.classList.remove('hidden'); i.classList.add('rotate-180'); }
+            else { c.classList.add('hidden'); i.classList.remove('rotate-180'); }
+        }
+
+        function s1_applyMassiveOverrides() {
+            const tLines = document.getElementById('s1_massiveTotal').value.split('\n').map(l => l.trim().toUpperCase()).filter(l => l);
+            const pLines = document.getElementById('s1_massiveParcial').value.split('\n').map(l => l.trim().toUpperCase()).filter(l => l);
+            if (tLines.length === 0 && pLines.length === 0) { showToastGlobal("No hay obras ingresadas.", "error"); return; }
+            let count = 0;
+            s1_processedData.forEach(item => {
+                const oU = item.Obra.toUpperCase(); const gK = `${item.Contratista}|${item.Obra}`;
+                if (tLines.includes(oU)) { s1_manualOverrides[gK] = "Consumo Total"; count++; }
+                else if (pLines.includes(oU)) { s1_manualOverrides[gK] = "Consumo Parcial"; count++; }
+            });
+            showToastGlobal(`Asignadas ${count} obras.`, "success");
+            s1_recalculateStates();
+            document.getElementById('s1_massiveTotal').value = ''; document.getElementById('s1_massiveParcial').value = '';
+            s1_toggleMassivePanel();
+        }
+
+        function s1_handleManualDecision(selectElement) {
+            const gK = selectElement.getAttribute('data-key'); const d = selectElement.value;
+            if (d === "" || d === "Verificar Consumo") delete s1_manualOverrides[gK]; else s1_manualOverrides[gK] = d;
+            s1_recalculateStates();
+        }
+
+        // NUEVA FUNCIÓN PARA SINCRONIZAR FILTRO DEL DASHBOARD
+        function s1_syncFromDashboard() {
+            const val = document.getElementById('s1_dashboardFilterEstado').value;
+            document.getElementById('s1_filterEstado').value = val;
+            s1_renderTable();
+        }
+
+        function s1_syncFromPanel() {
+            const val = document.getElementById('s1_filterEstado').value;
+            document.getElementById('s1_dashboardFilterEstado').value = val;
+            s1_renderTable();
+        }
+
+        function s1_clearFilters() {
+            document.getElementById('s1_filterContratista').value = 'ALL';
+            document.getElementById('s1_filterEstado').value = 'ALL';
+            document.getElementById('s1_dashboardFilterEstado').value = 'ALL';
+            document.getElementById('s1_searchObraDashboard').value = '';
+            s1_renderTable();
+        }
+
+        function s1_renderTable() {
+            const fC = document.getElementById('s1_filterContratista').value;
+            const fE = document.getElementById('s1_filterEstado').value;
+            const fS = document.getElementById('s1_searchObraDashboard').value.trim().toLowerCase();
+
+            s1_filteredData = s1_processedData.filter(i => {
+                if (fC !== 'ALL' && i.Contratista !== fC) return false;
+                if (fE !== 'ALL' && i['Estado de liquidacion'] !== fE) return false;
+                if (fS !== '' && !i.Obra.toLowerCase().includes(fS)) return false;
+                return true;
+            });
+
+            document.getElementById('s1_statsText').innerHTML = `Mostrando <b>${s1_filteredData.length}</b> obras.`;
+            const sC = { 'Consumido': 0, 'Sin Consumo': 0, 'Verificar Consumo': 0, 'Consumo Total': 0, 'Consumo Parcial': 0 };
+            s1_filteredData.forEach(i => { if (sC[i['Estado de liquidacion']] !== undefined) sC[i['Estado de liquidacion']]++; });
+
+            document.getElementById('s1_dashboardStateSummary').innerHTML = `
+                <span class="px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-check-circle mr-1"></i>Consumido: <b>${sC['Consumido'] + sC['Consumo Total']}</b></span>
+                <span class="px-2 py-1 rounded-md bg-slate-100 text-slate-600 border border-slate-200"><i class="fa-solid fa-minus-circle mr-1"></i>Sin Consumo: <b>${sC['Sin Consumo']}</b></span>
+                <span class="px-2 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200"><i class="fa-solid fa-exclamation-triangle mr-1"></i>Verificar: <b>${sC['Verificar Consumo']}</b></span>
+                <span class="px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Parcial: <b>${sC['Consumo Parcial']}</b></span>
+            `;
+
+            const tbody = document.getElementById('s1_tableBody'); tbody.innerHTML = '';
+            s1_filteredData.forEach((item) => {
+                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50";
+                let bC = "bg-slate-100 text-slate-700", iC = "fa-circle-question", eS = item['Estado de liquidacion'];
+                if (eS === 'Consumido' || eS === 'Consumo Total') { bC = "bg-emerald-100 text-emerald-800 border-emerald-200"; iC = "fa-check-circle"; }
+                else if (eS === 'Verificar Consumo') { bC = "bg-amber-100 text-amber-800 border-amber-200"; iC = "fa-exclamation-triangle"; }
+                else if (eS === 'Sin Consumo') { bC = "bg-slate-100 text-slate-600 border-slate-200"; iC = "fa-minus-circle"; }
+                else if (eS === 'Consumo Parcial') { bC = "bg-blue-100 text-blue-800 border-blue-200"; iC = "fa-clock-rotate-left"; }
+                const isMan = s1_manualOverrides[`${item.Contratista}|${item.Obra}`];
+                const gK = `${item.Contratista}|${item.Obra}`;
+
+                const exclAlert = item.onlyExcluded
+                    ? `<i class="fa-solid fa-triangle-exclamation text-amber-500 ml-2" title="Alerta: La obra solo tiene entregas de artículos excluidos"></i>`
+                    : '';
+                // Badge de fallback: activos en cero, se usaron los excluidos para calcular
+                const fallbackAlert = item.fallbackExcluidos
+                    ? `<i class="fa-solid fa-recycle text-violet-500 ml-2" title="Fallback aplicado: artículos activos en cero, se recalculó con artículos excluidos"></i>`
+                    : '';
+
+                tr.innerHTML = `
+                    <td class="p-3 text-sm text-slate-700">${item.Contratista}</td><td class="p-3 text-sm font-medium text-blue-700 flex items-center">${item.Obra}${exclAlert}${fallbackAlert}</td>
+                    <td class="p-3 text-sm text-slate-600 text-right">${s1_formatLocalNumber(item.Entregado)}</td><td class="p-3 text-sm text-slate-600 text-right">${s1_formatLocalNumber(item.Consumido)}</td><td class="p-3 text-sm text-slate-600 text-right font-medium">${s1_formatLocalNumber(item.Diferencia)}</td>
+                    <td class="p-3 text-sm text-slate-600 text-center"><div class="w-full bg-slate-200 rounded-full h-2 mt-1 mb-1"><div class="bg-blue-600 h-2 rounded-full" style="width: ${Math.min(item.PorcentajeReal * 100, 100)}%"></div></div>${item['% Consumo']}</td>
+                    <td class="p-3 text-sm"><span class="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 border ${bC}"><i class="fa-solid ${iC}"></i> ${eS} ${isMan ? '<i class="fa-solid fa-brain text-[10px] ml-1 opacity-70"></i>' : ''}</span></td>
+                    <td class="p-3 text-sm text-center"><button onclick="s1_showDetails('${gK}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg"><i class="fa-solid fa-eye"></i></button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function s1_renderVerificationTable() {
+            const fS = document.getElementById('s1_searchObraVerif').value.trim().toLowerCase();
+            const tbody = document.getElementById('s1_verificationTableBody'); tbody.innerHTML = '';
+
+            let list = s1_processedData.filter(i => i.naturalState === 'Verificar Consumo');
+            if (fS !== '') list = list.filter(i => i.Obra.toLowerCase().includes(fS));
+
+            document.getElementById('s1_statsVerifText').innerHTML = `Mostrando <b>${list.length}</b> obras en revisión.`;
+
+            let cP = 0, cT = 0, cPar = 0;
+            list.forEach(i => { const o = s1_manualOverrides[`${i.Contratista}|${i.Obra}`] || ""; if (o === "Consumo Total") cT++; else if (o === "Consumo Parcial") cPar++; else cP++; });
+
+            document.getElementById('s1_verifStateSummary').innerHTML = `<span class="px-2 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Pendientes: <b>${cP}</b></span><span class="px-2 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fa-solid fa-check-circle mr-1"></i>Total: <b>${cT}</b></span><span class="px-2 py-1 rounded-md bg-blue-50 text-blue-700 border border-blue-200"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Parcial: <b>${cPar}</b></span>`;
+
+            const hasPM = s1_dataMateriales && s1_dataMateriales.length > 0;
+
+            list.forEach(i => {
+                const tr = document.createElement('tr'); tr.className = "hover:bg-slate-50";
+                const gK = `${i.Contratista}|${i.Obra}`; const cO = s1_manualOverrides[gK] || "";
+                let selClass = "w-full text-sm font-semibold p-2 border rounded-lg transition-colors ";
+                if (cO === "Consumo Total") selClass += "border-emerald-400 bg-emerald-50 text-emerald-800"; else if (cO === "Consumo Parcial") selClass += "border-blue-400 bg-blue-50 text-blue-800"; else selClass += "border-slate-300 bg-white text-slate-600";
+
+                const exclAlert = i.onlyExcluded
+                    ? `<i class="fa-solid fa-triangle-exclamation text-amber-500 ml-2" title="Alerta: La obra solo tiene entregas de artículos excluidos"></i>`
+                    : '';
+                const fallbackAlert = i.fallbackExcluidos
+                    ? `<i class="fa-solid fa-recycle text-violet-500 ml-2" title="Fallback: artículos activos en cero, recalculado con excluidos"></i>`
+                    : '';
+
+                const pmBtn = hasPM
+                    ? `<button onclick="s1_showPMDetails('${i.Contratista.replace(/'/g, "\\'").replace(/"/g, '&quot;')}', '${i.Obra.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')" class="text-teal-600 hover:text-teal-800 bg-teal-50 hover:bg-teal-100 p-2 rounded-lg" title="Ver movimientos PM (PMOVXF)"><i class="fa-solid fa-eye"></i></button>`
+                    : `<span class="text-slate-300 p-2" title="Cargue el PMOVXF para ver este detalle"><i class="fa-solid fa-eye-slash"></i></span>`;
+
+                tr.innerHTML = `
+                    <td class="p-3 text-sm text-slate-700">${i.Contratista}</td>
+                    <td class="p-3 text-sm font-medium text-blue-700 flex items-center">${i.Obra}${exclAlert}${fallbackAlert}</td>
+                    <td class="p-3 text-sm text-slate-600 text-center font-mono bg-slate-100 rounded">${i['% Consumo']}</td>
+                    <td class="p-3 text-sm"><select onchange="s1_handleManualDecision(this)" data-key="${gK}" class="${selClass}"><option value="" ${cO === "" ? "selected" : ""}>&#9888;&#65039; Verificar Consumo (Pendiente)</option><option value="Consumo Total" ${cO === "Consumo Total" ? "selected" : ""}>&#9989; Consumo Total</option><option value="Consumo Parcial" ${cO === "Consumo Parcial" ? "selected" : ""}>&#8987; Consumo Parcial</option></select></td>
+                    <td class="p-3 text-sm text-center"><button onclick="s1_showDetails('${gK}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg" title="Ver detalle de materiales BCMO"><i class="fa-solid fa-eye"></i></button></td>
+                    <td class="p-3 text-sm text-center">${pmBtn}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function s1_toggleInvalidConfigPanel() {
+            document.getElementById('s1_invalidConfigPanel').classList.toggle('hidden');
+        }
+
+        function s1_applyInvalidNomenclatures() {
+            localStorage.setItem('invalidNomenclatures', document.getElementById('s1_invalidNomenclaturesInput').value);
+            if (s1_currentRawData && s1_currentRawData.length > 0) {
+                document.getElementById('s1_resultsWorkspace').classList.add('hidden');
+                document.getElementById('s1_loader').classList.remove('hidden');
+                setTimeout(() => s1_analyzeData(s1_currentRawData), 200);
+                showToastGlobal("Reglas de exclusión aplicadas y datos recalculados.", "success");
+            } else {
+                showToastGlobal("Reglas guardadas exitosamente.", "success");
+            }
+        }
+
+        function s1_showInvalidDetails(gK) {
+            const dRow = s1_invalidData.find(i => `${i.Contratista}|${i.Obra}` === gK);
+            if (!dRow) return;
+
+            document.getElementById('s1_modalTitle').textContent = `Detalles: ${dRow.Obra}`;
+            document.getElementById('s1_modalSubtitle').textContent = `Contratista: ${dRow.Contratista} | Estado: Nomenclatura Inválida`;
+
+            const tbody = document.getElementById('s1_modalTableBody'); tbody.innerHTML = '';
+            dRow.Detalles.forEach(det => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors bg-rose-50/20";
+                tr.innerHTML = `
+                    <td class="p-2 px-4 text-xs text-slate-500 font-mono">${det['Ítem']}</td>
+                    <td class="p-2 px-4 text-xs text-slate-700 font-medium">${det['Descripción']}</td>
+                    <td class="p-2 px-4 text-xs text-slate-500 text-center">${det['UM']}</td>
+                    <td class="p-2 px-4 text-xs text-slate-600 text-right">${s1_formatLocalNumber(det['Entregado'])}</td>
+                    <td class="p-2 px-4 text-xs text-slate-600 text-right">${s1_formatLocalNumber(det['Consumido'])}</td>
+                    <td class="p-2 px-4 text-xs font-semibold text-slate-600 text-right">${s1_formatLocalNumber(det['Diferencia'])}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('s1_detailsModal').classList.remove('hidden');
+        }
+
+        function s1_showDetails(gK) {
+            const dRow = s1_processedData.find(i => `${i.Contratista}|${i.Obra}` === gK);
+            if (!dRow) return;
+
+            document.getElementById('s1_modalTitle').textContent = `Detalles: ${dRow.Obra}`;
+            document.getElementById('s1_modalSubtitle').textContent = `Contratista: ${dRow.Contratista} | Estado: ${dRow['Estado de liquidacion']}`;
+
+            const tbody = document.getElementById('s1_modalTableBody'); tbody.innerHTML = '';
+            dRow.Detalles.forEach(det => {
+                const tr = document.createElement('tr');
+                tr.className = det['Ignorado'] ? "bg-slate-50 transition-colors" : "hover:bg-slate-50 transition-colors";
+
+                let exclBadge = '';
+                if (det['FallbackRescatado']) {
+                    exclBadge = `<span class="bg-violet-100 text-violet-800 px-1.5 py-0.5 rounded text-[10px] font-bold ml-2 border border-violet-300" title="Artículo excluido rescatado por fallback: activos en cero">Fallback</span>`;
+                } else if (det['Ignorado']) {
+                    exclBadge = `<span class="bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded text-[10px] font-bold ml-2 border border-slate-300" title="Item ignorado para el porcentaje de avance">Ignorado</span>`;
+                } else if (det['Excluido']) {
+                    exclBadge = `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold ml-2 border border-amber-200" title="Único material excluido que fue rescatado">Rescatado</span>`;
+                }
+
+                const textClass = det['Ignorado'] ? "text-slate-400 line-through" : "text-slate-700 font-medium";
+                const numClass = det['Ignorado'] ? "text-slate-400" : "text-slate-600";
+
+                tr.innerHTML = `
+                    <td class="p-2 px-4 text-xs text-slate-500 font-mono ${det['Ignorado'] ? 'line-through' : ''}">${det['Ítem']}</td>
+                    <td class="p-2 px-4 text-xs ${textClass}">${det['Descripción']}${exclBadge}</td>
+                    <td class="p-2 px-4 text-xs text-slate-500 text-center">${det['UM']}</td>
+                    <td class="p-2 px-4 text-xs ${numClass} text-right">${s1_formatLocalNumber(det['Entregado'])}</td>
+                    <td class="p2 px-4 text-xs ${numClass} text-right">${s1_formatLocalNumber(det['Consumido'])}</td>
+                    <td class="p-2 px-4 text-xs font-semibold ${numClass} text-right">${s1_formatLocalNumber(det['Diferencia'])}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('s1_detailsModal').classList.remove('hidden');
+        }
+
+        function s1_closeModal() { document.getElementById('s1_detailsModal').classList.add('hidden'); }
+
+        function s1_showPMDetails(contratista, obra) {
+            if (!s1_dataMateriales || s1_dataMateriales.length === 0) {
+                showToastGlobal("No hay datos del PMOVXF cargados.", "error"); return;
+            }
+
+            // Buscar el registro de BCMO para obtener las diferencias de los artículos
+            const cleanCode = (code) => {
+                let str = String(code || '').trim().toUpperCase();
+                // Quitar ceros a la izquierda si es puramente numérico para evitar descalces entre formato texto/número
+                if (/^\d+$/.test(str)) {
+                    str = String(parseInt(str, 10));
+                }
+                return str;
+            };
+
+            // Comparación flexible de nombres de obras
+            const matchObra = (motivoRaw, obraRaw) => {
+                const cleanStr = (s) => String(s || '').trim().toUpperCase().replace(/[\s-_]/g, '');
+                const m = cleanStr(motivoRaw);
+                const o = cleanStr(obraRaw);
+                if (!m || !o) return false;
+                return m === o || m.includes(o) || o.includes(m);
+            };
+
+            const dRow = s1_processedData.find(item => item.Contratista === contratista && item.Obra === obra);
+            const articulosConDiferencia = {};
+            if (dRow && dRow.Detalles) {
+                dRow.Detalles.forEach(det => {
+                    const itemCod = cleanCode(det['Ítem']);
+                    const dif = parseFloat(det['Diferencia']) || 0;
+                    if (itemCod && dif > 0) {
+                        articulosConDiferencia[itemCod] = String(det['Descripción'] || '').trim();
+                    }
+                });
+            }
+
+            // Buscar movimientos de PM y filtrar para mostrar solo los que tienen diferencia > 0 en BCMO
+            const movimientos = s1_dataMateriales.filter(row => {
+                const motivo = String(row['_N_MOTIVO'] || row['MOTIVO'] || row['Motivo'] || '');
+                if (!matchObra(motivo, obra)) return false;
+
+                const articuloPM = cleanCode(row['_N_ARTICULO'] || row['ARTICULO'] || row['Articulo'] || row['Artículo'] || row['Item'] || row['Ítem'] || row['Código'] || row['Codigo']);
+                return articulosConDiferencia.hasOwnProperty(articuloPM);
+            });
+
+            document.getElementById('s1_pmModalTitle').textContent = `PM — ${obra}`;
+            document.getElementById('s1_pmModalSubtitle').textContent = `${movimientos.length} movimiento(s) filtrado(s) del PMOVXF con diferencia > 0`;
+
+            const tbody = document.getElementById('s1_pmModalTableBody');
+            tbody.innerHTML = '';
+            const emptyMsg = document.getElementById('s1_pmModalEmpty');
+
+            if (movimientos.length === 0) {
+                emptyMsg.classList.remove('hidden');
+            } else {
+                emptyMsg.classList.add('hidden');
+                movimientos.forEach(row => {
+                    // Mapear campos flexiblemente segun cabeceras del PMOVXF
+                    const motivo = row['_N_MOTIVO'] || row['MOTIVO'] || row['Motivo'] || '-';
+                    const articuloPMVal = row['_N_ARTICULO'] || row['ARTICULO'] || row['Articulo'] || row['Artículo'] || '-';
+                    const descBCMO = articulosConDiferencia[cleanCode(articuloPMVal)];
+                    const descFinal = descBCMO || row['_N_DESCRIPCION'] || row['_N_DESC_MATERIAL'] || row['DESCRIPCION'] || row['DESC_MATERIAL'] || row['Descripción'] || row['Descripcion'] || '-';
+                    const cantSol = row['_N_CANT_SOLICITADA'] || row['_N_CANTIDAD_SOLICITADA'] || row['CANT_SOLICITADA'] || row['CANTIDAD_SOLICITADA'] || row['Cantidad Solicitada'] || '';
+                    const cantEnt = row['_N_CANTIDAD_ENTREGADA'] || row['_N_CANT_ENTREGADA'] || row['CANTIDAD_ENTREGADA'] || row['CANT_ENTREGADA'] || row['Cantidad Entregada'] || row['_N_CANTIDAD'] || row['CANTIDAD'] || '';
+                    const fechaEnt = row['_N_FECHA_TRX'] || row['FECHA_TRX'] || row['Fecha_Trx'] || row['FECHA_ENTREGA'] || row['Fecha Entrega'] || '';
+
+                    let fechaStr = '';
+                    if (fechaEnt instanceof Date) {
+                        fechaStr = fechaEnt.toLocaleDateString('es-AR');
+                    } else if (fechaEnt) {
+                        fechaStr = String(fechaEnt);
+                    }
+
+                    const cantSolNum = parseFloat(String(cantSol).replace(',', '.')) || 0;
+                    const cantEntNum = parseFloat(String(cantEnt).replace(',', '.')) || 0;
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-teal-50 transition-colors';
+                    tr.innerHTML = `
+                        <td class="p-2 px-4 text-xs text-slate-700 font-medium">${motivo}</td>
+                        <td class="p-2 px-4 text-xs text-slate-700 font-mono font-semibold">${articuloPMVal}</td>
+                        <td class="p-2 px-4 text-xs text-slate-600">${descFinal}</td>
+                        <td class="p-2 px-4 text-xs text-slate-600 text-right font-mono">${cantSol !== '' ? s1_formatLocalNumber(cantSolNum) : '-'}</td>
+                        <td class="p-2 px-4 text-xs text-teal-700 text-right font-mono font-semibold">${cantEnt !== '' ? s1_formatLocalNumber(cantEntNum) : '-'}</td>
+                        <td class="p-2 px-4 text-xs text-slate-500">${fechaStr || '-'}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('s1_pmDetailsModal').classList.remove('hidden');
+        }
+
+        function s1_closePMModal() { document.getElementById('s1_pmDetailsModal').classList.add('hidden'); }
+
+        function s1_exportToExcel_Etapa1() {
+            if (s1_processedData.length === 0) { showToastGlobal("No hay datos para exportar.", "error"); return; }
+            const d1 = s1_filteredData.map(i => ({ "Contratista": i.Contratista, "Tarea / Obra": i.Obra, "Entregado": i.Entregado, "Consumido": i.Consumido, "Diferencia": i.Diferencia, "% Consumo": i.PorcentajeReal, "Estado de Liquidacion": i['Estado de liquidacion'] }));
+            const lVerif = s1_processedData.filter(i => i.naturalState === 'Verificar Consumo');
+            const d2 = lVerif.map(i => ({ "Contratista": i.Contratista, "Tarea / Obra": i.Obra, "% Consumo": i.PorcentajeReal, "Estado Automático": i.naturalState, "Obra Consumida (Decisión)": s1_manualOverrides[`${i.Contratista}|${i.Obra}`] || "Pendiente", "Estado Final de Liquidación": i['Estado de liquidacion'] }));
+            const d3 = []; s1_filteredData.forEach(i => { i.Detalles.forEach(d => { d3.push({ "Contratista": i.Contratista, "Tarea / Obra": i.Obra, "Estado de Liquidacion": i['Estado de liquidacion'], "Ítem": d['Ítem'], "Descripción": d['Descripción'], "UM": d['UM'], "Entregado": d['Entregado'], "Consumido": d['Consumido'], "Diferencia": d['Diferencia'] }); }); });
+
+            const ws1 = XLSX.utils.json_to_sheet(d1); const ws2 = XLSX.utils.json_to_sheet(d2); const ws3 = XLSX.utils.json_to_sheet(d3);
+            const fmt = (ws, isV = false) => {
+                const r = XLSX.utils.decode_range(ws['!ref']);
+                for (let R = r.s.r + 1; R <= r.e.r; ++R) {
+                    for (let C = r.s.c; C <= r.e.c; ++C) {
+                        const cRef = XLSX.utils.encode_cell({ c: C, r: R });
+                        if (ws[cRef] && typeof ws[cRef].v === 'number') { if ((!isV && C === 5) || (isV && C === 2)) ws[cRef].z = "0.00%"; else ws[cRef].z = "#,##0.00"; }
+                    }
+                }
+            };
+            fmt(ws1, false); fmt(ws2, true); fmt(ws3, false);
+
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws1, "Dinamica BCMO");
+            if (d2.length > 0) XLSX.utils.book_append_sheet(wb, ws2, "3 - VERIFICAR CONSUMO");
+            XLSX.utils.book_append_sheet(wb, ws3, "Detalle BCMO");
+            const d = new Date(); const dS = `${d.getFullYear()}${(d.getMonth() + 1).toString().padStart(2, '0')}${d.getDate().toString().padStart(2, '0')}`;
+            XLSX.writeFile(wb, `Analisis_BCMO_${dS}.xlsx`);
+        }
+
+        function openFaqModal() {
+            document.getElementById('faqModal').classList.remove('hidden');
+        }
+
+        function closeFaqModal() {
+            document.getElementById('faqModal').classList.add('hidden');
+        }
+
+    </script>
+
+    <!-- ============================================================ -->
+    <!-- CARGADOR DE COMPONENTES HTML DINAMICOS                        -->
+    <!-- ============================================================ -->
+    <script src="components/etapa1BCMO.js"></script>
+    <script src="components/etapa2Consolidacion.js"></script>
+    <script>
+        (function () {
+            'use strict';
+
+            // --------------------------------------------------------
+            // Helpers de inyección
+            // --------------------------------------------------------
+
+            /** Reemplaza un marcador por un conjunto de nodos del DOM */
+            function injectNodes(markerId, nodes) {
+                const el = document.getElementById(markerId);
+                if (!el) { console.warn('[Loader] Marcador no encontrado:', markerId); return; }
+                el.replaceWith(...nodes);
+            }
+
+            /** Parsea HTML en nodos DOM */
+            function parseHTML(html) {
+                const tpl = document.createElement('template');
+                tpl.innerHTML = html;
+                return Array.from(tpl.content.childNodes);
+            }
+
+            // -------------------------------------------------------------------
+            // Obtención del HTML del componente usando variables pre‑cargadas.
+            // Los archivos *.js generados exponen window.__COMP_...__ con el HTML
+            // como cadena. Esta estrategia funciona con el protocolo
+            // file:// sin necesidad de fetch().
+            // -------------------------------------------------------------------
+            function getComponentHTML(varName) {
+                const comp = window[varName];
+                if (typeof comp !== 'string') {
+                    console.error('[Loader] Variable de componente no encontrada:', varName);
+                    return '';
+                }
+                return comp;
+            }
+
+            // --------------------------------------------------------
+            // Carga y distribución de Etapa 1 (BCMO)
+            // El componente etapa1BCMO.html contiene:
+            //   - Parte A (tarjeta): hasta el div#s1_bcmoModule (exclusive)
+            //   - Parte B (módulo): el div#s1_bcmoModule y sus submodales
+            // --------------------------------------------------------
+            async function loadEtapa1() {
+                const html = getComponentHTML('__COMP_ETAPA1_BCMO__');
+
+                // Encontrar el índice donde comienza s1_bcmoModule
+                const splitMarker = '<!-- [SPLIT-MARKER] s1_bcmoModule begin -->';
+                const splitIdx = html.indexOf(splitMarker);
+
+                let cardHtml, moduleHtml;
+                if (splitIdx !== -1) {
+                    cardHtml   = html.substring(0, splitIdx).trim();
+                    moduleHtml = html.substring(splitIdx).trim();
+                } else {
+                    // fallback: inyectar todo como tarjeta
+                    cardHtml   = html;
+                    moduleHtml = '';
+                }
+
+                // Inyectar tarjeta dentro del setupSection
+                injectNodes('etapa1-card-container', parseHTML(cardHtml));
+
+                // Inyectar módulo BCMO como hermano de setupSection (dentro de main)
+                if (moduleHtml) {
+                    injectNodes('etapa1-bcmo-container', parseHTML(moduleHtml));
+                }
+            }
+
+            // --------------------------------------------------------
+            // Carga y distribución de Etapa 2 (Consolidación)
+            // El componente etapa2Consolidacion.html contiene:
+            //   - Parte A (tarjeta): hasta el comentario de resultsSection
+            //   - Parte B (resultados): el div#resultsSection + modales
+            // --------------------------------------------------------
+            async function loadEtapa2() {
+                const html = getComponentHTML('__COMP_ETAPA2_CONSOLIDACION__');
+
+                // Encontrar el índice donde comienza resultsSection
+                const splitMarker = '<!-- [SPLIT-MARKER] resultsSection begin -->';
+                const splitIdx = html.indexOf(splitMarker);
+
+                let cardHtml, resultsHtml;
+                if (splitIdx !== -1) {
+                    cardHtml    = html.substring(0, splitIdx).trim();
+                    resultsHtml = html.substring(splitIdx).trim();
+                } else {
+                    // fallback: inyectar todo como tarjeta
+                    cardHtml    = html;
+                    resultsHtml = '';
+                }
+
+                // Inyectar tarjeta dentro del setupSection
+                injectNodes('etapa2-card-container', parseHTML(cardHtml));
+
+                // Inyectar resultsSection + modales como hermanos de setupSection
+                if (resultsHtml) {
+                    injectNodes('etapa2-results-container', parseHTML(resultsHtml));
+                }
+            }
+
+            // --------------------------------------------------------
+            // Orquestador principal
+            // --------------------------------------------------------
+            async function initApp() {
+                try {
+                    await Promise.all([ loadEtapa1(), loadEtapa2() ]);
+                    console.log('[Loader] ✓ Todos los componentes cargados e inyectados.');
+                } catch (e) {
+                    console.error('[Loader] Error crítico al cargar componentes:', e);
+                }
+
+                // Restaurar addEventListener original
+                if (window._origAEL) {
+                    EventTarget.prototype.addEventListener = window._origAEL;
+                }
+
+                // Disparar los DOMContentLoaded que quedaron pendientes
+                if (window._pendingDCL) {
+                    const dcl = new Event('DOMContentLoaded');
+                    window._pendingDCL.forEach(function (item) {
+                        try { item.handler.call(document, dcl); }
+                        catch (err) { console.error('[Loader] Error en handler DOMContentLoaded:', err); }
+                    });
+                }
+            }
+
+            // Arrancar cuando el DOM esté listo
+            if (document.readyState === 'loading') {
+                if (window._origAEL) {
+                    window._origAEL.call(document, 'DOMContentLoaded', initApp);
+                } else {
+                    document.addEventListener('DOMContentLoaded', initApp);
+                }
+            } else {
+                initApp();
+            }
+        })();
+    </script>
+</body>
+
+</html>
