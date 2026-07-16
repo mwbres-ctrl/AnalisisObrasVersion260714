@@ -1024,24 +1024,12 @@
         // ============================================================
         // La lógica de HUÉRFANOS Y EDICIÓN DE ESTADO ha sido migrada a modules/orphans.js
 
-        function renderAuditTable() {
-            // Lógica migrada a modules/auditoria.js
-        }
-
-        function removeOverride(nodo) {
-            // Lógica migrada a modules/auditoria.js
-        }
-
-        // --- DETALLES ---
-        function showDetails(fIdx) {
-            // Lógica migrada a modules/auditoria.js
-        }
+        // NOTA: renderAuditTable(), removeOverride(), showDetails() y closeDetailsModal()
+        // viven exclusivamente en modules/auditoria.js. Antes había "stubs" vacíos acá
+        // que sobrescribían esas funciones reales por orden de carga de scripts — se
+        // eliminaron porque causaban que el Historial de Cambios Manuales no se pintara.
 
         // La lógica de la SOLAPA DETALLE DE OBRAS (PM) ha sido migrada a modules/detallePM.js
-
-        function closeDetailsModal() {
-            // Lógica migrada a modules/auditoria.js
-        }
 
         // --- EXPORTACIÓN EXCEL NATIVA ---
         // exportToExcel() fue extraída a modules/consolidacion.js
