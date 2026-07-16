@@ -474,6 +474,8 @@ function saveStateChange() {
 
     closeEditModal();
     showToast(`Cambios guardados exitosamente. Recalculando...`, "success");
+    // Guardar el historial en localStorage para que no se pierda con un F5 / recarga
+    persistStateOverrides();
     // Refresh audit table immediately (el Historial se actualiza al instante, sin esperar al cierre de la edición)
     renderAuditTable();
     // Recalculate consolidations after a short delay

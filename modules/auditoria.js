@@ -93,6 +93,8 @@ function removeOverride(nodo) {
                 log.revertedTimestamp = new Date().toLocaleString('es-AR');
             }
         });
+        persistStateOverrides();
+        renderAuditTable();
         showToast("Cambios revertidos. Recalculando sistema...", "info");
         setTimeout(() => procesarConsolidacion(), 300);
     }
