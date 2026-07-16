@@ -105,25 +105,13 @@ function renderBcmoSinCruceTable() {
     emptyState.classList.add('hidden');
 
     // Calcular posibles coincidencias (similitud de prefijo) para hint tipográfico
-    // REQUERIMIENTO: Solo sugerir nodos de Avance que:
-    //   1) Se liquiden por Modalidad "TAREA" (dato calculado desde el Avance de Obras), y
-    //   2) No tengan consumo registrado, definido como:
-    //        BCMO - % Consumo = 0  Y  TAREA - Resultado Final distinto de
-    //        "FINALIZADA CON CONSUMO TOTAL" / "FINALIZADA CON CONSUMO PARCIAL"
+    // REQUERIMIENTO: Solo sugerir nodos de Avance que tengan Estado de Entregas = "Sin registro de materiales a entregar"
     const nodosParaSugerencia = new Set();
     dataConsolidada.forEach(row => {
-        const modalidad = String(row['Modalidad de Liquidación Calculada'] || '').trim().toUpperCase();
-        if (modalidad !== 'TAREA') return; // Solo obras que se liquidan por TAREA
-
-        const pctConsumoBCMO = parseFloat(row['BCMO - % Consumo']) || 0;
-        const resultadoFinalTarea = String(row['TAREA - Resultado Final'] || '').trim().toUpperCase();
-        const tieneConsumoPorResultado = (resultadoFinalTarea === 'FINALIZADA CON CONSUMO TOTAL' || resultadoFinalTarea === 'FINALIZADA CON CONSUMO PARCIAL');
-
-        const sinConsumo = pctConsumoBCMO === 0 && !tieneConsumoPorResultado;
-        if (!sinConsumo) return;
-
-        const n = String(row['Nodo'] || row['Nodo Original'] || row['NODO'] || '').trim().toUpperCase();
-        if (n) nodosParaSugerencia.add(n);
+        if (row['Estado de Entregas'] === 'Sin registro de materiales a entregar') {
+            const n = String(row['Nodo'] || row['Nodo Original'] || row['NODO'] || '').trim().toUpperCase();
+            if (n) nodosParaSugerencia.add(n);
+        }
     });
     const nodosAvanceArray = Array.from(nodosParaSugerencia);
 
