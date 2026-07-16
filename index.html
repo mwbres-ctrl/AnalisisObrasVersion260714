@@ -205,6 +205,30 @@
         // Memoria de trazabilidad (JSON portable e Inmutable)
         let stateOverrides = {};
 
+        // --- Persistencia del Historial de Cambios Manuales ---
+        // Mismo patrón que ya usa Etapa 1 (excludedTasks, excludedMaterials, etc.):
+        // se guarda en localStorage para que sobreviva a un F5 o cierre de pestaña.
+        function persistStateOverrides() {
+            try {
+                localStorage.setItem('stateOverrides_v1', JSON.stringify(stateOverrides));
+            } catch (e) {
+                console.error('No se pudo guardar el Historial de Cambios Manuales:', e);
+            }
+        }
+
+        function loadStateOverrides() {
+            try {
+                const saved = localStorage.getItem('stateOverrides_v1');
+                if (saved) {
+                    stateOverrides = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.error('No se pudo recuperar el Historial de Cambios Manuales guardado:', e);
+                stateOverrides = {};
+            }
+        }
+        loadStateOverrides();
+
         // Reglas de Estandarización Dinámica (Punto 5)
         let standardizationRules = {
             'TERMINADO': 'TERMINADO',
