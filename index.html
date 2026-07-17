@@ -175,6 +175,7 @@
     <script src="modules/detallePM.js"></script>
     <script src="modules/bcmoSinCruce.js"></script>
     <script src="modules/caducidad.js"></script>
+    <script src="modules/analisisObras.js"></script>
     <script src="modules/orphans.js"></script>
     <script src="modules/auditoria.js"></script>
     <script src="modules/recategorizacion.js"></script>
@@ -423,7 +424,7 @@
         }
 
         function switchTab(tab) {
-            const diagTabs = ['audit', 'orphans', 'recat', 'detallepm', 'bcmosincruce', 'caducidad'];
+            const diagTabs = ['audit', 'orphans', 'recat', 'detallepm', 'bcmosincruce', 'caducidad', 'validacioncontratista'];
 
             document.getElementById('tabDataContent').classList.toggle('hidden', tab !== 'data');
             document.getElementById('tabAuditContent').classList.toggle('hidden', tab !== 'audit');
@@ -432,6 +433,7 @@
             document.getElementById('tabDetallePMContent').classList.toggle('hidden', tab !== 'detallepm');
             document.getElementById('tabBcmoSinCruceContent').classList.toggle('hidden', tab !== 'bcmosincruce');
             document.getElementById('tabCaducidadContent').classList.toggle('hidden', tab !== 'caducidad');
+            document.getElementById('tabValidacionContratistaContent').classList.toggle('hidden', tab !== 'validacioncontratista');
 
             document.getElementById('tabDataBtn').classList.toggle('active', tab === 'data');
             document.getElementById('tabDiagBtn').classList.toggle('active', diagTabs.includes(tab));
@@ -443,13 +445,15 @@
             document.getElementById('tabDetallePMBtn').classList.toggle('active', tab === 'detallepm');
             document.getElementById('tabBcmoSinCruceBtn').classList.toggle('active', tab === 'bcmosincruce');
             document.getElementById('tabCaducidadBtn').classList.toggle('active', tab === 'caducidad');
+            document.getElementById('tabValidacionContratistaBtn').classList.toggle('active', tab === 'validacioncontratista');
 
             s1_closeDiagMenu();
 
             const activeContentId = {
                 data: 'tabDataContent', audit: 'tabAuditContent', orphans: 'tabOrphansContent',
                 recat: 'tabRecatContent', detallepm: 'tabDetallePMContent',
-                bcmosincruce: 'tabBcmoSinCruceContent', caducidad: 'tabCaducidadContent'
+                bcmosincruce: 'tabBcmoSinCruceContent', caducidad: 'tabCaducidadContent',
+                validacioncontratista: 'tabValidacionContratistaContent'
             }[tab];
             if (activeContentId) {
                 const el = document.getElementById(activeContentId);
@@ -464,6 +468,7 @@
             if (tab === 'detallepm') initDetallePMTab();
             if (tab === 'bcmosincruce') renderBcmoSinCruceTable();
             if (tab === 'caducidad') renderCaducidadTable();
+            if (tab === 'validacioncontratista') renderValidacionContratistaTable();
         }
 
         // Menú desplegable "Diagnóstico": agrupa las 6 vistas secundarias
