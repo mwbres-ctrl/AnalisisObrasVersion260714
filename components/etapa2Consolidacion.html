@@ -147,13 +147,14 @@
                     <span class="flex items-center gap-2"><i class="fa-solid fa-hourglass-end w-4 text-slate-400"></i> Gestor de Caducidad</span>
                     <span id="tabCaducidadCount" class="tab-count-badge hidden"></span>
                 </button>
-                <button type="button" onclick="switchTab('validacioncontratista')" id="tabValidacionContratistaBtn"
-                    class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-envelope-circle-check w-4 text-slate-400"></i> Validación Contratista</span>
-                    <span id="tabValidacionContratistaCount" class="tab-count-badge hidden"></span>
-                </button>
             </div>
         </div>
+
+        <button type="button" onclick="switchTab('validacioncontratista')" id="tabValidacionContratistaBtn"
+            class="tab-btn px-5 py-2.5 text-sm text-slate-600 font-medium rounded-t-lg transition-colors focus:outline-none flex items-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-envelope-circle-check"></i> Listado de Obras
+            <span id="tabValidacionContratistaCount" class="tab-count-badge hidden"></span>
+        </button>
     </div>
 
     <!-- CONTENIDO PESTAÑA 1: DATOS -->
@@ -616,9 +617,9 @@
             </div>
 
             <!-- Tabla de Previsualización -->
-            <div class="flex-1 overflow-auto custom-scrollbar p-0">
-                <table class="w-full text-left text-sm whitespace-nowrap">
-                    <thead class="bg-slate-50 sticky top-0 border-b border-slate-200">
+            <div class="p-0" style="max-height: 500px; overflow-y: auto;">
+                <table class="w-full text-left text-sm whitespace-nowrap" style="border-collapse: collapse;">
+                    <thead class="bg-slate-50 border-b border-slate-200" style="position: sticky; top: 0; z-index: 1;">
                         <tr>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">#</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r bg-indigo-50 text-indigo-800">Nodo</th>
