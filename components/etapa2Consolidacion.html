@@ -147,6 +147,10 @@
                     <span class="flex items-center gap-2"><i class="fa-solid fa-hourglass-end w-4 text-slate-400"></i> Gestor de Caducidad</span>
                     <span id="tabCaducidadCount" class="tab-count-badge hidden"></span>
                 </button>
+                <button type="button" onclick="switchTab('detalletareas')" id="tabDetalleTareasBtn"
+                    class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-ticket-simple w-4 text-slate-400"></i> Detalle Tareas</span>
+                </button>
             </div>
         </div>
 
@@ -593,7 +597,7 @@
             </div>
 
             <!-- Panel de Configuración de Envío -->
-            <div class="p-4 border-b border-slate-200 bg-white grid grid-cols-1 md:grid-cols-5 gap-3">
+            <div class="p-4 border-b border-slate-200 bg-white grid grid-cols-1 md:grid-cols-7 gap-3 items-end">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Contratista</label>
                     <input type="text" id="vcContratista" readonly class="w-full p-2 border border-slate-200 rounded bg-slate-100 text-sm text-slate-700 font-semibold cursor-not-allowed" placeholder="Automático">
@@ -603,16 +607,28 @@
                     <input type="date" id="vcFechaInventario" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Fecha Balance de Obras (ORACLE)</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Fecha Balance (ORACLE)</label>
                     <input type="date" id="vcFechaBalanceObras" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Fecha Reporte de Avance (OPERACIONES)</label>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Fecha Avance (OPERACIONES)</label>
                     <input type="date" id="vcFechaAvanceOperaciones" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Cantidad de Obras</label>
                     <input type="number" id="vcCantidadObras" readonly class="w-full p-2 border border-slate-200 rounded bg-slate-100 text-sm text-slate-700 font-semibold cursor-not-allowed" placeholder="0">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1"><i class="fa-solid fa-magnifying-glass"></i> Filtrar por Nodo</label>
+                    <input type="text" id="vcFilterNodo" oninput="filterValidacionContratistaTable()" class="w-full p-2 border border-indigo-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-indigo-50/10 placeholder-indigo-300" placeholder="Buscar nodo...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1"><i class="fa-solid fa-filter"></i> Filtrar por Origen</label>
+                    <select id="vcFilterOrigen" onchange="filterValidacionContratistaTable()" class="w-full p-2 border border-indigo-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-indigo-50/10 font-semibold text-slate-700">
+                        <option value="AVANCE" selected>Solo Avance</option>
+                        <option value="BCMO">Solo BCMO</option>
+                        <option value="AMBOS">Ambos</option>
+                    </select>
                 </div>
             </div>
 
@@ -624,12 +640,14 @@
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">#</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r bg-indigo-50 text-indigo-800">Nodo</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Obra BF</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Contratista</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Modalidad</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado de Avance (Calculado)</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Fecha Inicio</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Fecha Cierre Técnico</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Modalidad de Liquidación</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">% Avance</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Entrega de materiales</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Origen</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-right">Entregado</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 text-right">% Consumo (BCMO)</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600">Estado de Avance (CONTRATISTA)</th>
                         </tr>
                     </thead>
                     <tbody id="validacionContratistaTableBody" class="divide-y divide-slate-100"></tbody>
@@ -651,6 +669,39 @@
             </div>
         </div>
     </div>
+
+    <!-- CONTENIDO PESTAÑA: DETALLE TAREAS -->
+    <div id="tabDetalleTareasContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
+        <div class="max-w-7xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <div class="p-4 border-b border-indigo-200 bg-indigo-50 flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-bold text-indigo-800"><i class="fa-solid fa-ticket-simple mr-2"></i>Detalle de Análisis de Tickets (Tareas)</h2>
+                    <p class="text-xs text-indigo-600 mt-1">Resultado del procesamiento del archivo CSV crudo de Tareas. Una fila por Obra BF.</p>
+                </div>
+                <button type="button" onclick="exportarDetalleTareas()"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded text-sm font-semibold shadow-sm transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-file-excel"></i> Descargar Reporte Tareas
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto custom-scrollbar">
+                <table class="w-full text-left text-sm border-collapse data-table whitespace-nowrap">
+                    <thead class="sticky top-0 z-20 shadow-md">
+                        <tr class="text-slate-600 border-b border-slate-300 bg-slate-50">
+                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-indigo-50 text-indigo-800">Obra BF</th>
+                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">Contratista</th>
+                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-teal-50 text-teal-800">Detalle Tkt (Con Consumo)</th>
+                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">Detalle Obra BF</th>
+                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-center">Tkt Material</th>
+                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-emerald-50 text-emerald-800 text-center">Cerrados</th>
+                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider bg-amber-50 text-amber-800 text-center">Resultado Final</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detalleTareasTableBody" class="text-slate-700 border-b border-slate-200"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- MODAL DE REGLAS DE ESTANDARIZACION -->
