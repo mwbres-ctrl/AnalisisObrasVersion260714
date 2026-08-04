@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analizador de Obras BF - Consolidado v9.3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .status-badge { padding: 0.3rem 0.8rem; border-radius: 9999px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; border-width: 1px; display: inline-block; }
+        .status-finalizado-total { background-color: #dcfce7; color: #166534; border-color: #bbf7d0; }
+        .status-finalizado-parcial { background-color: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+        .status-encurso-parcial { background-color: #ffedd5; color: #9a3412; border-color: #fed7aa; } 
+        .status-encurso { background-color: #fef9c3; color: #854d0e; border-color: #fef08a; }
+        .status-aejecutar { background-color: #fee2e2; color: #991b1b; border-color: #fecaca; }
+        
+        th { position: sticky; top: 0; background: #f9fafb; z-index: 10; border-bottom: 2px solid #e5e7eb; }
+        
+        .pill { 
+            display: inline-flex; 
+            align-items: center; 
+            background: #f8fafc; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 6px; 
+            padding: 2px 6px; 
+            margin: 2px; 
+            font-size: 10px; 
+            font-weight: 700;
+            color: #475569;
+        }
+        .pill-count {
+            background: #e2e8f0;
+            color: #1e293b;
+            border-radius: 4px;
+            padding: 0 4px;
+            margin-left: 4px;
+            font-size: 9px;
+        }
+
+        .modal-overlay { transition: opacity 0.2s ease-out; }
+        .modal-content { transition: transform 0.2s ease-out; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen font-sans text-slate-900">
+
+    <div class="max-w-[1600px] mx-auto px-6 py-8">
+        
+        <!-- Header -->
+        <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div>
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight italic">ANALIZADOR BF <span class="text-blue-600">v9.3</span></h1>
+                <p class="text-slate-500 text-sm italic font-medium">Dashboard de Consumo | <span class="text-blue-700 font-bold italic underline">Exportación con Columnas de Dashboard</span></p>
+            </div>
+            
+            <div class="flex gap-3">
+                <button onclick="toggleConfig()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all flex items-center gap-2">
+                    CONFIGURACIÓN
+                </button>
+                <button id="btnNewUpload" onclick="resetApp()" class="hidden bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-2.5 px-4 rounded-xl transition-all flex items-center gap-2">
+                    NUEVA CARGA
+                </button>
+                <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all shadow-md flex items-center gap-2">
+                    EXPORTAR FILTRADO
+                </button>
+            </div>
+        </div>
+
+        <!-- Panel de Configuración -->
+        <div id="configPanel" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <h4 class="text-xs font-black text-blue-600 uppercase mb-4 tracking-widest">Cierre de Materiales</h4>
+                <div class="space-y-3">
+                    <label class="block">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Palabra Clave para "CERRADO"</span>
+                        <input id="cfgCerrado" type="text" class="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" value="CERRADO">
+                    </label>
+                    <label class="block">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Nombre Columna Filtro</span>
+                        <input id="cfgColPermitir" type="text" class="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm" value="Permite Declarar Material">
+                    </label>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <h4 class="text-xs font-black text-red-600 uppercase mb-4 tracking-widest">Exclusiones Globales</h4>
+                <div class="space-y-3">
+                    <label class="block">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">Estados a ignorar</span>
+                        <textarea id="cfgExcluirEstados" class="w-full mt-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[10px] h-20">CANCELADA, ANULADA, DUPLICADA</textarea>
+                    </label>
+                </div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-end">
+                <button onclick="saveConfig()" class="w-full bg-blue-600 text-white text-[10px] font-black py-4 rounded-lg transition-colors uppercase shadow-sm hover:bg-blue-700">Recalcular con Nuevas Reglas</button>
+            </div>
+        </div>
+
+        <!-- Zona de Carga -->
+        <div id="uploadArea" class="mb-8">
+            <label id="dropZone" class="flex flex-col items-center justify-center w-full h-40 border-2 border-slate-300 border-dashed rounded-3xl cursor-pointer bg-white hover:bg-slate-50 transition-all">
+                <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                    <svg class="w-10 h-10 mb-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+                    <p class="mb-1 text-sm text-slate-600 font-bold">Cargar Excel de Obra BF</p>
+                    <p class="text-[10px] text-red-500 uppercase font-black italic tracking-widest italic underline">IMPORTANTE: El Dashboard solo muestra tickets con Consumo Autorizado</p>
+                </div>
+                <input id="fileInput" type="file" class="hidden" accept=".xlsx,.xls,.csv" />
+            </label>
+        </div>
+
+        <div id="mainContent" class="hidden">
+            <!-- Filtros -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase mb-2">ID Obra</h3>
+                    <input type="text" id="obraSearch" onkeyup="applyAllFilters()" placeholder="Ej: EZ054OC..." class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase mb-2">Estado del Análisis</h3>
+                    <select id="estadoFilter" onchange="applyAllFilters()" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        <option value="all">TODOS LOS RESULTADOS</option>
+                        <option value="FINALIZADA CON CONSUMO TOTAL">CONS. TOTAL</option>
+                        <option value="FINALIZADA CON CONSUMO PARCIAL">CONS. PARCIAL</option>
+                        <option value="EN CURSO CON CONSUMO PARCIAL">EN CURSO (PARCIAL)</option>
+                        <option value="EN CURSO">EN CURSO (SIN CIERRES)</option>
+                        <option value="A EJECUTAR">A EJECUTAR</option>
+                    </select>
+                </div>
+                
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase mb-2">Contratista / Empresa</h3>
+                    <select id="contratistaFilter" onchange="applyAllFilters()" class="w-full px-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                        <option value="all">TODAS LAS CONTRATISTAS</option>
+                    </select>
+                </div>
+
+                <div class="bg-white p-4 rounded-2xl border-2 border-indigo-100 shadow-sm">
+                    <h3 class="text-[10px] font-black text-indigo-600 uppercase mb-2">Resumen Consumo (Filtrado)</h3>
+                    <div id="statSummary" class="text-[10px] font-bold text-slate-700 leading-tight"></div>
+                </div>
+            </div>
+
+            <!-- Listado -->
+            <div class="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto max-h-[650px]">
+                    <table id="resultsTable" class="min-w-full">
+                        <thead class="bg-slate-50">
+                            <tr class="text-slate-500 text-[10px] font-black uppercase tracking-wider">
+                                <th class="px-6 py-5 text-left">Obra BF</th>
+                                <th class="px-6 py-5 text-left">Contratista</th>
+                                <th class="px-4 py-5 text-left">Detalle Tkt (Con Consumo)</th>
+                                <th class="px-4 py-5 text-left">Detalle Obra BF</th>
+                                <th class="px-4 py-5 text-center">Tkt Material</th>
+                                <th class="px-4 py-5 text-center">Cerrados</th>
+                                <th class="px-6 py-5 text-center">Resultado Final</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 text-[11px] cursor-pointer"></tbody>
+                    </table>
+                </div>
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
+                    <p id="rowCount" class="text-[10px] font-black text-slate-500 uppercase tracking-widest"></p>
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic">Haz clic en una obra para ver el detalle exclusivo de sus tickets con material</p>
+                    <button onclick="resetFilters()" class="text-[10px] font-bold text-blue-600 hover:underline uppercase">Limpiar filtros de búsqueda</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALLE -->
+    <div id="detailModal" class="fixed inset-0 z-50 hidden">
+        <div class="modal-overlay absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div class="modal-content absolute inset-x-4 top-10 bottom-10 md:inset-x-10 lg:inset-x-20 bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200">
+            <!-- Modal Header -->
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white shrink-0">
+                <div class="flex items-center gap-4">
+                    <div class="bg-blue-600 text-white p-3 rounded-2xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    </div>
+                    <div>
+                        <h2 id="modalTitle" class="text-xl font-black text-slate-800 tracking-tight">DETALLE DE CONSUMO</h2>
+                        <p id="modalSubtitle" class="text-slate-400 text-xs font-bold uppercase"></p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                    <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l18 18"></path></svg>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-50/50">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tickets Filtrados (Con Material)</span>
+                        <div id="modalSummaryStats" class="mt-4 space-y-2"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Estados Obra (Tickets Material)</span>
+                        <div id="modalObraStats" class="mt-4 space-y-2"></div>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                        <div>
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Resultado del Análisis</span>
+                            <div id="modalFinalStatus" class="mt-4"></div>
+                        </div>
+                        <div id="modalConsumoRatio" class="text-[10px] font-bold text-slate-500 mt-4"></div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-blue-50/30">
+                        <div>
+                            <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest">Listado de Tickets con Declaración de Material</h3>
+                            <p class="text-[9px] text-blue-600 font-bold uppercase italic">Solo registros donde "Permite Declarar Material" es "Si"</p>
+                        </div>
+                        <span id="modalRecordCount" class="text-[10px] font-bold bg-blue-600 text-white px-3 py-1 rounded-full"></span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-[10px]">
+                            <thead class="bg-slate-50 text-slate-400 font-black uppercase italic">
+                                <tr id="modalTableHeader"></tr>
+                            </thead>
+                            <tbody id="modalTableBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="p-4 border-t border-slate-100 bg-white shrink-0 flex justify-end">
+                <button onclick="closeModal()" class="px-6 py-2 bg-slate-800 text-white text-xs font-bold rounded-xl hover:bg-slate-900 transition-colors">CERRAR DETALLE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let rawData = [];
+        let consolidatedObras = [];
+        let lastFilteredObras = []; // Variable para guardar el estado actual del filtro
+        
+        let config = {
+            cerradoValue: "CERRADO",
+            columnaPermitir: "Permite Declarar Material",
+            valorPermitir: "Si",
+            excluirEstados: ["CANCELADA", "ANULADA", "DUPLICADA"]
+        };
+
+        const fileInput = document.getElementById('fileInput');
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                
+                rawData = json.map(row => {
+                    const cleanRow = {};
+                    Object.keys(row).forEach(key => {
+                        const cleanKey = key.trim();
+                        cleanRow[cleanKey] = row[key];
+                    });
+                    return cleanRow;
+                });
+                
+                document.getElementById('uploadArea').classList.add('hidden');
+                document.getElementById('mainContent').classList.remove('hidden');
+                document.getElementById('btnNewUpload').classList.remove('hidden');
+                analyzeConsolidated();
+                populateContratistaFilter();
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function populateContratistaFilter() {
+            const filter = document.getElementById('contratistaFilter');
+            const contratistas = [...new Set(consolidatedObras.map(item => item.contratista))]
+                .filter(c => c && c !== "S/D")
+                .sort();
+            
+            filter.innerHTML = '<option value="all">TODAS LAS CONTRATISTAS</option>';
+            
+            contratistas.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.innerText = c;
+                filter.appendChild(opt);
+            });
+        }
+
+        function toggleConfig() { document.getElementById('configPanel').classList.toggle('hidden'); }
+        
+        function resetApp() {
+            rawData = [];
+            consolidatedObras = [];
+            lastFilteredObras = [];
+            document.getElementById('fileInput').value = "";
+            document.getElementById('uploadArea').classList.remove('hidden');
+            document.getElementById('mainContent').classList.add('hidden');
+            document.getElementById('btnNewUpload').classList.add('hidden');
+            document.getElementById('tableBody').innerHTML = "";
+            resetFilters();
+        }
+
+        function saveConfig() {
+            config.cerradoValue = document.getElementById('cfgCerrado').value.trim().toUpperCase();
+            config.columnaPermitir = document.getElementById('cfgColPermitir').value.trim();
+            const excludeInput = document.getElementById('cfgExcluirEstados').value;
+            config.excluirEstados = excludeInput.split(',').map(s => s.trim().toUpperCase()).filter(s => s !== "");
+            analyzeConsolidated();
+            populateContratistaFilter();
+            document.getElementById('configPanel').classList.add('hidden');
+        }
+
+        function analyzeConsolidated() {
+            const obrasMap = {};
+            
+            rawData.forEach(r => {
+                const id = r["Obra BF"];
+                if(!id) return;
+
+                const valorFiltro = (r[config.columnaPermitir] || "").toString().trim().toUpperCase();
+                if (valorFiltro !== config.valorPermitir.toUpperCase()) return;
+
+                // CORRECCIÓN 1: Se agrega .trim() para limpiar espacios ocultos en el estado de la tarea
+                const tktEstado = (r["Estado Tarea"] || "").toString().trim().toUpperCase() || "(VACÍO)";
+                const obraEstado = (r["Estado Obra BF"] || "").toString().toUpperCase() || "(VACÍO)";
+                const declEstado = (r["Estado Declaración"] || "").toString().toUpperCase();
+                
+                const isExcluded = config.excluirEstados.some(bad => 
+                    tktEstado === bad || obraEstado === bad || declEstado.includes(bad)
+                );
+                
+                if (isExcluded) return;
+
+                if(!obrasMap[id]) {
+                    obrasMap[id] = {
+                        obra: id,
+                        contratista: (r["Contratista"] || "S/D").toString().trim(),
+                        tareas: [],
+                        totalTickets: 0,
+                        totalCerrados: 0,
+                        statsTarea: {},
+                        statsObra: {}
+                    };
+                }
+                
+                const cant = parseInt(r["Cuenta de Tarea"]) || 1;
+                const isCerrado = declEstado.includes(config.cerradoValue);
+                const isTktCompletado = tktEstado === "COMPLETADA";
+
+                obrasMap[id].tareas.push({ tktEstado, declEstado, isCerrado, isTktCompletado, cant });
+                obrasMap[id].totalTickets += cant;
+                if (isCerrado) {
+                    obrasMap[id].totalCerrados += cant;
+                }
+
+                obrasMap[id].statsTarea[tktEstado] = (obrasMap[id].statsTarea[tktEstado] || 0) + cant;
+                obrasMap[id].statsObra[obraEstado] = (obrasMap[id].statsObra[obraEstado] || 0) + cant;
+            });
+
+            consolidatedObras = Object.values(obrasMap).map(o => {
+                let resultado = "EN CURSO";
+                let statusClass = "status-encurso";
+
+                const todasTareasCompletadas = o.tareas.every(t => t.isTktCompletado);
+                const todasTareasCerradas = o.tareas.every(t => t.isCerrado);
+                const algunasTareasCerradas = o.tareas.some(t => t.isCerrado);
+                
+                // CORRECCIÓN 2: Se acepta que "AGENDADA" actúe igual que "ASIGNADA" para considerarla "A EJECUTAR"
+                const todoEnAsignada = o.tareas.every(t => t.tktEstado === "ASIGNADA" || t.tktEstado === "AGENDADA");
+
+                if (todoEnAsignada && !algunasTareasCerradas) {
+                    resultado = "A EJECUTAR";
+                    statusClass = "status-aejecutar";
+                } else if (todasTareasCompletadas && todasTareasCerradas) {
+                    resultado = "FINALIZADA CON CONSUMO TOTAL";
+                    statusClass = "status-finalizado-total";
+                } else if (todasTareasCompletadas && algunasTareasCerradas) {
+                    resultado = "FINALIZADA CON CONSUMO PARCIAL";
+                    statusClass = "status-finalizado-parcial";
+                } else if (algunasTareasCerradas) {
+                    resultado = "EN CURSO CON CONSUMO PARCIAL";
+                    statusClass = "status-encurso-parcial";
+                } else {
+                    resultado = "EN CURSO";
+                    statusClass = "status-encurso";
+                }
+
+                return { ...o, resultado, statusClass };
+            });
+
+            applyAllFilters();
+        }
+
+        function updateSummaryStats(filteredObras) {
+            const stats = filteredObras.reduce((acc, curr) => {
+                acc[curr.resultado] = (acc[curr.resultado] || 0) + 1;
+                return acc;
+            }, {});
+            
+            const total = filteredObras.length;
+            
+            let html = `<div class="flex justify-between py-1 mb-1 border-b-2 border-indigo-200 text-indigo-900"><span class="font-black">TOTAL OBRAS:</span> <span class="font-black">${total}</span></div>`;
+            
+            Object.entries(stats).forEach(([k, v]) => {
+                html += `<div class="flex justify-between py-0.5 border-b border-indigo-50 italic"><span>${k}:</span> <span class="font-black text-indigo-700">${v}</span></div>`;
+            });
+            
+            document.getElementById('statSummary').innerHTML = html || "Sin datos de consumo.";
+        }
+
+        function applyAllFilters() {
+            const obraQ = document.getElementById('obraSearch').value.toLowerCase();
+            const estadoF = document.getElementById('estadoFilter').value;
+            const contratistaF = document.getElementById('contratistaFilter').value;
+            
+            lastFilteredObras = consolidatedObras.filter(item => {
+                const matchObra = !obraQ || item.obra.toLowerCase().includes(obraQ);
+                const matchEstado = estadoF === 'all' || item.resultado === estadoF;
+                const matchContratista = contratistaF === 'all' || item.contratista === contratistaF;
+                return matchObra && matchEstado && matchContratista;
+            });
+
+            updateSummaryStats(lastFilteredObras);
+            renderTable(lastFilteredObras);
+        }
+
+        function renderTable(data) {
+            const body = document.getElementById('tableBody');
+            body.innerHTML = "";
+            document.getElementById('rowCount').innerText = `${data.length} OBRAS EN LISTADO`;
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-blue-50/50 transition-colors border-b border-slate-50";
+                tr.onclick = () => openModal(item.obra);
+
+                const pillsTarea = Object.entries(item.statsTarea).map(([name, count]) => 
+                    `<span class="pill">${name}<span class="pill-count">${count}</span></span>`).join('');
+                
+                const pillsObra = Object.entries(item.statsObra).map(([name, count]) => 
+                    `<span class="pill">${name}<span class="pill-count">${count}</span></span>`).join('');
+
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-bold text-slate-800 font-mono text-xs">${item.obra}</td>
+                    <td class="px-6 py-4 text-slate-500 uppercase font-bold text-[9px] leading-tight max-w-[150px] truncate">${item.contratista}</td>
+                    <td class="px-4 py-4 w-[280px]">${pillsTarea}</td>
+                    <td class="px-4 py-4 w-[280px]">${pillsObra}</td>
+                    <td class="px-4 py-4 text-center font-bold text-slate-400">${item.totalTickets}</td>
+                    <td class="px-4 py-4 text-center font-black text-blue-600">${item.totalCerrados}</td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="status-badge ${item.statusClass}">${item.resultado}</span>
+                    </td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('obraSearch').value = "";
+            document.getElementById('estadoFilter').value = "all";
+            document.getElementById('contratistaFilter').value = "all";
+            applyAllFilters();
+        }
+
+        function openModal(obraId) {
+            const obraData = consolidatedObras.find(o => o.obra === obraId);
+            const rawRecords = rawData.filter(r => {
+                const isObraMatch = r["Obra BF"] === obraId;
+                const valorFiltro = (r[config.columnaPermitir] || "").toString().trim().toUpperCase();
+                const isMaterialMatch = valorFiltro === config.valorPermitir.toUpperCase();
+                return isObraMatch && isMaterialMatch;
+            });
+
+            if (!obraData || rawRecords.length === 0) return;
+
+            document.getElementById('detailModal').classList.remove('hidden');
+            document.getElementById('modalTitle').innerText = `DESGLOSE DE OBRA: ${obraId}`;
+            document.getElementById('modalSubtitle').innerText = obraData.contratista;
+            document.getElementById('modalRecordCount').innerText = `${rawRecords.length} TICKETS CON CONSUMO`;
+
+            let statsHtml = "";
+            Object.entries(obraData.statsTarea).forEach(([k, v]) => {
+                statsHtml += `<div class="flex justify-between text-xs font-bold text-slate-600"><span>${k}</span><span class="bg-slate-100 px-2 rounded">${v}</span></div>`;
+            });
+            document.getElementById('modalSummaryStats').innerHTML = statsHtml;
+
+            let obraHtml = "";
+            Object.entries(obraData.statsObra).forEach(([k, v]) => {
+                obraHtml += `<div class="flex justify-between text-xs font-bold text-slate-600"><span>${k}</span><span class="bg-slate-100 px-2 rounded">${v}</span></div>`;
+            });
+            document.getElementById('modalObraStats').innerHTML = obraHtml;
+
+            document.getElementById('modalFinalStatus').innerHTML = `<span class="status-badge ${obraData.statusClass}">${obraData.resultado}</span>`;
+            document.getElementById('modalConsumoRatio').innerHTML = `Tickets con Material: ${obraData.totalCerrados} de ${obraData.totalTickets} cerrados (${Math.round((obraData.totalCerrados/obraData.totalTickets)*100)}%)`;
+
+            const headerRow = document.getElementById('modalTableHeader');
+            const bodyTable = document.getElementById('modalTableBody');
+            headerRow.innerHTML = "";
+            bodyTable.innerHTML = "";
+
+            const allKeys = Object.keys(rawRecords[0]);
+            allKeys.forEach(k => {
+                const th = document.createElement('th');
+                th.className = "px-4 py-3 text-left border-b border-slate-100";
+                th.innerText = k;
+                headerRow.appendChild(th);
+            });
+
+            rawRecords.forEach(rec => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50";
+                allKeys.forEach(k => {
+                    const td = document.createElement('td');
+                    td.className = "px-4 py-2 text-slate-600 font-medium whitespace-nowrap";
+                    td.innerText = rec[k] || "-";
+                    tr.appendChild(td);
+                });
+                bodyTable.appendChild(tr);
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        window.exportToExcel = () => {
+            // Usamos lastFilteredObras en lugar de consolidatedObras para respetar el filtro de pantalla
+            if (lastFilteredObras.length === 0) {
+                return;
+            }
+
+            const exportable = lastFilteredObras.map(i => ({
+                "Obra BF": i.obra,
+                "Contratista": i.contratista,
+                "Detalle Tkt (Con Consumo)": Object.entries(i.statsTarea).map(e => `${e[0]} (${e[1]})`).join(" | "),
+                "Detalle Obra BF": Object.entries(i.statsObra).map(e => `${e[0]} (${e[1]})`).join(" | "),
+                "Tkt Material": i.totalTickets,
+                "Cerrados": i.totalCerrados,
+                "Resultado Final": i.resultado
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(exportable);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Dashboard_Consumo");
+            
+            // Nombre dinámico según contratista seleccionada
+            const cFiltro = document.getElementById('contratistaFilter').value;
+            const suffix = cFiltro === 'all' ? 'Todas' : cFiltro.replace(/[^a-z0-9]/gi, '_');
+            
+            XLSX.writeFile(wb, `Analisis_BF_${suffix}.xlsx`);
+        };
+    </script>
+</body>
+</html>

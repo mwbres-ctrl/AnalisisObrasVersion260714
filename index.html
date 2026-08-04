@@ -172,6 +172,7 @@
     <!-- CONTENEDOR DE NOTIFICACIONES TOAST -->
     <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
+    <script src="modules/procesadorTarea.js"></script>
     <script src="modules/detallePM.js"></script>
     <script src="modules/bcmoSinCruce.js"></script>
     <script src="modules/caducidad.js"></script>
@@ -424,7 +425,7 @@
         }
 
         function switchTab(tab) {
-            const diagTabs = ['audit', 'orphans', 'recat', 'detallepm', 'bcmosincruce', 'caducidad', 'validacioncontratista'];
+            const diagTabs = ['audit', 'orphans', 'recat', 'detallepm', 'bcmosincruce', 'caducidad', 'validacioncontratista', 'detalletareas'];
 
             document.getElementById('tabDataContent').classList.toggle('hidden', tab !== 'data');
             document.getElementById('tabAuditContent').classList.toggle('hidden', tab !== 'audit');
@@ -434,6 +435,8 @@
             document.getElementById('tabBcmoSinCruceContent').classList.toggle('hidden', tab !== 'bcmosincruce');
             document.getElementById('tabCaducidadContent').classList.toggle('hidden', tab !== 'caducidad');
             document.getElementById('tabValidacionContratistaContent').classList.toggle('hidden', tab !== 'validacioncontratista');
+            const dtEl = document.getElementById('tabDetalleTareasContent');
+            if (dtEl) dtEl.classList.toggle('hidden', tab !== 'detalletareas');
 
             document.getElementById('tabDataBtn').classList.toggle('active', tab === 'data');
             document.getElementById('tabDiagBtn').classList.toggle('active', diagTabs.includes(tab));
@@ -446,6 +449,8 @@
             document.getElementById('tabBcmoSinCruceBtn').classList.toggle('active', tab === 'bcmosincruce');
             document.getElementById('tabCaducidadBtn').classList.toggle('active', tab === 'caducidad');
             document.getElementById('tabValidacionContratistaBtn').classList.toggle('active', tab === 'validacioncontratista');
+            const dtBtn = document.getElementById('tabDetalleTareasBtn');
+            if (dtBtn) dtBtn.classList.toggle('active', tab === 'detalletareas');
 
             s1_closeDiagMenu();
 
@@ -453,13 +458,16 @@
                 data: 'tabDataContent', audit: 'tabAuditContent', orphans: 'tabOrphansContent',
                 recat: 'tabRecatContent', detallepm: 'tabDetallePMContent',
                 bcmosincruce: 'tabBcmoSinCruceContent', caducidad: 'tabCaducidadContent',
-                validacioncontratista: 'tabValidacionContratistaContent'
+                validacioncontratista: 'tabValidacionContratistaContent',
+                detalletareas: 'tabDetalleTareasContent'
             }[tab];
             if (activeContentId) {
                 const el = document.getElementById(activeContentId);
-                el.classList.remove('tab-content-fade');
-                void el.offsetWidth;
-                el.classList.add('tab-content-fade');
+                if (el) {
+                    el.classList.remove('tab-content-fade');
+                    void el.offsetWidth;
+                    el.classList.add('tab-content-fade');
+                }
             }
 
             if (tab === 'audit') renderAuditTable();
@@ -469,6 +477,7 @@
             if (tab === 'bcmosincruce') renderBcmoSinCruceTable();
             if (tab === 'caducidad') renderCaducidadTable();
             if (tab === 'validacioncontratista') renderValidacionContratistaTable();
+            if (tab === 'detalletareas' && typeof renderDetalleTareasTable === 'function') renderDetalleTareasTable();
         }
 
         // Menú desplegable "Diagnóstico": agrupa las 6 vistas secundarias
@@ -846,28 +855,14 @@
             const dateStr = new Date().toLocaleString('es-AR');
 
             if (hStr.includes('MODALIDAD DE LIQUIDACION') || hStr.includes('ETAPA LOGICA')) {
-                tempAvanceData = normalizarDataset(data); 
-                tempAvanceHeaders = headers;
-                tempAvanceDateStr = dateStr;
-
-                const excludedText = document.getElementById('configExcludedContratistas') ? document.getElementById('configExcludedContratistas').value : "";
-                const excludedList = excludedText.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
-
-                const contratistas = [...new Set(tempAvanceData.map(r => r['_N_CONTRATISTA'] || r['CONTRATISTA'] || r['Contratista']).filter(c => c && String(c).trim() !== ''))]
-                    .filter(c => !excludedList.includes(String(c).trim().toUpperCase()))
-                    .sort();
-
-                const select = document.getElementById('selectContratistaAvance');
-                select.innerHTML = contratistas.map(c => `<option value="${c}">${c}</option>`).join('');
-
-                if (contratistas.length > 0) {
-                    document.getElementById('modalFiltroContratistaAvance').classList.remove('hidden');
-                } else {
-                    confirmarCargaAvanceFallback();
-                }
-                return; // Pausamos ejecución para Avance
+                showToast("El archivo de Avance de Obras ahora se procesa exclusivamente en la Etapa 1. Carga cancelada.", "error");
+                return;
             } else if (hStr.includes('ESTADO DE LIQUIDACION') || (hStr.includes('ENTREGADO') && hStr.includes('CONSUMIDO') && hStr.includes('TAREA'))) {
                 showToast("El archivo BCMO debe procesarse e inyectarse obligatoriamente desde el módulo de la Etapa 1 (Arriba).", "error");
+            } else if (hStr.includes('PERMITE DECLARAR MATERIAL') && hStr.includes('ESTADO TAREA')) {
+                dataTarea = procesarHistorialTareas(data);
+                fileUploadDates.tarea = dateStr;
+                actualizarEstadoUI('statusTarea', true, dateStr);
             } else if (hStr.includes('OBRA BF') || hStr.includes('DETALLE TKT')) {
                 dataTarea = normalizarDataset(data);
                 fileUploadDates.tarea = dateStr;
@@ -880,7 +875,7 @@
         }
 
         function confirmarCargaAvanceFallback() {
-            dataAvance = tempAvanceData; 
+            dataAvance = tempAvanceData;
             headersAvance = tempAvanceHeaders;
             aplicarEstandarizacionInPlace(dataAvance);
             fileUploadDates.avance = tempAvanceDateStr;
@@ -902,15 +897,15 @@
                 let c = String(r['_N_CONTRATISTA'] || r['CONTRATISTA'] || r['Contratista'] || "").trim();
                 return selectedOptions.includes(c);
             });
-            
+
             headersAvance = tempAvanceHeaders;
             aplicarEstandarizacionInPlace(dataAvance);
             fileUploadDates.avance = tempAvanceDateStr;
             actualizarEstadoUI('statusAvance', true, tempAvanceDateStr);
-            
+
             document.getElementById('modalFiltroContratistaAvance').classList.add('hidden');
             tempAvanceData = [];
-            
+
             checkReadyToConsolidate();
             if (typeof window.renderRecatTable === 'function') window.renderRecatTable();
             showToast("Avance de Obras cargado exitosamente.", "success");
@@ -960,12 +955,12 @@
             }
         }
 
+        // Requerimos al menos Avance (Principal o Corp) y (BCMO o TAREA)
         function checkReadyToConsolidate() {
             const btn = document.getElementById('btnConsolidar');
             const auditor = document.getElementById('auditorName').value.trim();
             const auditDate = document.getElementById('globalAuditDate').value;
 
-            // Requerimos al menos Avance (Principal o Corp) y (BCMO o TAREA)
             if ((dataAvance || dataAvanceCorporativo) && (dataBCMO || dataTarea)) {
                 if (auditor && auditDate) {
                     btn.disabled = false;
@@ -1090,7 +1085,8 @@
                 '_N_ESTADO_DE_LIQUIDACION': item['Estado de liquidacion'],
                 '_N_%_CONSUMO': item.PorcentajeReal,
                 '_N_CONTRATISTA': item.Contratista,
-                '_N_ENTREGADO': item.Entregado
+                '_N_ENTREGADO': item.Entregado,
+                '_N_LOCALIZADOR_COD': item.LocalizadorCod
             }));
 
             fileUploadDates.bcmo = "Inyectado de Módulo BCMO: " + new Date().toLocaleString('es-AR');
@@ -1100,6 +1096,25 @@
                 dataMateriales = s1_dataMateriales;
                 fileUploadDates.pmovxf = "Inyectado de Módulo Etapa 1: " + s1_fileUploadDates.pmovxf;
                 actualizarEstadoUI('statusMateriales', true, fileUploadDates.pmovxf);
+            }
+
+            // Transferir datos de Avance de Obras filtrados por la empresa seleccionada
+            if (s1_dataAvanceGeneral && s1_empresaAuditada) {
+                const headers = Object.keys(s1_dataAvanceGeneral[0]);
+                const campoEmpresa = window._s1_campoEmpresaAvance || headers.find(h => {
+                    const hu = h.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    return hu.includes('EMPRESA') || hu.includes('CONTRATISTA') || hu.includes('RAZON SOCIAL') || hu.includes('LOCALIZADOR_DESC') || hu.includes('LOCALIZADOR DESC');
+                }) || headers[0];
+
+                const filteredAvanceRaw = s1_dataAvanceGeneral.filter(r => {
+                    return String(r[campoEmpresa] || '').trim().toUpperCase() === s1_empresaAuditada.toUpperCase();
+                });
+
+                dataAvance = normalizarDataset(filteredAvanceRaw);
+                aplicarEstandarizacionInPlace(dataAvance);
+                headersAvance = headers;
+                fileUploadDates.avance = "Transferido de Etapa 1: " + new Date().toLocaleString('es-AR');
+                actualizarEstadoUI('statusAvance', true, fileUploadDates.avance);
             }
 
             checkReadyToConsolidate();
@@ -1128,6 +1143,10 @@
         let s1_invalidData = [];
         let s1_dataMateriales = null;
         let s1_fileUploadDates = { bcmo: null, pmovxf: null };
+        // --- Avance General / Obras Reasignadas ---
+        let s1_dataAvanceGeneral = null;
+        let s1_empresaAuditada = '';
+        let s1_obrasReasignadasData = [];
 
         document.addEventListener("DOMContentLoaded", () => {
             const sTasks = localStorage.getItem('excludedTasks');
@@ -1200,19 +1219,20 @@
         }
 
         function s1_switchTabEtapa1(tab) {
-            const elDash = document.getElementById('s1_tabDashboard'); const elVerif = document.getElementById('s1_tabVerification'); const elInvalid = document.getElementById('s1_tabInvalid');
-            const btnDash = document.getElementById('s1_btnTabDashboard'); const btnVerif = document.getElementById('s1_btnTabVerification'); const btnInvalid = document.getElementById('s1_btnTabInvalid');
-            
+            const elDash = document.getElementById('s1_tabDashboard'); const elVerif = document.getElementById('s1_tabVerification'); const elInvalid = document.getElementById('s1_tabInvalid'); const elReas = document.getElementById('s1_tabReasignadas');
+            const btnDash = document.getElementById('s1_btnTabDashboard'); const btnVerif = document.getElementById('s1_btnTabVerification'); const btnInvalid = document.getElementById('s1_btnTabInvalid'); const btnReas = document.getElementById('s1_btnTabReasignadas');
+
             // Bloquear acceso a Verificar si no hay PM cargado
             if (tab === 'verification' && (!s1_dataMateriales || s1_dataMateriales.length === 0)) {
                 showToastGlobal("El PMOVXF es obligatorio para acceder a \"Obras a Verificar\". Cárguelo antes de analizar.", "error");
                 return;
             }
 
-            elDash.classList.add('hidden'); elVerif.classList.add('hidden'); elInvalid.classList.add('hidden');
+            [elDash, elVerif, elInvalid, elReas].forEach(el => { if (el) el.classList.add('hidden'); });
             btnDash.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive";
             btnVerif.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive relative";
             if (btnInvalid) btnInvalid.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-rose-600 font-bold";
+            if (btnReas) btnReas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-orange-600 font-bold";
 
             if (tab === 'dashboard') {
                 elDash.classList.remove('hidden');
@@ -1223,6 +1243,9 @@
             } else if (tab === 'invalid') {
                 if (elInvalid) elInvalid.classList.remove('hidden');
                 if (btnInvalid) btnInvalid.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-rose-700 font-bold border-b-2 border-rose-600";
+            } else if (tab === 'reasignadas') {
+                if (elReas) elReas.classList.remove('hidden');
+                if (btnReas) btnReas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-orange-700 font-bold border-b-2 border-orange-500";
             }
         }
 
@@ -1247,6 +1270,9 @@
             dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
             dz.addEventListener('drop', (e) => { e.preventDefault(); dz.classList.remove('dragover'); if (e.dataTransfer.files.length) s1_handleFiles(e.dataTransfer.files); });
             fi.addEventListener('change', (e) => { if (e.target.files.length) s1_handleFiles(e.target.files); });
+            // Listener para Avance General
+            const avInput = document.getElementById('s1_avanceGeneralInput');
+            if (avInput) avInput.addEventListener('change', (e) => { if (e.target.files.length) s1_handleAvanceGeneralFile(e.target.files[0]); });
         }
 
         function s1_handleFiles(files) {
@@ -1308,9 +1334,142 @@
                     btn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-sm border border-blue-800 shadow-md animate-pulse';
                 }
                 showToastGlobal("BCMO listo. Puede cargar el PMOVXF antes de analizar.", "success");
+            } else if (hStr.includes('MODALIDAD DE LIQUIDACION') || hStr.includes('ETAPA LOGICA') || (hStr.includes('MOTIVO') && (hStr.includes('EMPRESA') || hStr.includes('CONTRATISTA')))) {
+                // Es el Avance General
+                s1_handleAvanceGeneralFileRaw(data, dateStr);
             } else {
-                showToastGlobal(`El archivo ${filename} no es válido para la Etapa 1 (Se requiere BCMO o PMOVXF).`, "error");
+                showToastGlobal(`El archivo ${filename} no es válido para la Etapa 1 (Se requiere BCMO, PMOVXF o Avance General).`, "error");
             }
+        }
+
+        function s1_handleAvanceGeneralFileRaw(data, dateStr) {
+            s1_dataAvanceGeneral = data;
+            const headers = Object.keys(data[0]);
+            const campoEmpresa = headers.find(h => {
+                const hu = h.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                return hu.includes('EMPRESA') || hu.includes('CONTRATISTA') || hu.includes('RAZON SOCIAL') || hu.includes('LOCALIZADOR_DESC') || hu.includes('LOCALIZADOR DESC');
+            }) || headers[0];
+            window._s1_campoEmpresaAvance = campoEmpresa;
+            const empresas = [...new Set(data.map(r => String(r[campoEmpresa] || '').trim()).filter(Boolean))].sort();
+            s1_actualizarEstadoUI('s1_statusAvanceGeneral', true, dateStr);
+            showToastGlobal(`Avance General cargado. ${data.length} registros.`, "success");
+            s1_abrirModalEmpresa(empresas);
+        }
+
+        function s1_handleAvanceGeneralFile(file) {
+            const procesar = (json) => {
+                if (!json || json.length === 0) { showToastGlobal("El archivo Avance General está vacío.", "error"); return; }
+                s1_dataAvanceGeneral = json;
+                const headers = Object.keys(json[0]);
+                const campoEmpresa = headers.find(h => {
+                    const hu = h.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    return hu.includes('EMPRESA') || hu.includes('CONTRATISTA') || hu.includes('RAZON SOCIAL') || hu.includes('LOCALIZADOR_DESC') || hu.includes('LOCALIZADOR DESC');
+                }) || headers[0];
+                window._s1_campoEmpresaAvance = campoEmpresa;
+                const empresas = [...new Set(json.map(r => String(r[campoEmpresa] || '').trim()).filter(Boolean))].sort();
+                const dateStr = new Date().toLocaleString('es-AR');
+                s1_actualizarEstadoUI('s1_statusAvanceGeneral', true, dateStr);
+                showToastGlobal(`Avance General cargado. ${json.length} registros detectados.`, "success");
+                s1_abrirModalEmpresa(empresas);
+            };
+
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (ext === 'csv' || ext === 'txt') {
+                const r = new FileReader();
+                r.onload = (e) => {
+                    const text = e.target.result;
+                    const firstLine = text.split('\n')[0];
+                    let delim = firstLine.includes('\t') ? '\t' : firstLine.includes(';') ? ';' : ',';
+                    const lines = text.split('\n');
+                    const headers = lines[0].split(delim).map(h => h.trim());
+                    const json = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        const values = lines[i].split(delim); const row = {};
+                        for (let j = 0; j < headers.length; j++) row[headers[j]] = values[j] ? values[j].trim() : '';
+                        json.push(row);
+                    }
+                    procesar(json);
+                };
+                r.readAsText(file, 'ISO-8859-1');
+            } else {
+                const r = new FileReader();
+                r.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const wb = XLSX.read(data, { type: 'array' });
+                        const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+                        procesar(json);
+                    } catch (err) { showToastGlobal("Error al leer el Avance General.", "error"); }
+                };
+                r.readAsArrayBuffer(file);
+            }
+        }
+
+        function s1_abrirModalEmpresa(empresas) {
+            const sel = document.getElementById('s1_empresaAuditadaSelect');
+            if (!sel) return;
+            sel.innerHTML = empresas.map(e => `<option value="${e}">${e}</option>`).join('');
+            if (s1_empresaAuditada) {
+                const opt = [...sel.options].find(o => o.value === s1_empresaAuditada);
+                if (opt) opt.selected = true;
+            }
+            const modal = document.getElementById('s1_avanceModal');
+            if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+        }
+
+        function s1_cancelarAvanceModal() {
+            const modal = document.getElementById('s1_avanceModal');
+            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+        }
+
+        function s1_cambiarEmpresaAuditada() {
+            if (!s1_dataAvanceGeneral) { showToastGlobal("Primero cargue el Avance General.", "error"); return; }
+            const headers = Object.keys(s1_dataAvanceGeneral[0]);
+            const campoEmpresa = window._s1_campoEmpresaAvance || headers[0];
+            const empresas = [...new Set(s1_dataAvanceGeneral.map(r => String(r[campoEmpresa] || '').trim()).filter(Boolean))].sort();
+            s1_abrirModalEmpresa(empresas);
+        }
+
+        function s1_confirmarEmpresaAuditada() {
+            const sel = document.getElementById('s1_empresaAuditadaSelect');
+            if (!sel || !sel.value) return;
+            s1_empresaAuditada = sel.value;
+            s1_cancelarAvanceModal();
+            const tag = document.getElementById('s1_empresaAuditadaTag');
+            const lbl = document.getElementById('s1_empresaAuditadaLabel');
+            if (tag) tag.classList.remove('hidden');
+            if (lbl) lbl.textContent = s1_empresaAuditada;
+            showToastGlobal(`Empresa auditada establecida: ${s1_empresaAuditada}`, "success");
+            if (s1_currentRawData && s1_currentRawData.length > 0) {
+                document.getElementById('s1_resultsWorkspace').classList.add('hidden');
+                document.getElementById('s1_loader').classList.remove('hidden');
+                setTimeout(() => s1_analyzeData(s1_currentRawData), 200);
+            }
+        }
+
+        function s1_renderReasignadasTable() {
+            const tbody = document.getElementById('s1_reasignadasTableBody');
+            const empty = document.getElementById('s1_reasignadasEmpty');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (s1_obrasReasignadasData.length === 0) {
+                if (empty) empty.classList.remove('hidden');
+                return;
+            }
+            if (empty) empty.classList.add('hidden');
+            s1_obrasReasignadasData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100 hover:bg-orange-50";
+                tr.innerHTML = `
+                    <td class="p-3 text-sm text-slate-700">${item.Contratista}</td>
+                    <td class="p-3 text-sm font-bold text-orange-700">${item.Obra}</td>
+                    <td class="p-3 text-sm text-slate-600"><span class="bg-orange-100 text-orange-800 text-xs font-semibold px-2 py-0.5 rounded">${item.EmpresaEnAvance || 'Otra empresa'}</span></td>
+                    <td class="p-3 text-sm text-slate-700 text-right">${s1_formatLocalNumber(item.Entregado || 0)}</td>
+                    <td class="p-3 text-sm text-slate-700 text-right">${s1_formatLocalNumber(item.Consumido || 0)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
         function s1_lanzarAnalisisBCMO() {
@@ -1338,12 +1497,18 @@
         function s1_resetUI() {
             s1_currentRawData = [];
             s1_dataMateriales = null;
+            s1_dataAvanceGeneral = null;
+            s1_empresaAuditada = '';
+            s1_obrasReasignadasData = [];
+            window._s1_campoEmpresaAvance = null;
             s1_fileUploadDates = { bcmo: null, pmovxf: null };
             document.getElementById('s1_uploadWrapper').classList.remove('hidden');
             document.getElementById('s1_loader').classList.add('hidden');
             document.getElementById('s1_resultsWorkspace').classList.add('hidden');
             document.getElementById('s1_filtersPanel').classList.add('opacity-50', 'pointer-events-none');
-            document.getElementById('s1_fileInput').value = ""; document.getElementById('s1_searchObraDashboard').value = ""; document.getElementById('s1_searchObraVerif').value = "";
+            document.getElementById('s1_fileInput').value = "";
+            const avInput = document.getElementById('s1_avanceGeneralInput'); if (avInput) avInput.value = "";
+            document.getElementById('s1_searchObraDashboard').value = ""; document.getElementById('s1_searchObraVerif').value = "";
             if (document.getElementById('s1_massiveTotal')) document.getElementById('s1_massiveTotal').value = "";
             if (document.getElementById('s1_massiveParcial')) document.getElementById('s1_massiveParcial').value = "";
             // Restablecer botón Analizar
@@ -1352,8 +1517,11 @@
                 btn.disabled = true;
                 btn.className = 'w-full bg-slate-200 text-slate-400 font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-slate-300';
             }
-            
-            ['s1_statusBCMO', 's1_statusMateriales'].forEach(id => {
+            // Limpiar tag empresa auditada
+            const tag = document.getElementById('s1_empresaAuditadaTag');
+            if (tag) tag.classList.add('hidden');
+
+            ['s1_statusBCMO', 's1_statusMateriales', 's1_statusAvanceGeneral'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.classList.add('border-slate-100', 'bg-slate-50');
@@ -1376,6 +1544,38 @@
             const contratistasSet = new Set();
 
             // PRIMERA PASADA: Agrupar todo sin omitir por lógica matemática (solo exclusión base .4001 y tareas nulas)
+            // Preparar Set de obras reasignadas si hay Avance General
+            const obrasOtrasEmpresasSet = new Set(); // clave: obraKey
+            const obrasEmpresaAvanceMap = {}; // obraKey -> empresa del avance
+            if (s1_dataAvanceGeneral && s1_empresaAuditada) {
+                const campoEmpresa = window._s1_campoEmpresaAvance || Object.keys(s1_dataAvanceGeneral[0])[0];
+                const headers = Object.keys(s1_dataAvanceGeneral[0]);
+
+
+                const campoObra = headers.find(h => h.toUpperCase().includes('NODO')) ||
+                    headers.find(h => {
+                        const hu = h.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                        return hu.includes('MOTIVO') || hu.includes('OBRA') || (hu.includes('TAREA') && !hu.includes('EXTRA'));
+                    }) || headers[1];
+
+
+
+                //   const campoObra = headers.find(h => {
+                //       const hu = h.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                //       return hu.includes('MOTIVO') || hu.includes('OBRA') || (hu.includes('TAREA') && !hu.includes('EXTRA'));
+                //   }) || headers[1];
+                s1_dataAvanceGeneral.forEach(row => {
+                    const empresa = String(row[campoEmpresa] || '').trim();
+                    const obra = String(row[campoObra] || '').trim().toUpperCase();
+                    if (!obra || !empresa) return;
+                    if (empresa.toUpperCase() !== s1_empresaAuditada.toUpperCase()) {
+                        obrasOtrasEmpresasSet.add(obra);
+                        if (!obrasEmpresaAvanceMap[obra]) obrasEmpresaAvanceMap[obra] = empresa;
+                    }
+                });
+            }
+            s1_obrasReasignadasData = [];
+
             data.forEach(row => {
                 const nR = {};
                 for (let key in row) {
@@ -1384,14 +1584,14 @@
                     nR[cK] = row[key]; nR[cK.replace(/\s+/g, '_')] = row[key];
                 }
 
-                // REGLA 1.A: EXCLUSIÓN DE LOCALIZADORES .4001
-                const locCod = String(nR['LOCALIZADOR_COD'] || nR['LOCALIZADOR COD'] || '');
-                if (locCod.includes('.4001')) return;
+                // REGLA 1.A: EXCLUSIÓN DE LOCALIZADORES QUE TERMINAN EN .3001, .4001 Y .1015
+                const locCod = String(nR['LOCALIZADOR_COD'] || nR['LOCALIZADOR COD'] || '').trim();
+                if (locCod.endsWith('.3001') || locCod.endsWith('.4001') || locCod.endsWith('.1015')) return;
 
                 const contratista = nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || nR['NOMBRE_PROV'] || 'Sin Contratista';
                 const tarea = String(nR['TAREA'] || '').trim();
                 const obra = String(nR['MOTIVO_DE_OBRA'] || nR['MOTIVO DE OBRA'] || nR['MOTIVO'] || 'Sin Obra').trim();
-                
+
                 if (invalidNomenclatures.includes(obra.toUpperCase())) {
                     const gK = `${contratista}|${obra}`;
                     if (!invalidGroupedRaw[gK]) {
@@ -1399,7 +1599,7 @@
                     }
                     invalidGroupedRaw[gK].Entregado += parseDecimalGlobal(nR['ENTREGADO']);
                     invalidGroupedRaw[gK].Consumido += parseDecimalGlobal(nR['CONSUMIDO']);
-                    
+
                     invalidGroupedRaw[gK].Detalles.push({
                         "Ítem": nR['ITEM'] || nR['CODIGO'] || '',
                         "Descripción": String(nR['DESCRIPCION'] || '').trim(),
@@ -1420,14 +1620,46 @@
                 const dif = parseDecimalGlobal(nR['DIFERENCIA']);
 
                 if (!obra && !tarea) return;
+
+                // Interceptación de la tarea "SORED" para verificar condiciones de descarte/interruptor
+                if (tarea.toUpperCase() === 'SORED') {
+                    if (locCod.endsWith('.1001') && con > 0) {
+                        const gK = `${contratista}|${obra}`;
+                        if (!groupedRaw[gK]) {
+                            groupedRaw[gK] = { Contratista: contratista, Obra: obra, LocalizadorCod: locCod, items: [], tieneSoredConsumido: true };
+                            contratistasSet.add(contratista);
+                        } else {
+                            groupedRaw[gK].tieneSoredConsumido = true;
+                        }
+                    }
+                    return; // Siempre se descarta de la suma de materiales
+                }
+
                 if (tasksToExclude.includes(tarea.toUpperCase())) return;
 
                 let isExcludedMat = false;
                 for (let mat of materialsToExclude) { if (descLower.includes(mat)) { isExcludedMat = true; break; } }
 
                 const gK = `${contratista}|${obra}`;
+
+                // REGLA: Si hay Avance General y la obra pertenece a otra empresa, es REASIGNADA
+                if (s1_dataAvanceGeneral && s1_empresaAuditada && obrasOtrasEmpresasSet.has(obra.toUpperCase())) {
+                    let existente = s1_obrasReasignadasData.find(r => r.Obra === obra);
+                    if (!existente) {
+                        s1_obrasReasignadasData.push({
+                            Contratista: contratista, Obra: obra,
+                            EmpresaEnAvance: obrasEmpresaAvanceMap[obra.toUpperCase()] || 'Otra empresa',
+                            Entregado: ent, Consumido: con
+                        });
+                    } else {
+                        existente.Entregado += ent;
+                        existente.Consumido += con;
+                    }
+                    return;
+                }
+
                 if (!groupedRaw[gK]) {
-                    groupedRaw[gK] = { Contratista: contratista, Obra: obra, items: [] };
+                    groupedRaw[gK] = { Contratista: contratista, Obra: obra, LocalizadorCod: locCod, items: [] };
                     contratistasSet.add(contratista);
                 }
 
@@ -1457,12 +1689,19 @@
                 let finalDiferencia = 0;
                 const finalDetalles = [];
 
+                // Determinar si hay consumo de material ignorado/excluido
+                let tieneConsumoIgnorado = false;
+
                 group.items.forEach(item => {
                     let ignorarCalculo = false;
 
                     // REGLA MATEMÁTICA: Si es un escenario MIXTO, los artículos excluidos se ignoran en la suma.
                     if (!onlyExcluded && item.Excluido) {
                         ignorarCalculo = true;
+                    }
+
+                    if (item.Excluido && item.Consumido > 0) {
+                        tieneConsumoIgnorado = true;
                     }
 
                     if (!ignorarCalculo) {
@@ -1497,12 +1736,15 @@
                 grouped[gK] = {
                     Contratista: group.Contratista,
                     Obra: group.Obra,
+                    LocalizadorCod: group.LocalizadorCod,
                     Entregado: finalEntregado,
                     Consumido: finalConsumido,
                     Diferencia: finalDiferencia,
                     Detalles: finalDetalles,
                     onlyExcluded: onlyExcluded,
-                    fallbackExcluidos: fallbackExcluidos
+                    fallbackExcluidos: fallbackExcluidos,
+                    tieneConsumoIgnorado: tieneConsumoIgnorado,
+                    tieneSoredConsumido: !!group.tieneSoredConsumido
                 };
             }
 
@@ -1527,10 +1769,14 @@
             });
 
             s1_populateContratistasDropdown(Array.from(contratistasSet).sort());
-            
+
             s1_invalidData = Object.values(invalidGroupedRaw);
             setTabBadge('s1_invalidCountBadge', s1_invalidData.length);
             s1_renderInvalidTable();
+
+            // Render Obras Reasignadas
+            setTabBadge('s1_reasignadasCountBadge', s1_obrasReasignadasData.length);
+            s1_renderReasignadasTable();
 
             document.getElementById('s1_filtersPanel').classList.remove('opacity-50', 'pointer-events-none');
             document.getElementById('s1_loader').classList.add('hidden');
@@ -1571,10 +1817,19 @@
             let umbDec = umb / 100;
             s1_processedData.forEach(item => {
                 let ns = "";
-                if (item.Diferencia <= 0.01 && item.Consumido > 0) ns = "Consumido";
-                else if (item.Consumido <= 0.01) ns = "Sin Consumo";
-                else if (item.OriginalPorcentajeReal >= umbDec) ns = "Consumido";
-                else ns = "Verificar Consumo";
+                if (item.tieneSoredConsumido) {
+                    ns = "Consumido";
+                } else if (item.tieneConsumoIgnorado) {
+                    ns = "Consumido";
+                } else if (item.Diferencia <= 0.01 && item.Consumido > 0) {
+                    ns = "Consumido";
+                } else if (item.Consumido <= 0.01) {
+                    ns = "Sin Consumo";
+                } else if (item.OriginalPorcentajeReal >= umbDec) {
+                    ns = "Consumido";
+                } else {
+                    ns = "Verificar Consumo";
+                }
                 item.naturalState = ns;
                 const gK = `${item.Contratista}|${item.Obra}`;
                 item['Estado de liquidacion'] = s1_manualOverrides[gK] || ns;
@@ -1946,6 +2201,12 @@
     </script>
 
     <!-- ============================================================ -->
+    <!-- MÓDULOS DE FUNCIONES                                          -->
+    <!-- ============================================================ -->
+    <script src="modules/procesadorTarea.js"></script>
+    <script src="modules/detalleTarea.js"></script>
+
+    <!-- ============================================================ -->
     <!-- CARGADOR DE COMPONENTES HTML DINAMICOS                        -->
     <!-- ============================================================ -->
     <script src="components/etapa1BCMO.js"></script>
@@ -2002,11 +2263,11 @@
 
                 let cardHtml, moduleHtml;
                 if (splitIdx !== -1) {
-                    cardHtml   = html.substring(0, splitIdx).trim();
+                    cardHtml = html.substring(0, splitIdx).trim();
                     moduleHtml = html.substring(splitIdx).trim();
                 } else {
                     // fallback: inyectar todo como tarjeta
-                    cardHtml   = html;
+                    cardHtml = html;
                     moduleHtml = '';
                 }
 
@@ -2034,11 +2295,11 @@
 
                 let cardHtml, resultsHtml;
                 if (splitIdx !== -1) {
-                    cardHtml    = html.substring(0, splitIdx).trim();
+                    cardHtml = html.substring(0, splitIdx).trim();
                     resultsHtml = html.substring(splitIdx).trim();
                 } else {
                     // fallback: inyectar todo como tarjeta
-                    cardHtml    = html;
+                    cardHtml = html;
                     resultsHtml = '';
                 }
 
@@ -2056,7 +2317,7 @@
             // --------------------------------------------------------
             async function initApp() {
                 try {
-                    await Promise.all([ loadEtapa1(), loadEtapa2() ]);
+                    await Promise.all([loadEtapa1(), loadEtapa2()]);
                     console.log('[Loader] ✓ Todos los componentes cargados e inyectados.');
                 } catch (e) {
                     console.error('[Loader] Error crítico al cargar componentes:', e);
