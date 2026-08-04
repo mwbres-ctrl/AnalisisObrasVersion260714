@@ -256,7 +256,7 @@ function openEditModal(nodo, origState, origModality = '', isOrphan = false) {
         // Agregar motivos personalizados
         const customInput = document.getElementById('configCustomJustifications');
         if (customInput && customInput.value.trim() !== '') {
-            const customs = customInput.value.split('\\n').map(s => s.trim()).filter(s => s !== '');
+            const customs = customInput.value.split('\n').map(s => s.trim()).filter(s => s !== '');
             if (customs.length > 0) {
                 const optGroup = document.createElement('optgroup');
                 optGroup.label = "Motivos Personalizados (Manuales)";
@@ -271,14 +271,14 @@ function openEditModal(nodo, origState, origModality = '', isOrphan = false) {
         }
 
         // Asistente Inteligente de Búsqueda de Nodos
-        const sNodo = nodo.replace(/[\\s-]/g, '').toUpperCase();
+        const sNodo = nodo.replace(/[\s-]/g, '').toUpperCase();
         const checkList = [];
         if (dataBCMO) dataBCMO.forEach(r => { const k = String(r['_N_TAREA_/_OBRA'] || r['_N_TAREA'] || r['_N_OBRA'] || '').trim(); if (k) checkList.push(k); });
         if (dataMateriales) dataMateriales.forEach(r => { const k = String(r['_N_MOTIVO'] || '').trim(); if (k) checkList.push(k); });
 
         let suggested = null;
         for (let candidate of checkList) {
-            if (candidate.replace(/[\\s-]/g, '').toUpperCase() === sNodo && candidate.toUpperCase() !== nodo.toUpperCase()) {
+            if (candidate.replace(/[\s-]/g, '').toUpperCase() === sNodo && candidate.toUpperCase() !== nodo.toUpperCase()) {
                 suggested = candidate; break;
             }
         }
