@@ -1584,13 +1584,35 @@
                     nR[cK] = row[key]; nR[cK.replace(/\s+/g, '_')] = row[key];
                 }
 
-                // REGLA 1.A: EXCLUSIÓN DE LOCALIZADORES QUE TERMINAN EN .3001, .4001 Y .1015
+//                 // REGLA 1.A: EXCLUSIÓN DE LOCALIZADORES QUE TERMINAN EN .3001, .4001 Y .1015
+//                 const locCod = String(nR['LOCALIZADOR_COD'] || nR['LOCALIZADOR COD'] || '').trim();
+//                 if (locCod.endsWith('.3001') || locCod.endsWith('.4001') || locCod.endsWith('.1015')) return;
+// 
+//                 const contratista = nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || nR['NOMBRE_PROV'] || 'Sin Contratista';
+//                 const tarea = String(nR['TAREA'] || '').trim();
+//                 const obra = String(nR['MOTIVO_DE_OBRA'] || nR['MOTIVO DE OBRA'] || nR['MOTIVO'] || 'Sin Obra').trim();
+
+
+
+
+		// REGLA 1.A: EXCLUSIÓN DINÁMICA DE LOCALIZADORES (.3001, .4001 y familia .1XXX)
                 const locCod = String(nR['LOCALIZADOR_COD'] || nR['LOCALIZADOR COD'] || '').trim();
-                if (locCod.endsWith('.3001') || locCod.endsWith('.4001') || locCod.endsWith('.1015')) return;
+                
+                // Patrón: Termina en .1 seguido de exactamente 3 dígitos. Excepción: .1001 (usado por SORED)
+                const esFamiliaSobrantes = /\.1\d{3}$/.test(locCod) && !locCod.endsWith('.1001');
+                
+                if (locCod.endsWith('.3001') || locCod.endsWith('.4001') || esFamiliaSobrantes) return;
 
                 const contratista = nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || nR['NOMBRE_PROV'] || 'Sin Contratista';
                 const tarea = String(nR['TAREA'] || '').trim();
                 const obra = String(nR['MOTIVO_DE_OBRA'] || nR['MOTIVO DE OBRA'] || nR['MOTIVO'] || 'Sin Obra').trim();
+                
+                // REGLA 1.B: Filtro de seguridad por texto en la descripción del contratista
+                if (contratista.toUpperCase().includes('SOBRANTES')) return;
+
+
+
+
 
                 if (invalidNomenclatures.includes(obra.toUpperCase())) {
                     const gK = `${contratista}|${obra}`;
