@@ -147,10 +147,6 @@
                     <span class="flex items-center gap-2"><i class="fa-solid fa-hourglass-end w-4 text-slate-400"></i> Gestor de Caducidad</span>
                     <span id="tabCaducidadCount" class="tab-count-badge hidden"></span>
                 </button>
-                <button type="button" onclick="switchTab('detalletareas')" id="tabDetalleTareasBtn"
-                    class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-ticket-simple w-4 text-slate-400"></i> Detalle Tareas</span>
-                </button>
             </div>
         </div>
 
@@ -158,6 +154,11 @@
             class="tab-btn px-5 py-2.5 text-sm text-slate-600 font-medium rounded-t-lg transition-colors focus:outline-none flex items-center gap-2 whitespace-nowrap">
             <i class="fa-solid fa-envelope-circle-check"></i> Listado de Obras
             <span id="tabValidacionContratistaCount" class="tab-count-badge hidden"></span>
+        </button>
+
+        <button type="button" onclick="switchTab('detalletareas')" id="tabDetalleTareasBtn"
+            class="tab-btn px-5 py-2.5 text-sm text-slate-600 font-medium rounded-t-lg transition-colors focus:outline-none flex items-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-gauge-high"></i> Dashboard BF
         </button>
     </div>
 
@@ -670,19 +671,85 @@
         </div>
     </div>
 
-    <!-- CONTENIDO PESTAÑA: DETALLE TAREAS -->
+    <!-- CONTENIDO PESTAÑA: DASHBOARD BF -->
     <div id="tabDetalleTareasContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
+        <style>
+            /* Estilos migrados del Analizador Estado de Obra BF v9.3 */
+            #tabDetalleTareasContent .pill {
+                display: inline-flex; align-items: center; gap: 4px;
+                padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
+                background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; white-space: nowrap;
+            }
+            #tabDetalleTareasContent .pill-count {
+                background: #ffffff; color: #334155; border-radius: 999px;
+                padding: 0 6px; font-size: 10px; font-weight: 700; border: 1px solid #cbd5e1;
+            }
+            #tabDetalleTareasContent .status-finalizado-total {
+                background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;
+            }
+            #tabDetalleTareasContent .status-finalizado-parcial {
+                background: #fffbeb; color: #b45309; border: 1px solid #fde68a;
+            }
+            #tabDetalleTareasContent .status-encurso {
+                background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
+            }
+            #tabDetalleTareasContent .status-sinconsumo {
+                background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+            }
+            #tabDetalleTareasContent .status-otro {
+                background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;
+            }
+            #tabDetalleTareasContent tbody tr { cursor: pointer; }
+        </style>
+
         <div class="max-w-7xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div class="p-4 border-b border-indigo-200 bg-indigo-50 flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-indigo-800"><i class="fa-solid fa-ticket-simple mr-2"></i>Detalle de Análisis de Tickets (Tareas)</h2>
-                    <p class="text-xs text-indigo-600 mt-1">Resultado del procesamiento del archivo CSV crudo de Tareas. Una fila por Obra BF.</p>
+                    <h2 class="text-lg font-bold text-indigo-800"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard BF — Análisis de Tickets (Tareas)</h2>
+                    <p class="text-xs text-indigo-600 mt-1">Resultado del procesamiento del archivo de Tareas. Una fila por Obra BF.</p>
                 </div>
                 <button type="button" onclick="exportarDetalleTareas()"
                     class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded text-sm font-semibold shadow-sm transition-colors flex items-center gap-2">
                     <i class="fa-solid fa-file-excel"></i> Descargar Reporte Tareas
                 </button>
             </div>
+
+            <!-- Fila de Filtros -->
+            <div class="p-4 border-b border-slate-200 bg-white grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Búsqueda por ID Obra</label>
+                    <input type="text" id="dtFiltroObra" oninput="renderDetalleTareasTable()" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="Ej: ST345...">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Estado</label>
+                    <select id="dtFiltroEstado" onchange="renderDetalleTareasTable()" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+                        <option value="">-- Todos --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Contratista</label>
+                    <select id="dtFiltroContratista" onchange="renderDetalleTareasTable()" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+                        <option value="">-- Todos --</option>
+                    </select>
+                </div>
+                <button type="button" onclick="limpiarFiltrosDetalleTareas()" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded text-sm font-semibold transition-colors shadow-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-filter-circle-xmark"></i> Limpiar Filtros
+                </button>
+            </div>
+
+            <!-- Resumen Consumo (Filtrado) -->
+            <div class="px-4 pt-3 pb-1 bg-white">
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-wrap gap-2 items-center">
+                    <span class="text-xs font-bold text-slate-500 uppercase mr-1">Resumen Consumo (Filtrado):</span>
+                    <span class="pill"><i class="fa-solid fa-list"></i> Obras <span id="dtResumenTotal" class="pill-count">0</span></span>
+                    <span class="pill status-finalizado-total"><i class="fa-solid fa-check-double"></i> Finalizada Consumo Total <span id="dtResumenTotalConsumo" class="pill-count">0</span></span>
+                    <span class="pill status-finalizado-parcial"><i class="fa-solid fa-check"></i> Finalizada Consumo Parcial <span id="dtResumenParcialConsumo" class="pill-count">0</span></span>
+                    <span class="pill status-encurso"><i class="fa-solid fa-spinner"></i> En Curso / Otros <span id="dtResumenOtros" class="pill-count">0</span></span>
+                    <span class="pill"><i class="fa-solid fa-ticket"></i> Tkt Material <span id="dtResumenTickets" class="pill-count">0</span></span>
+                    <span class="pill"><i class="fa-solid fa-check-double"></i> Cerrados <span id="dtResumenCerrados" class="pill-count">0</span></span>
+                </div>
+            </div>
+
             <div class="flex-1 overflow-auto custom-scrollbar">
                 <table class="w-full text-left text-sm border-collapse data-table whitespace-nowrap">
                     <thead class="sticky top-0 z-20 shadow-md">
@@ -698,6 +765,50 @@
                     </thead>
                     <tbody id="detalleTareasTableBody" class="text-slate-700 border-b border-slate-200"></tbody>
                 </table>
+                <div id="emptyDetalleTareasState" class="hidden p-8 text-center text-slate-400">
+                    <i class="fa-solid fa-ticket-simple text-4xl mb-3 opacity-20"></i>
+                    <p class="text-sm font-semibold text-slate-600">No hay obras que coincidan con los filtros aplicados.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE DETALLE DASHBOARD BF (Tickets asociados a la Obra) -->
+    <div id="detailModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh]">
+            <div class="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-ticket-simple text-indigo-600 mr-2"></i>Detalle de Tickets</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Obra BF: <span id="detailModalObraBF" class="font-mono font-bold text-indigo-700"></span></p>
+                </div>
+                <button type="button" onclick="closeDetalleTareaModal()" class="text-slate-400 hover:text-slate-700 text-xl leading-none">&times;</button>
+            </div>
+            <div class="p-4 overflow-y-auto custom-scrollbar space-y-4">
+                <div>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase mb-2">Detalle Tkt (Con Consumo)</p>
+                    <div id="detailModalStatsTarea" class="flex flex-wrap gap-1.5"></div>
+                </div>
+                <div>
+                    <p class="text-[11px] font-bold text-slate-500 uppercase mb-2">Detalle Obra BF</p>
+                    <div id="detailModalStatsObra" class="flex flex-wrap gap-1.5"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100">
+                    <div class="bg-slate-50 rounded p-2 text-center">
+                        <p class="text-[10px] text-slate-500 font-bold uppercase">Tkt Material</p>
+                        <p id="detailModalTotalTickets" class="text-lg font-bold text-slate-700">0</p>
+                    </div>
+                    <div class="bg-emerald-50 rounded p-2 text-center">
+                        <p class="text-[10px] text-emerald-600 font-bold uppercase">Cerrados</p>
+                        <p id="detailModalCerrados" class="text-lg font-bold text-emerald-700">0</p>
+                    </div>
+                    <div class="bg-indigo-50 rounded p-2 text-center">
+                        <p class="text-[10px] text-indigo-600 font-bold uppercase">Contratista</p>
+                        <p id="detailModalContratista" class="text-xs font-bold text-indigo-700 mt-1">-</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <span id="detailModalResultado" class="pill text-sm"></span>
+                </div>
             </div>
         </div>
     </div>
