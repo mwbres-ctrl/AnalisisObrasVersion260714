@@ -142,6 +142,13 @@
                                 <i class="fa-solid fa-file-arrow-up"></i> Cargar Avance General
                             </button>
                         </div>
+                        <div class="mt-3 pt-3 w-full">
+                            <p class="text-slate-500 text-xs mb-2 text-center"><i class="fa-solid fa-link mr-1 text-violet-500"></i><b>Reporte de Localizadores</b> (Obligatorio — determina la Razón Social)</p>
+                            <input type="file" id="s1_localizadoresInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
+                            <button onclick="document.getElementById('s1_localizadoresInput').click()" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-300 font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-link"></i> Cargar Reporte de Localizadores
+                            </button>
+                        </div>
                     </div>
                     <!-- Botón Analizar -->
                     <button id="s1_btnAnalizar" onclick="s1_lanzarAnalisisBCMO()" disabled
@@ -165,6 +172,10 @@
                             <div class="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100" id="s1_statusAvanceGeneral">
                                 <span class="text-slate-600 font-medium"><i class="fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle"></i>Avance General</span>
                                 <span class="text-xs text-slate-400 italic file-date">Opcional</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded border border-violet-100" id="s1_statusLocalizadores">
+                                <span class="text-slate-600 font-medium"><i class="fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle"></i>Reporte de Localizadores</span>
+                                <span class="text-xs text-violet-500 italic file-date font-bold">Requerido</span>
                             </div>
                         </div>
                         <p class="text-xs text-slate-400 mt-5 italic"><i class="fa-solid fa-circle-info mr-1"></i>Puede cargar todos los archivos antes de analizar.</p>
@@ -198,6 +209,9 @@
                         <li><button onclick="s1_switchTabEtapa1('reasignadas')" id="s1_btnTabReasignadas"
                                 class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive"><i
                                     class="fa-solid fa-arrows-turn-right mr-1"></i> Obras Reasignadas<span id="s1_reasignadasCountBadge" class="tab-count-badge hidden"></span></button></li>
+                        <li><button onclick="s1_switchTabEtapa1('otraec')" id="s1_btnTabOtraEC"
+                                class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive"><i
+                                    class="fa-solid fa-magnifying-glass-dollar mr-1"></i> Consumo en Otra EC<span id="s1_otraECCountBadge" class="tab-count-badge hidden"></span></button></li>
                     </ul>
                     <div class="flex gap-2">
                         <button onclick="s1_resetUI()"
@@ -361,6 +375,33 @@
                             <div id="s1_reasignadasEmpty" class="hidden p-8 text-center text-slate-500">
                                 <i class="fa-solid fa-circle-check text-4xl text-emerald-300 mb-3"></i>
                                 <p class="font-semibold">No se detectaron obras reasignadas a otras contratistas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="s1_tabOtraEC" class="hidden flex-grow flex-col min-h-[500px]">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col min-h-0">
+                        <div class="p-4 border-b shrink-0 bg-purple-50 rounded-t-2xl">
+                            <h2 class="text-lg font-bold text-purple-800"><i class="fa-solid fa-magnifying-glass-dollar mr-2"></i>Consumo en Otra Razón Social</h2>
+                            <p class="text-sm text-purple-600">Obras marcadas como "Sin Consumo" en la empresa auditada, pero que registran consumo real de materiales bajo otra razón social del BCMO.</p>
+                        </div>
+                        <div class="p-0 table-container overflow-auto flex-grow relative min-h-[300px]">
+                            <table class="w-full text-left border-collapse min-w-max">
+                                <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
+                                    <tr>
+                                        <th class="p-3 text-sm font-semibold border-b">Obra / Motivo</th>
+                                        <th class="p-3 text-sm font-semibold border-b">Empresa Original (Auditada)</th>
+                                        <th class="p-3 text-sm font-semibold border-b">Razón Social (Otra EC)</th>
+                                        <th class="p-3 text-sm font-semibold border-b">Localizador Cod.</th>
+                                        <th class="p-3 text-sm font-semibold border-b text-center">Detalle</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="s1_otraECTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                            <div id="s1_otraECEmpty" class="hidden p-8 text-center text-slate-500">
+                                <i class="fa-solid fa-circle-check text-4xl text-emerald-300 mb-3"></i>
+                                <p class="font-semibold">No se detectó consumo de estas obras bajo otras razones sociales.</p>
                             </div>
                         </div>
                     </div>
