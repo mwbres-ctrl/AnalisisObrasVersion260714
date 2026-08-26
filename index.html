@@ -1146,6 +1146,11 @@
         // --- Avance General / Obras Reasignadas ---
         let s1_dataAvanceGeneral = null;
         let s1_empresaAuditada = '';
+        // --- Reporte de Localizadores (obligatorio) / Bloque Secundario (otras razones sociales) ---
+        let s1_dataLocalizadores = null;          // Datos crudos del Reporte de Localizadores
+        let s1_localizadorMap = null;              // Map: LOCALIZADOR.toUpperCase() -> NOMBRE PROV
+        let s1_secundarioIndex = {};               // { OBRA_UPPER: [ {Contratista, LocalizadorCod, Item, Descripcion, Entregado, Consumido, Diferencia}, ... ] }
+        let s1_otraECData = [];                    // Resultado de la búsqueda transversal ("Consumo en Otra EC")
         let s1_obrasReasignadasData = [];
 
         document.addEventListener("DOMContentLoaded", () => {
@@ -1219,8 +1224,8 @@
         }
 
         function s1_switchTabEtapa1(tab) {
-            const elDash = document.getElementById('s1_tabDashboard'); const elVerif = document.getElementById('s1_tabVerification'); const elInvalid = document.getElementById('s1_tabInvalid'); const elReas = document.getElementById('s1_tabReasignadas');
-            const btnDash = document.getElementById('s1_btnTabDashboard'); const btnVerif = document.getElementById('s1_btnTabVerification'); const btnInvalid = document.getElementById('s1_btnTabInvalid'); const btnReas = document.getElementById('s1_btnTabReasignadas');
+            const elDash = document.getElementById('s1_tabDashboard'); const elVerif = document.getElementById('s1_tabVerification'); const elInvalid = document.getElementById('s1_tabInvalid'); const elReas = document.getElementById('s1_tabReasignadas'); const elOtraEC = document.getElementById('s1_tabOtraEC');
+            const btnDash = document.getElementById('s1_btnTabDashboard'); const btnVerif = document.getElementById('s1_btnTabVerification'); const btnInvalid = document.getElementById('s1_btnTabInvalid'); const btnReas = document.getElementById('s1_btnTabReasignadas'); const btnOtraEC = document.getElementById('s1_btnTabOtraEC');
 
             // Bloquear acceso a Verificar si no hay PM cargado
             if (tab === 'verification' && (!s1_dataMateriales || s1_dataMateriales.length === 0)) {
@@ -1228,11 +1233,12 @@
                 return;
             }
 
-            [elDash, elVerif, elInvalid, elReas].forEach(el => { if (el) el.classList.add('hidden'); });
+            [elDash, elVerif, elInvalid, elReas, elOtraEC].forEach(el => { if (el) el.classList.add('hidden'); });
             btnDash.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive";
             btnVerif.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive relative";
             if (btnInvalid) btnInvalid.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-rose-600 font-bold";
             if (btnReas) btnReas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-orange-600 font-bold";
+            if (btnOtraEC) btnOtraEC.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-purple-600 font-bold";
 
             if (tab === 'dashboard') {
                 elDash.classList.remove('hidden');
@@ -1246,6 +1252,9 @@
             } else if (tab === 'reasignadas') {
                 if (elReas) elReas.classList.remove('hidden');
                 if (btnReas) btnReas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-orange-700 font-bold border-b-2 border-orange-500";
+            } else if (tab === 'otraec') {
+                if (elOtraEC) elOtraEC.classList.remove('hidden');
+                if (btnOtraEC) btnOtraEC.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-purple-700 font-bold border-b-2 border-purple-500";
             }
         }
 
@@ -1273,6 +1282,9 @@
             // Listener para Avance General
             const avInput = document.getElementById('s1_avanceGeneralInput');
             if (avInput) avInput.addEventListener('change', (e) => { if (e.target.files.length) s1_handleAvanceGeneralFile(e.target.files[0]); });
+            // Listener para el Reporte de Localizadores (obligatorio)
+            const locInput = document.getElementById('s1_localizadoresInput');
+            if (locInput) locInput.addEventListener('change', (e) => { if (e.target.files.length) s1_handleLocalizadoresFile(e.target.files[0]); });
         }
 
         function s1_handleFiles(files) {
@@ -1337,8 +1349,76 @@
             } else if (hStr.includes('MODALIDAD DE LIQUIDACION') || hStr.includes('ETAPA LOGICA') || (hStr.includes('MOTIVO') && (hStr.includes('EMPRESA') || hStr.includes('CONTRATISTA')))) {
                 // Es el Avance General
                 s1_handleAvanceGeneralFileRaw(data, dateStr);
+            } else if (hStr.includes('SUBINVENTARIO') && hStr.includes('LOCALIZADOR') && hStr.includes('NOMBRE PROV')) {
+                // Es el Reporte de Localizadores
+                s1_handleLocalizadoresFileRaw(data, dateStr);
             } else {
-                showToastGlobal(`El archivo ${filename} no es válido para la Etapa 1 (Se requiere BCMO, PMOVXF o Avance General).`, "error");
+                showToastGlobal(`El archivo ${filename} no es válido para la Etapa 1 (Se requiere BCMO, PMOVXF, Avance General o Reporte de Localizadores).`, "error");
+            }
+        }
+
+        function s1_handleLocalizadoresFileRaw(data, dateStr) {
+            if (!data || data.length === 0) { showToastGlobal("El Reporte de Localizadores está vacío.", "error"); return; }
+            s1_dataLocalizadores = data;
+
+            const headers = Object.keys(data[0]);
+            const campoLocalizador = headers.find(h => h.trim().toUpperCase() === 'LOCALIZADOR') || headers.find(h => h.toUpperCase().includes('LOCALIZADOR'));
+            const campoNombreProv = headers.find(h => h.trim().toUpperCase() === 'NOMBRE PROV') || headers.find(h => h.toUpperCase().includes('NOMBRE') && h.toUpperCase().includes('PROV'));
+
+            if (!campoLocalizador || !campoNombreProv) {
+                showToastGlobal("El Reporte de Localizadores no tiene las columnas LOCALIZADOR / NOMBRE PROV esperadas.", "error");
+                return;
+            }
+
+            s1_localizadorMap = new Map();
+            data.forEach(row => {
+                const loc = String(row[campoLocalizador] || '').trim().toUpperCase();
+                const nombreProv = String(row[campoNombreProv] || '').trim();
+                if (loc && nombreProv) s1_localizadorMap.set(loc, nombreProv);
+            });
+
+            s1_actualizarEstadoUI('s1_statusLocalizadores', true, dateStr);
+            showToastGlobal(`Reporte de Localizadores cargado. ${s1_localizadorMap.size} localizadores mapeados.`, "success");
+
+            // Extraer razones sociales únicas y abrir el modal de selección de empresa auditada
+            const empresas = [...new Set(Array.from(s1_localizadorMap.values()))].filter(Boolean).sort();
+            s1_abrirModalEmpresa(empresas);
+        }
+
+        function s1_handleLocalizadoresFile(file) {
+            const dateStr = new Date().toLocaleString('es-AR');
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (ext === 'csv' || ext === 'txt') {
+                const r = new FileReader();
+                r.onload = (e) => {
+                    try {
+                        const text = e.target.result;
+                        const firstLine = text.split('\n')[0];
+                        let delim = firstLine.includes('\t') ? '\t' : firstLine.includes(';') ? ';' : ',';
+                        const lines = text.split('\n');
+                        const headers = lines[0].split(delim).map(h => h.trim());
+                        const json = [];
+                        for (let i = 1; i < lines.length; i++) {
+                            if (!lines[i].trim()) continue;
+                            const values = lines[i].split(delim); const row = {};
+                            for (let j = 0; j < headers.length; j++) row[headers[j]] = values[j] ? values[j].trim() : '';
+                            json.push(row);
+                        }
+                        s1_handleLocalizadoresFileRaw(json, dateStr);
+                    } catch (err) { showToastGlobal("Error al leer el Reporte de Localizadores (CSV/TXT).", "error"); }
+                };
+                r.readAsText(file, 'ISO-8859-1');
+            } else {
+                const r = new FileReader();
+                r.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const wb = XLSX.read(data, { type: 'array' });
+                        const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+                        s1_handleLocalizadoresFileRaw(json, dateStr);
+                    } catch (err) { showToastGlobal("Error al leer el Reporte de Localizadores (Excel).", "error"); }
+                };
+                r.readAsArrayBuffer(file);
             }
         }
 
@@ -1424,7 +1504,12 @@
         }
 
         function s1_cambiarEmpresaAuditada() {
-            if (!s1_dataAvanceGeneral) { showToastGlobal("Primero cargue el Avance General.", "error"); return; }
+            if (s1_localizadorMap && s1_localizadorMap.size > 0) {
+                const empresas = [...new Set(Array.from(s1_localizadorMap.values()))].filter(Boolean).sort();
+                s1_abrirModalEmpresa(empresas);
+                return;
+            }
+            if (!s1_dataAvanceGeneral) { showToastGlobal("Primero cargue el Reporte de Localizadores.", "error"); return; }
             const headers = Object.keys(s1_dataAvanceGeneral[0]);
             const campoEmpresa = window._s1_campoEmpresaAvance || headers[0];
             const empresas = [...new Set(s1_dataAvanceGeneral.map(r => String(r[campoEmpresa] || '').trim()).filter(Boolean))].sort();
@@ -1442,9 +1527,7 @@
             if (lbl) lbl.textContent = s1_empresaAuditada;
             showToastGlobal(`Empresa auditada establecida: ${s1_empresaAuditada}`, "success");
             if (s1_currentRawData && s1_currentRawData.length > 0) {
-                document.getElementById('s1_resultsWorkspace').classList.add('hidden');
-                document.getElementById('s1_loader').classList.remove('hidden');
-                setTimeout(() => s1_analyzeData(s1_currentRawData), 200);
+                s1_lanzarAnalisisBCMO();
             }
         }
 
@@ -1476,6 +1559,15 @@
             if (!s1_currentRawData || s1_currentRawData.length === 0) {
                 showToastGlobal("Cargue primero el archivo BCMO.", "error"); return;
             }
+            if (!s1_localizadorMap || s1_localizadorMap.size === 0) {
+                showToastGlobal("Debe cargar el Reporte de Localizadores antes de analizar (Requerido).", "error"); return;
+            }
+            if (!s1_empresaAuditada) {
+                const empresas = [...new Set(Array.from(s1_localizadorMap.values()))].filter(Boolean).sort();
+                s1_abrirModalEmpresa(empresas);
+                showToastGlobal("Seleccione la empresa auditada para continuar.", "info");
+                return;
+            }
             document.getElementById('s1_uploadWrapper').classList.add('hidden');
             document.getElementById('s1_loader').classList.remove('hidden');
             document.getElementById('s1_resultsWorkspace').classList.add('hidden');
@@ -1500,6 +1592,10 @@
             s1_dataAvanceGeneral = null;
             s1_empresaAuditada = '';
             s1_obrasReasignadasData = [];
+            s1_dataLocalizadores = null;
+            s1_localizadorMap = null;
+            s1_secundarioIndex = {};
+            s1_otraECData = [];
             window._s1_campoEmpresaAvance = null;
             s1_fileUploadDates = { bcmo: null, pmovxf: null };
             document.getElementById('s1_uploadWrapper').classList.remove('hidden');
@@ -1508,6 +1604,7 @@
             document.getElementById('s1_filtersPanel').classList.add('opacity-50', 'pointer-events-none');
             document.getElementById('s1_fileInput').value = "";
             const avInput = document.getElementById('s1_avanceGeneralInput'); if (avInput) avInput.value = "";
+            const locInput = document.getElementById('s1_localizadoresInput'); if (locInput) locInput.value = "";
             document.getElementById('s1_searchObraDashboard').value = ""; document.getElementById('s1_searchObraVerif').value = "";
             if (document.getElementById('s1_massiveTotal')) document.getElementById('s1_massiveTotal').value = "";
             if (document.getElementById('s1_massiveParcial')) document.getElementById('s1_massiveParcial').value = "";
@@ -1521,13 +1618,13 @@
             const tag = document.getElementById('s1_empresaAuditadaTag');
             if (tag) tag.classList.add('hidden');
 
-            ['s1_statusBCMO', 's1_statusMateriales', 's1_statusAvanceGeneral'].forEach(id => {
+            ['s1_statusBCMO', 's1_statusMateriales', 's1_statusAvanceGeneral', 's1_statusLocalizadores'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.classList.add('border-slate-100', 'bg-slate-50');
                     el.classList.remove('border-emerald-200', 'bg-emerald-50');
                     el.querySelector('i').className = 'fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle';
-                    el.querySelector('.file-date').textContent = id === 's1_statusBCMO' ? 'Requerido' : 'Opcional';
+                    el.querySelector('.file-date').textContent = (id === 's1_statusBCMO' || id === 's1_statusLocalizadores') ? 'Requerido' : 'Opcional';
                 }
             });
         }
@@ -1542,6 +1639,11 @@
             const groupedRaw = {};
             const invalidGroupedRaw = {};
             const contratistasSet = new Set();
+
+            // Bloque Secundario: índice de otras razones sociales (obra -> [items con consumo])
+            // Se usa después para la búsqueda transversal "Consumo en Otra EC"
+            const secundarioIndexLocal = {};
+            const empresaAuditadaNorm = String(s1_empresaAuditada || '').trim().toUpperCase();
 
             // PRIMERA PASADA: Agrupar todo sin omitir por lógica matemática (solo exclusión base .4001 y tareas nulas)
             // Preparar Set de obras reasignadas si hay Avance General
@@ -1580,7 +1682,7 @@
                 const nR = {};
                 for (let key in row) {
                     if (!key) continue;
-                    const cK = key.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const cK = key.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\.$/, '');
                     nR[cK] = row[key]; nR[cK.replace(/\s+/g, '_')] = row[key];
                 }
 
@@ -1603,12 +1705,47 @@
                 
                 if (locCod.endsWith('.3001') || locCod.endsWith('.4001') || esFamiliaSobrantes) return;
 
-                const contratista = nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || nR['NOMBRE_PROV'] || 'Sin Contratista';
+                // Razón Social real: cruce Localizador Cod (BCMO) -> LOCALIZADOR (Reporte de Localizadores) -> NOMBRE PROV
+                const contratistaReal = (s1_localizadorMap && s1_localizadorMap.get(locCod.toUpperCase())) || nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || nR['NOMBRE_PROV'] || 'Sin Contratista';
+                const localizadorDescBCMO = String(nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || '');
                 const tarea = String(nR['TAREA'] || '').trim();
                 const obra = String(nR['MOTIVO_DE_OBRA'] || nR['MOTIVO DE OBRA'] || nR['MOTIVO'] || 'Sin Obra').trim();
-                
-                // REGLA 1.B: Filtro de seguridad por texto en la descripción del contratista
-                if (contratista.toUpperCase().includes('SOBRANTES')) return;
+
+                // REGLA 1.B: Filtro de seguridad por texto en la descripción original del localizador (BCMO)
+                if (localizadorDescBCMO.toUpperCase().includes('SOBRANTES')) return;
+
+                // --- BIFURCACIÓN POR RAZÓN SOCIAL (Reporte de Localizadores) ---
+                // Bloque Principal = empresa auditada -> continúa con la lógica existente, sin cambios (más abajo).
+                // Bloque Secundario = cualquier otra razón social -> solo se indexa (obra -> ítems con consumo>0)
+                // para la búsqueda transversal de "Consumo en Otra EC"; no participa del análisis principal.
+                const contratistaRealNorm = String(contratistaReal).trim().toUpperCase();
+                if (empresaAuditadaNorm && contratistaRealNorm !== empresaAuditadaNorm) {
+                    if (invalidNomenclatures.includes(obra.toUpperCase())) return;
+                    if (tasksToExclude.includes(tarea.toUpperCase())) return;
+                    const descSec = String(nR['DESCRIPCION'] || '');
+                    let esMatExcluidoSec = false;
+                    for (let mat of materialsToExclude) { if (descSec.toLowerCase().includes(mat)) { esMatExcluidoSec = true; break; } }
+                    if (esMatExcluidoSec) return;
+
+                    const conSec = parseDecimalGlobal(nR['CONSUMIDO']);
+                    if (conSec > 0) {
+                        const obraKey = obra.toUpperCase();
+                        if (!secundarioIndexLocal[obraKey]) secundarioIndexLocal[obraKey] = [];
+                        secundarioIndexLocal[obraKey].push({
+                            Contratista: contratistaReal,
+                            LocalizadorCod: locCod,
+                            Item: nR['ITEM'] || nR['CODIGO'] || '',
+                            Descripcion: descSec.trim(),
+                            UM: nR['UM'] || '',
+                            Entregado: parseDecimalGlobal(nR['ENTREGADO']),
+                            Consumido: conSec,
+                            Diferencia: parseDecimalGlobal(nR['DIFERENCIA'])
+                        });
+                    }
+                    return;
+                }
+
+                const contratista = contratistaReal;
 
 
 
@@ -1800,6 +1937,11 @@
             setTabBadge('s1_reasignadasCountBadge', s1_obrasReasignadasData.length);
             s1_renderReasignadasTable();
 
+            // Guardar el índice del Bloque Secundario (otras razones sociales) para la búsqueda transversal.
+            // La tabla "Consumo en Otra EC" se termina de calcular en s1_recalculateStates(), una vez
+            // que cada obra del Bloque Principal ya tiene su naturalState ("Sin Consumo", etc.) asignado.
+            s1_secundarioIndex = secundarioIndexLocal;
+
             document.getElementById('s1_filtersPanel').classList.remove('opacity-50', 'pointer-events-none');
             document.getElementById('s1_loader').classList.add('hidden');
             document.getElementById('s1_resultsWorkspace').classList.remove('hidden');
@@ -1863,6 +2005,110 @@
                 }
             });
             s1_renderTable(); s1_renderVerificationTable();
+            s1_buildOtraECData();
+        }
+
+        // Búsqueda transversal: para cada obra del Bloque Principal con estado "Sin Consumo",
+        // busca en el índice del Bloque Secundario (otras razones sociales) si esa misma obra
+        // registra consumo real en otra empresa. Los materiales se agrupan por Contratista+LocalizadorCod.
+       
+	
+//	function s1_buildOtraECData() {
+//            const gruposMap = {};
+//            s1_processedData.forEach(item => {
+//                if (item.naturalState !== 'Sin Consumo') return;
+//                const matches = s1_secundarioIndex[String(item.Obra || '').toUpperCase()];
+//                if (!matches || matches.length === 0) return;
+ 
+		function s1_buildOtraECData() {
+            	const gruposMap = {};
+            	s1_processedData.forEach(item => {
+                // 1. Limpiamos la bandera por si los datos se recalcularon
+                item._enOtraEC = false; 
+                
+                if (item.naturalState !== 'Sin Consumo') return;
+                const matches = s1_secundarioIndex[String(item.Obra || '').toUpperCase()];
+                if (!matches || matches.length === 0) return;
+                
+                // 2. Marcamos la obra original para excluirla del Dashboard Principal
+                item._enOtraEC = true;               
+
+		matches.forEach(m => {
+                    const gK = `${m.Contratista}|${m.LocalizadorCod}`;
+                    if (!gruposMap[gK]) {
+                        gruposMap[gK] = {
+                            Obra: item.Obra,
+                            EmpresaOriginal: item.Contratista,
+                            RazonSocialOtraEC: m.Contratista,
+                            LocalizadorCod: m.LocalizadorCod,
+                            Detalles: []
+                        };
+                    }
+                    gruposMap[gK].Detalles.push({
+                        Articulo: m.Item,
+                        DescripcionArticulo: m.Descripcion,
+                        UM: m.UM,
+                        CantidadEntrega: m.Entregado,
+                        CantidadConsumida: m.Consumido,
+                        Diferencia: m.Diferencia
+                    });
+                });
+            });
+            s1_otraECData = Object.values(gruposMap);
+            setTabBadge('s1_otraECCountBadge', s1_otraECData.length);
+            s1_renderOtraECTable();
+        }
+
+        function s1_renderOtraECTable() {
+            const tbody = document.getElementById('s1_otraECTableBody');
+            const empty = document.getElementById('s1_otraECEmpty');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (s1_otraECData.length === 0) {
+                if (empty) empty.classList.remove('hidden');
+                return;
+            }
+            if (empty) empty.classList.add('hidden');
+            s1_otraECData.forEach((grupo, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100 hover:bg-purple-50";
+                tr.innerHTML = `
+                    <td class="p-3 text-sm font-bold text-purple-700">${grupo.Obra}</td>
+                    <td class="p-3 text-sm text-slate-700">${grupo.EmpresaOriginal}</td>
+                    <td class="p-3 text-sm text-slate-700"><span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2 py-0.5 rounded">${grupo.RazonSocialOtraEC}</span></td>
+                    <td class="p-3 text-sm font-mono text-slate-600">${grupo.LocalizadorCod}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="s1_showOtraECDetails(${index})" class="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 w-8 h-8 rounded-lg flex items-center justify-center transition-colors mx-auto" title="Ver detalle de materiales">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function s1_showOtraECDetails(index) {
+            const grupo = s1_otraECData[index];
+            if (!grupo) return;
+
+            document.getElementById('s1_modalTitle').textContent = `Detalles: ${grupo.Obra}`;
+            document.getElementById('s1_modalSubtitle').textContent = `Empresa Original: ${grupo.EmpresaOriginal} | Consumido bajo: ${grupo.RazonSocialOtraEC}`;
+
+            const tbody = document.getElementById('s1_modalTableBody'); tbody.innerHTML = '';
+            grupo.Detalles.forEach(det => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-2 px-4 text-xs text-slate-500 font-mono">${det.Articulo}</td>
+                    <td class="p-2 px-4 text-xs text-slate-700 font-medium">${det.DescripcionArticulo}</td>
+                    <td class="p-2 px-4 text-xs text-slate-500 text-center">${det.UM}</td>
+                    <td class="p-2 px-4 text-xs text-slate-600 text-right">${s1_formatLocalNumber(det.CantidadEntrega)}</td>
+                    <td class="p-2 px-4 text-xs text-slate-600 text-right">${s1_formatLocalNumber(det.CantidadConsumida)}</td>
+                    <td class="p-2 px-4 text-xs font-semibold text-slate-600 text-right">${s1_formatLocalNumber(det.Diferencia)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.getElementById('s1_detailsModal').classList.remove('hidden');
         }
 
         function s1_toggleMassivePanel() {
@@ -1914,17 +2160,35 @@
             s1_renderTable();
         }
 
-        function s1_renderTable() {
+//        function s1_renderTable() {
+//            const fC = document.getElementById('s1_filterContratista').value;
+//            const fE = document.getElementById('s1_filterEstado').value;
+//            const fS = document.getElementById('s1_searchObraDashboard').value.trim().toLowerCase();
+
+//            s1_filteredData = s1_processedData.filter(i => {
+//                if (fC !== 'ALL' && i.Contratista !== fC) return false;
+//                if (fE !== 'ALL' && i['Estado de liquidacion'] !== fE) return false;
+//                if (fS !== '' && !i.Obra.toLowerCase().includes(fS)) return false;
+//                return true;
+//            });
+
+
+function s1_renderTable() {
             const fC = document.getElementById('s1_filterContratista').value;
             const fE = document.getElementById('s1_filterEstado').value;
             const fS = document.getElementById('s1_searchObraDashboard').value.trim().toLowerCase();
 
             s1_filteredData = s1_processedData.filter(i => {
+                // 3. Si la obra fue absorbida por "Otra EC", la ocultamos de esta vista
+                if (i._enOtraEC) return false; 
+                
                 if (fC !== 'ALL' && i.Contratista !== fC) return false;
                 if (fE !== 'ALL' && i['Estado de liquidacion'] !== fE) return false;
                 if (fS !== '' && !i.Obra.toLowerCase().includes(fS)) return false;
                 return true;
             });
+
+
 
             document.getElementById('s1_statsText').innerHTML = `Mostrando <b>${s1_filteredData.length}</b> obras.`;
             const sC = { 'Consumido': 0, 'Sin Consumo': 0, 'Verificar Consumo': 0, 'Consumo Total': 0, 'Consumo Parcial': 0 };
