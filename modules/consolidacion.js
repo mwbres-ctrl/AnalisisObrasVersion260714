@@ -275,16 +275,20 @@ function _procesarConsolidacionCore() {
         // --- Lógica de Obra a considerar ---
         let obraAConsiderar = "-";
         const estBCMO = (matchBCMO ? String(matchBCMO['_N_ESTADO_DE_LIQUIDACION'] || '').trim().toUpperCase() : "");
-        if ((estadoEntrega === "Con entregas" || estadoEntrega === "Con entregas y pendientes") &&
+        const tieneEntregas = (estadoEntrega === "Con entregas" || estadoEntrega === "Con entregas y pendientes");
+
+        if (tieneEntregas &&
             nuevoEstado === "TERMINADO" &&
             estBCMO === "SIN CONSUMO" &&
             modalidad === "LEGAJO") {
             obraAConsiderar = "Considerar en hoja TERMINADO/CT";
-        } else if ((modalidad === "TAREA" || modalidad === "LEGAJO") &&
-            nuevoEstado === "A EJECUTAR" &&
-            (estadoEntrega === "Con entregas" || estadoEntrega === "Con entregas y pendientes")) {
-            obraAConsiderar = "Considerar en hoja A EJECUTAR (solo lo entregado vs conteo)";
-        } else if ((estadoEntrega === "Con entregas" || estadoEntrega === "Con entregas y pendientes") &&
+        } else if (tieneEntregas && nuevoEstado === "A EJECUTAR") {
+            if (modalidad === "TAREA" || modalidad === "LEGAJO") {
+                obraAConsiderar = "Considerar en hoja A EJECUTAR (solo lo entregado vs conteo)";
+            } else if (modalidad === "" || modalidad === "SIN MODALIDAD") {
+                obraAConsiderar = "ERROR: Definir Modalidad (A EJECUTAR - Entregado vs Conteo)";
+            }
+        } else if (tieneEntregas &&
             (nuevoEstado === "EN EJECUCIÓN" || nuevoEstado === "EN EJECUCION") &&
             estBCMO === "SIN CONSUMO" &&
             modalidad === "LEGAJO") {
