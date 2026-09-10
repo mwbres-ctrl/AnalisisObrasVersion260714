@@ -212,9 +212,10 @@
                         <li><button onclick="s1_switchTabEtapa1('otraec')" id="s1_btnTabOtraEC"
                                 class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive"><i
                                     class="fa-solid fa-magnifying-glass-dollar mr-1"></i> Consumo en Otra EC<span id="s1_otraECCountBadge" class="tab-count-badge hidden"></span></button></li>
-                        <li><button onclick="s1_switchTabEtapa1('excluidas')" id="s1_btnTabExcluidas"
-                                class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive"><i
-                                    class="fa-solid fa-ban mr-1"></i> Excluidas por Tarea<span id="s1_excluidasCountBadge" class="tab-count-badge hidden"></span></button></li>
+                        <!-- Botón del tab "Excluidas por Tarea" eliminado: ahora es un proceso interno oculto.
+                             Las obras que califican se rescatan automáticamente al Dashboard Principal
+                             (ver s1_analyzeData / regla de rescate ORED). El bloque HTML de abajo
+                             (id="s1_tabExcluidas") se conserva oculto para que el JS que lo referencia no rompa. -->
                     </ul>
                     <div class="flex gap-2">
                         <button onclick="s1_resetUI()"
@@ -411,6 +412,9 @@
                 </div>
 
                 <!-- ===== NUEVA SOLAPA: EXCLUIDAS POR TAREA ===== -->
+                <!-- Bloque lógico oculto: ya no es accesible por navegación (sin botón de tab).
+                     Se conserva para que s1_renderExcluidasPorTareaTable() y demás JS asociado
+                     sigan funcionando sin errores, aunque nunca se muestre. -->
                 <div id="s1_tabExcluidas" class="hidden flex-grow flex-col min-h-[500px]">
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col min-h-0">
                         <div class="p-4 border-b shrink-0 bg-amber-50 rounded-t-2xl flex justify-between items-center flex-wrap gap-3">
