@@ -254,6 +254,7 @@
         // Filtros Múltiples
         let activeStateFilters = [];
         let activeModalityFilters = [];
+        let activeObraConsiderarFilters = [];
         let activeOrphansStateFilters = [];
         let activeOrphansModFilters = [];
 
@@ -1152,6 +1153,9 @@
         let s1_secundarioIndex = {};               // { OBRA_UPPER: [ {Contratista, LocalizadorCod, Item, Descripcion, Entregado, Consumido, Diferencia}, ... ] }
         let s1_otraECData = [];                    // Resultado de la búsqueda transversal ("Consumo en Otra EC")
         let s1_obrasReasignadasData = [];
+        // --- Obras Excluidas por Tarea (nueva solapa) ---
+        let s1_excluidasPorTareaData = [];      // Array de grupos: { Contratista, Obra, Tarea, Entregado, Consumido, Diferencia, Detalles }
+        let s1_excluidasAutorizadas = new Set(); // Set de claves "Contratista|Obra" autorizadas manualmente
 
         document.addEventListener("DOMContentLoaded", () => {
             const sTasks = localStorage.getItem('excludedTasks');
@@ -1224,8 +1228,8 @@
         }
 
         function s1_switchTabEtapa1(tab) {
-            const elDash = document.getElementById('s1_tabDashboard'); const elVerif = document.getElementById('s1_tabVerification'); const elInvalid = document.getElementById('s1_tabInvalid'); const elReas = document.getElementById('s1_tabReasignadas'); const elOtraEC = document.getElementById('s1_tabOtraEC');
-            const btnDash = document.getElementById('s1_btnTabDashboard'); const btnVerif = document.getElementById('s1_btnTabVerification'); const btnInvalid = document.getElementById('s1_btnTabInvalid'); const btnReas = document.getElementById('s1_btnTabReasignadas'); const btnOtraEC = document.getElementById('s1_btnTabOtraEC');
+            const elDash = document.getElementById('s1_tabDashboard'); const elVerif = document.getElementById('s1_tabVerification'); const elInvalid = document.getElementById('s1_tabInvalid'); const elReas = document.getElementById('s1_tabReasignadas'); const elOtraEC = document.getElementById('s1_tabOtraEC'); const elExcluidas = document.getElementById('s1_tabExcluidas');
+            const btnDash = document.getElementById('s1_btnTabDashboard'); const btnVerif = document.getElementById('s1_btnTabVerification'); const btnInvalid = document.getElementById('s1_btnTabInvalid'); const btnReas = document.getElementById('s1_btnTabReasignadas'); const btnOtraEC = document.getElementById('s1_btnTabOtraEC'); const btnExcluidas = document.getElementById('s1_btnTabExcluidas');
 
             // Bloquear acceso a Verificar si no hay PM cargado
             if (tab === 'verification' && (!s1_dataMateriales || s1_dataMateriales.length === 0)) {
@@ -1233,12 +1237,13 @@
                 return;
             }
 
-            [elDash, elVerif, elInvalid, elReas, elOtraEC].forEach(el => { if (el) el.classList.add('hidden'); });
+            [elDash, elVerif, elInvalid, elReas, elOtraEC, elExcluidas].forEach(el => { if (el) el.classList.add('hidden'); });
             btnDash.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive";
             btnVerif.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive relative";
             if (btnInvalid) btnInvalid.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-rose-600 font-bold";
             if (btnReas) btnReas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-orange-600 font-bold";
             if (btnOtraEC) btnOtraEC.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-purple-600 font-bold";
+            if (btnExcluidas) btnExcluidas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-amber-600 font-bold";
 
             if (tab === 'dashboard') {
                 elDash.classList.remove('hidden');
@@ -1255,6 +1260,10 @@
             } else if (tab === 'otraec') {
                 if (elOtraEC) elOtraEC.classList.remove('hidden');
                 if (btnOtraEC) btnOtraEC.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-purple-700 font-bold border-b-2 border-purple-500";
+            } else if (tab === 'excluidas') {
+                if (elExcluidas) elExcluidas.classList.remove('hidden');
+                if (btnExcluidas) btnExcluidas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-amber-800 font-bold border-b-2 border-amber-500";
+                s1_renderExcluidasPorTareaTable();
             }
         }
 
@@ -1339,13 +1348,8 @@
                 s1_currentRawData = data;
                 s1_fileUploadDates.bcmo = dateStr;
                 s1_actualizarEstadoUI('s1_statusBCMO', true, dateStr);
-                // Habilitar botón Analizar BCMO
-                const btn = document.getElementById('s1_btnAnalizar');
-                if (btn) {
-                    btn.disabled = false;
-                    btn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-sm border border-blue-800 shadow-md animate-pulse';
-                }
-                showToastGlobal("BCMO listo. Puede cargar el PMOVXF antes de analizar.", "success");
+                s1_checkReadyToAnalyze();
+                showToastGlobal("BCMO listo. Puede cargar el PMOVXF y el Reporte de Localizadores antes de analizar.", "success");
             } else if (hStr.includes('MODALIDAD DE LIQUIDACION') || hStr.includes('ETAPA LOGICA') || (hStr.includes('MOTIVO') && (hStr.includes('EMPRESA') || hStr.includes('CONTRATISTA')))) {
                 // Es el Avance General
                 s1_handleAvanceGeneralFileRaw(data, dateStr);
@@ -1378,6 +1382,7 @@
             });
 
             s1_actualizarEstadoUI('s1_statusLocalizadores', true, dateStr);
+            s1_checkReadyToAnalyze();
             showToastGlobal(`Reporte de Localizadores cargado. ${s1_localizadorMap.size} localizadores mapeados.`, "success");
 
             // Extraer razones sociales únicas y abrir el modal de selección de empresa auditada
@@ -1555,6 +1560,35 @@
             });
         }
 
+        /**
+         * Verifica si los archivos REQUERIDOS de la Etapa 1 están cargados
+         * (BCMO + Reporte de Localizadores) y actualiza el estado del botón Analizar.
+         */
+        function s1_checkReadyToAnalyze() {
+            const btn = document.getElementById('s1_btnAnalizar');
+            if (!btn) return;
+            const tieneBCMO = s1_currentRawData && s1_currentRawData.length > 0;
+            const tieneLocalizadores = s1_localizadorMap && s1_localizadorMap.size > 0;
+
+            if (tieneBCMO && tieneLocalizadores) {
+                btn.disabled = false;
+                btn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-sm border border-blue-800 shadow-md animate-pulse';
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Analizar BCMO';
+            } else if (tieneBCMO && !tieneLocalizadores) {
+                btn.disabled = true;
+                btn.className = 'w-full bg-amber-500 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-amber-600';
+                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Cargue el Reporte de Localizadores para continuar';
+            } else if (!tieneBCMO && tieneLocalizadores) {
+                btn.disabled = true;
+                btn.className = 'w-full bg-amber-500 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-amber-600';
+                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Cargue el archivo BCMO para continuar';
+            } else {
+                btn.disabled = true;
+                btn.className = 'w-full bg-slate-200 text-slate-400 font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-slate-300';
+                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Analizar BCMO';
+            }
+        }
+
         function s1_lanzarAnalisisBCMO() {
             if (!s1_currentRawData || s1_currentRawData.length === 0) {
                 showToastGlobal("Cargue primero el archivo BCMO.", "error"); return;
@@ -1592,6 +1626,8 @@
             s1_dataAvanceGeneral = null;
             s1_empresaAuditada = '';
             s1_obrasReasignadasData = [];
+            s1_excluidasPorTareaData = [];
+            s1_excluidasAutorizadas = new Set();
             s1_dataLocalizadores = null;
             s1_localizadorMap = null;
             s1_secundarioIndex = {};
@@ -1609,11 +1645,7 @@
             if (document.getElementById('s1_massiveTotal')) document.getElementById('s1_massiveTotal').value = "";
             if (document.getElementById('s1_massiveParcial')) document.getElementById('s1_massiveParcial').value = "";
             // Restablecer botón Analizar
-            const btn = document.getElementById('s1_btnAnalizar');
-            if (btn) {
-                btn.disabled = true;
-                btn.className = 'w-full bg-slate-200 text-slate-400 font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-slate-300';
-            }
+            s1_checkReadyToAnalyze();
             // Limpiar tag empresa auditada
             const tag = document.getElementById('s1_empresaAuditadaTag');
             if (tag) tag.classList.add('hidden');
@@ -1677,6 +1709,9 @@
                 });
             }
             s1_obrasReasignadasData = [];
+            s1_excluidasPorTareaData = [];
+            // Mapa temporal para acumular grupos de obras excluidas por tarea
+            const excluidasPorTareaRaw = {};
 
             data.forEach(row => {
                 const nR = {};
@@ -1794,7 +1829,39 @@
                     return; // Siempre se descarta de la suma de materiales
                 }
 
-                if (tasksToExclude.includes(tarea.toUpperCase())) return;
+                if (tasksToExclude.includes(tarea.toUpperCase())) {
+                    // Capturar obra excluida por tarea: solo si pertenece a la empresa auditada
+                    // y no está en nomenclatura inválida ni en reasignadas.
+                    if (!invalidNomenclatures.includes(obra.toUpperCase()) &&
+                        !(s1_dataAvanceGeneral && s1_empresaAuditada && obrasOtrasEmpresasSet.has(obra.toUpperCase()))) {
+                        const gKExc = `${contratista}|${obra}`;
+                        if (!excluidasPorTareaRaw[gKExc]) {
+                            excluidasPorTareaRaw[gKExc] = {
+                                Contratista: contratista,
+                                Obra: obra,
+                                Tarea: tarea,
+                                Entregado: 0,
+                                Consumido: 0,
+                                Diferencia: 0,
+                                Detalles: []
+                            };
+                        }
+                        const excEntry = excluidasPorTareaRaw[gKExc];
+                        excEntry.Entregado += ent;
+                        excEntry.Consumido += con;
+                        excEntry.Diferencia += dif;
+                        excEntry.Detalles.push({
+                            'Ítem': nR['ITEM'] || nR['CODIGO'] || '',
+                            'Descripción': String(nR['DESCRIPCION'] || '').trim(),
+                            'UM': nR['UM'] || '',
+                            'Tarea': tarea,
+                            'Entregado': ent,
+                            'Consumido': con,
+                            'Diferencia': dif
+                        });
+                    }
+                    return;
+                }
 
                 let isExcludedMat = false;
                 for (let mat of materialsToExclude) { if (descLower.includes(mat)) { isExcludedMat = true; break; } }
@@ -1937,6 +2004,26 @@
             setTabBadge('s1_reasignadasCountBadge', s1_obrasReasignadasData.length);
             s1_renderReasignadasTable();
 
+            // Obras Excluidas por Tarea: filtrar las que ya están en alguna otra pestaña
+            const obrasEnOtrasPestanas = new Set();
+            s1_invalidData.forEach(d => obrasEnOtrasPestanas.add(`${d.Contratista}|${d.Obra}`));
+            s1_obrasReasignadasData.forEach(d => obrasEnOtrasPestanas.add(`${d.Contratista}|${d.Obra}`));
+            s1_processedData.forEach(d => obrasEnOtrasPestanas.add(`${d.Contratista}|${d.Obra}`));
+            s1_excluidasPorTareaData = Object.values(excluidasPorTareaRaw).filter(d => {
+                const key = `${d.Contratista}|${d.Obra}`;
+                return !obrasEnOtrasPestanas.has(key);
+            });
+            // Redondear valores
+            s1_excluidasPorTareaData.forEach(d => {
+                d.Entregado = Math.round(d.Entregado * 100) / 100;
+                d.Consumido = Math.round(d.Consumido * 100) / 100;
+                d.Diferencia = Math.round(d.Diferencia * 100) / 100;
+                const p = d.Entregado > 0 ? d.Consumido / d.Entregado : (d.Consumido > 0 ? 1 : 0);
+                d.PorcentajeReal = p;
+                d['% Consumo'] = (p * 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
+            });
+            setTabBadge('s1_excluidasCountBadge', s1_excluidasPorTareaData.length);
+
             // Guardar el índice del Bloque Secundario (otras razones sociales) para la búsqueda transversal.
             // La tabla "Consumo en Otra EC" se termina de calcular en s1_recalculateStates(), una vez
             // que cada obra del Bloque Principal ya tiene su naturalState ("Sin Consumo", etc.) asignado.
@@ -1947,6 +2034,415 @@
             document.getElementById('s1_resultsWorkspace').classList.remove('hidden');
             document.getElementById('s1_resultsWorkspace').classList.add('flex');
             s1_recalculateStates();
+        }
+
+        // =====================================================================
+        // FUNCIONES: OBRAS EXCLUIDAS POR TAREA
+        // =====================================================================
+
+        function s1_renderExcluidasPorTareaTable() {
+            const tbody = document.getElementById('s1_excluidasTableBody');
+            const emptyEl = document.getElementById('s1_excluidasEmpty');
+            const resumenEl = document.getElementById('s1_excluidasResumen');
+            const bannerEl = document.getElementById('s1_excluidasBannerAutorizadas');
+            const bannerTextEl = document.getElementById('s1_excluidasBannerText');
+            if (!tbody) return;
+
+            const query = (document.getElementById('s1_searchExcluidas')?.value || '').toLowerCase().trim();
+            const autorizadasCount = s1_excluidasAutorizadas.size;
+
+            // Banner de autorizadas
+            if (autorizadasCount > 0) {
+                bannerEl?.classList.remove('hidden');
+                if (bannerTextEl) bannerTextEl.textContent = `${autorizadasCount} obra(s) autorizada(s) — se incluyeron en el Dashboard Principal.`;
+            } else {
+                bannerEl?.classList.add('hidden');
+            }
+
+            const filtered = s1_excluidasPorTareaData.filter(item => {
+                if (!query) return true;
+                return item.Obra.toLowerCase().includes(query) || item.Contratista.toLowerCase().includes(query);
+            });
+
+            if (resumenEl) resumenEl.textContent = `${s1_excluidasPorTareaData.length} obra${s1_excluidasPorTareaData.length !== 1 ? 's' : ''} excluida${s1_excluidasPorTareaData.length !== 1 ? 's' : ''}`;
+
+            tbody.innerHTML = '';
+            if (filtered.length === 0) {
+                emptyEl?.classList.remove('hidden');
+                return;
+            }
+            emptyEl?.classList.add('hidden');
+
+            // Estados badge colors (igual que Dashboard)
+            const s1_excluidaStateColors = {
+                'Consumido':        { badge: 'bg-emerald-100 text-emerald-800 border border-emerald-200' },
+                'Sin Consumo':      { badge: 'bg-slate-100 text-slate-700 border border-slate-300' },
+                'Verificar Consumo':{ badge: 'bg-amber-100 text-amber-800 border border-amber-200' },
+                'DEFAULT':          { badge: 'bg-purple-100 text-purple-800 border border-purple-200' }
+            };
+
+            filtered.forEach(item => {
+                const key = `${item.Contratista}|${item.Obra}`;
+                const autorizado = s1_excluidasAutorizadas.has(key);
+                const pct = item.PorcentajeReal || 0;
+                const estado = pct >= 0.99 ? 'Consumido' : (pct <= 0 ? 'Sin Consumo' : 'Verificar Consumo');
+                const colors = s1_excluidaStateColors[estado] || s1_excluidaStateColors['DEFAULT'];
+
+                const pctFmt = item['% Consumo'] || '0,00%';
+                const pctBar = Math.min(Math.round(pct * 100), 100);
+                const pctColor = pct >= 0.99 ? 'bg-emerald-500' : (pct >= 0.5 ? 'bg-amber-400' : 'bg-rose-400');
+
+                const tr = document.createElement('tr');
+                tr.className = `border-b border-slate-100 hover:bg-amber-50 transition-colors ${autorizado ? 'bg-emerald-50' : ''}`;
+                tr.innerHTML = `
+                    <td class="p-3 text-sm text-slate-700">${item.Contratista}</td>
+                    <td class="p-3 text-sm font-bold text-amber-800">${item.Obra}</td>
+                    <td class="p-3 text-sm">
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                            <i class="fa-solid fa-ban text-[10px]"></i> ${item.Tarea}
+                        </span>
+                    </td>
+                    <td class="p-3 text-sm text-slate-700 text-right">${s1_formatLocalNumber(item.Entregado)}</td>
+                    <td class="p-3 text-sm text-slate-700 text-right">${s1_formatLocalNumber(item.Consumido)}</td>
+                    <td class="p-3 text-sm text-slate-700 text-right ${item.Diferencia < 0 ? 'text-emerald-700 font-semibold' : ''}">${s1_formatLocalNumber(item.Diferencia)}</td>
+                    <td class="p-3 text-center">
+                        <div class="flex flex-col items-center gap-0.5">
+                            <span class="text-xs font-bold text-slate-700">${pctFmt}</span>
+                            <div class="w-20 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                                <div class="h-full ${pctColor} rounded-full" style="width:${pctBar}%"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="p-3">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${colors.badge}">${estado}</span>
+                    </td>
+                    <td class="p-3 text-center">
+                        <button onclick="s1_showUnifiedDetails('${key.replace(/'/g, "\\'")}')" class="text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors font-semibold text-xs inline-flex items-center gap-1 shadow-sm" title="Analizar integralmente la obra (BCMO + PMOVXF)">
+                            <i class="fa-solid fa-microscope"></i> Analizar Obra
+                        </button>
+                    </td>
+                    <td class="p-3 text-center">
+                        <label class="relative inline-flex items-center cursor-pointer" title="${autorizado ? 'Quitar del Dashboard Principal' : 'Incluir en Dashboard Principal'}">
+                            <input type="checkbox" class="sr-only peer" ${autorizado ? 'checked' : ''}
+                                onchange="s1_toggleAutorizarExcluida('${key.replace(/'/g, "\\'")}')"
+                                id="chk_excl_${CSS.escape(key)}">
+                            <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function s1_toggleAutorizarExcluida(key) {
+            if (s1_excluidasAutorizadas.has(key)) {
+                // Desautorizar: quitar del Dashboard
+                s1_excluidasAutorizadas.delete(key);
+                s1_processedData = s1_processedData.filter(d => `${d.Contratista}|${d.Obra}` !== key);
+                showToastGlobal('Obra removida del Dashboard Principal.', 'info');
+            } else {
+                // Autorizar: buscar el item en excluidas y promoverlo al Dashboard
+                const excItem = s1_excluidasPorTareaData.find(d => `${d.Contratista}|${d.Obra}` === key);
+                if (!excItem) return;
+                s1_excluidasAutorizadas.add(key);
+                // Crear entrada compatible con s1_processedData
+                const p = excItem.Entregado > 0 ? excItem.Consumido / excItem.Entregado : (excItem.Consumido > 0 ? 1 : 0);
+                const umb = parseFloat(document.getElementById('s1_umbralVerificacion')?.value || '50') / 100;
+                let ns = 'Sin Consumo';
+                if (excItem.Consumido <= 0.01) ns = 'Sin Consumo';
+                else if (p >= umb) ns = 'Consumido';
+                else ns = 'Verificar Consumo';
+                s1_processedData.push({
+                    Contratista: excItem.Contratista,
+                    Obra: excItem.Obra,
+                    LocalizadorCod: '',
+                    Entregado: excItem.Entregado,
+                    Consumido: excItem.Consumido,
+                    Diferencia: excItem.Diferencia,
+                    Detalles: excItem.Detalles,
+                    PorcentajeReal: p,
+                    OriginalPorcentajeReal: p,
+                    '% Consumo': excItem['% Consumo'],
+                    naturalState: ns,
+                    'Estado de liquidacion': ns,
+                    onlyExcluded: false,
+                    fallbackExcluidos: false,
+                    tieneConsumoIgnorado: false,
+                    tieneSoredConsumido: false,
+                    _autorizadaDesdeExcluidas: true
+                });
+                showToastGlobal(`Obra "${excItem.Obra}" incluida en el Dashboard Principal.`, 'success');
+            }
+            s1_renderTable();
+            s1_renderVerificationTable();
+            s1_renderExcluidasPorTareaTable();
+        }
+
+        function s1_showExcluidaDetails(key) {
+            const item = s1_excluidasPorTareaData.find(d => `${d.Contratista}|${d.Obra}` === key);
+            if (!item) return;
+            const modal = document.getElementById('s1_detailsModal');
+            const title = document.getElementById('s1_modalTitle');
+            const subtitle = document.getElementById('s1_modalSubtitle');
+            const tbody = document.getElementById('s1_modalTableBody');
+            if (!modal || !tbody) return;
+            title.textContent = `Detalle: ${item.Obra}`;
+            subtitle.textContent = `Contratista: ${item.Contratista} | Tarea excluida: ${item.Tarea}`;
+            tbody.innerHTML = (item.Detalles || []).map(d => `
+                <tr class="border-b border-slate-100 hover:bg-amber-50">
+                    <td class="p-2 px-4 text-xs">${d['Ítem'] || ''}</td>
+                    <td class="p-2 px-4 text-xs">${d['Descripción'] || ''}</td>
+                    <td class="p-2 px-4 text-xs">${d['UM'] || ''}</td>
+                    <td class="p-2 px-4 text-xs">
+                        <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold border border-amber-200">${d['Tarea'] || ''}</span>
+                    </td>
+                    <td class="p-2 px-4 text-xs text-right">${s1_formatLocalNumber(d['Entregado'] || 0)}</td>
+                    <td class="p-2 px-4 text-xs text-right">${s1_formatLocalNumber(d['Consumido'] || 0)}</td>
+                    <td class="p-2 px-4 text-xs text-right">${s1_formatLocalNumber(d['Diferencia'] || 0)}</td>
+                </tr>
+            `).join('');
+            // Agregar encabezado dinámico al modal
+            const existingThead = modal.querySelector('table thead');
+            if (existingThead) {
+                existingThead.innerHTML = `<tr>
+                    <th class="p-2 px-4 text-xs font-semibold border-b">Ítem</th>
+                    <th class="p-2 px-4 text-xs font-semibold border-b">Descripción</th>
+                    <th class="p-2 px-4 text-xs font-semibold border-b">UM</th>
+                    <th class="p-2 px-4 text-xs font-semibold border-b">Tarea</th>
+                    <th class="p-2 px-4 text-xs font-semibold border-b text-right">Entregado</th>
+                    <th class="p-2 px-4 text-xs font-semibold border-b text-right">Consumido</th>
+                    <th class="p-2 px-4 text-xs font-semibold border-b text-right">Diferencia</th>
+                </tr>`;
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function s1_closeUnifiedModal() {
+            document.getElementById('s1_unifiedDetailsModal')?.classList.add('hidden');
+        }
+
+        function s1_switchUniTab(tab) {
+            const btnBcmo = document.getElementById('s1_uniTabBtn_bcmo');
+            const btnPm = document.getElementById('s1_uniTabBtn_pm');
+            const contBcmo = document.getElementById('s1_uniContent_bcmo');
+            const contPm = document.getElementById('s1_uniContent_pm');
+
+            if (!btnBcmo || !btnPm || !contBcmo || !contPm) return;
+
+            // Resetear estilos
+            btnBcmo.className = "px-4 py-2 text-sm font-bold rounded-t-lg transition-colors text-slate-500 hover:text-blue-700 hover:bg-blue-50";
+            btnPm.className = "px-4 py-2 text-sm font-bold rounded-t-lg transition-colors text-slate-500 hover:text-teal-700 hover:bg-teal-50";
+            contBcmo.classList.add('hidden');
+            contPm.classList.add('hidden');
+
+            if (tab === 'bcmo') {
+                btnBcmo.className = "px-4 py-2 text-sm font-bold rounded-t-lg transition-colors bg-white text-blue-700 border border-b-0 border-slate-200";
+                contBcmo.classList.remove('hidden');
+            } else if (tab === 'pm') {
+                btnPm.className = "px-4 py-2 text-sm font-bold rounded-t-lg transition-colors bg-white text-teal-700 border border-b-0 border-slate-200";
+                contPm.classList.remove('hidden');
+            }
+        }
+
+        let s1_uniModalIsMaximized = false;
+        function s1_toggleMaximizeUnifiedModal() {
+            const win = document.getElementById('s1_uniModalWindow');
+            const icon = document.getElementById('s1_uniModalMaxIcon');
+            if (!win || !icon) return;
+
+            if (s1_uniModalIsMaximized) {
+                // Restaurar
+                win.classList.remove('w-screen', 'h-screen', 'max-w-none', 'max-h-none', 'rounded-none');
+                win.classList.add('max-w-6xl', 'max-h-[90vh]', 'rounded-xl');
+                win.style.height = '80vh';
+                win.style.transform = 'translate(0px, 0px)';
+                icon.className = 'fa-solid fa-expand';
+                s1_uniModalIsMaximized = false;
+            } else {
+                // Maximizar
+                win.classList.remove('max-w-6xl', 'max-h-[90vh]', 'rounded-xl');
+                win.classList.add('w-screen', 'h-screen', 'max-w-none', 'max-h-none', 'rounded-none');
+                win.style.height = '100vh';
+                win.style.transform = 'translate(0px, 0px)';
+                icon.className = 'fa-solid fa-compress';
+                s1_uniModalIsMaximized = true;
+            }
+        }
+
+        function s1_initUnifiedModalDrag() {
+            const header = document.getElementById('s1_uniModalHeader');
+            const win = document.getElementById('s1_uniModalWindow');
+            if (!header || !win) return;
+
+            let isDragging = false;
+            let currentX;
+            let currentY;
+            let initialX;
+            let initialY;
+            let xOffset = 0;
+            let yOffset = 0;
+
+            // Limpiar eventos previos si los hay
+            const newHeader = header.cloneNode(true);
+            header.parentNode.replaceChild(newHeader, header);
+
+            newHeader.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+
+            function dragStart(e) {
+                if (s1_uniModalIsMaximized) return; // No arrastrar si está maximizado
+                // No arrastrar si se hace clic en botones
+                if (e.target.closest('button')) return;
+
+                initialX = e.clientX - xOffset;
+                initialY = e.clientY - yOffset;
+                isDragging = true;
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                xOffset = currentX;
+                yOffset = currentY;
+                setTranslate(currentX, currentY, win);
+            }
+
+            function dragEnd(e) {
+                isDragging = false;
+            }
+
+            function setTranslate(xPos, yPos, el) {
+                el.style.transform = `translate3d(${xPos}px, ${yPos}px, 0)`;
+            }
+
+            // Guardar para resetear
+            win.dataset.xOffset = 0;
+            win.dataset.yOffset = 0;
+        }
+
+        function s1_showUnifiedDetails(key) {
+            const item = s1_excluidasPorTareaData.find(d => `${d.Contratista}|${d.Obra}` === key);
+            if (!item) return;
+
+            const modal = document.getElementById('s1_unifiedDetailsModal');
+            if (!modal) return;
+
+            const win = document.getElementById('s1_uniModalWindow');
+            if (win) {
+                win.style.transform = 'translate3d(0px, 0px, 0)';
+                if (s1_uniModalIsMaximized) s1_toggleMaximizeUnifiedModal();
+            }
+            s1_initUnifiedModalDrag();
+
+            const obra = item.Obra;
+            const contratista = item.Contratista;
+
+            document.getElementById('s1_uniModalTitle').textContent = `Análisis Integral: ${obra}`;
+            document.getElementById('s1_uniModalSubtitle').textContent = `Contratista: ${contratista} | Tarea Excluida Principal: ${item.Tarea}`;
+
+            // --- Llenar Tab BCMO ---
+            const tbodyBcmo = document.getElementById('s1_uniModalTableBody_bcmo');
+            tbodyBcmo.innerHTML = (item.Detalles || []).map(d => `
+                <tr class="border-b border-slate-100 hover:bg-blue-50 transition-colors">
+                    <td class="p-2 px-4 text-xs font-mono font-semibold text-slate-700">${d['Ítem'] || ''}</td>
+                    <td class="p-2 px-4 text-xs text-slate-600">${d['Descripción'] || ''}</td>
+                    <td class="p-2 px-4 text-xs text-slate-500">${d['UM'] || ''}</td>
+                    <td class="p-2 px-4 text-xs">
+                        <span class="bg-amber-200 text-amber-900 px-2 py-1 rounded-md text-xs font-bold border border-amber-400 shadow-sm inline-block uppercase tracking-wide">${d['Tarea'] || ''}</span>
+                    </td>
+                    <td class="p-2 px-4 text-xs text-right text-slate-600">${s1_formatLocalNumber(d['Entregado'] || 0)}</td>
+                    <td class="p-2 px-4 text-xs text-right text-slate-600">${s1_formatLocalNumber(d['Consumido'] || 0)}</td>
+                    <td class="p-2 px-4 text-xs text-right text-slate-700 font-semibold ${d['Diferencia'] < 0 ? 'text-emerald-600' : ''}">${s1_formatLocalNumber(d['Diferencia'] || 0)}</td>
+                </tr>
+            `).join('');
+
+            // --- Llenar Tab PM ---
+            const matchObra = (motivoRaw, obraRaw) => {
+                const cleanStr = (s) => String(s || '').trim().toUpperCase().replace(/[\s-_]/g, '');
+                const m = cleanStr(motivoRaw);
+                const o = cleanStr(obraRaw);
+                if (!m || !o) return false;
+                return m === o || m.includes(o) || o.includes(m);
+            };
+
+            let movimientosPM = [];
+            if (s1_dataMateriales && s1_dataMateriales.length > 0) {
+                movimientosPM = s1_dataMateriales.filter(row => {
+                    const motivo = String(row['_N_MOTIVO'] || row['MOTIVO'] || row['Motivo'] || '');
+                    return matchObra(motivo, obra);
+                });
+            }
+
+            const badgePm = document.getElementById('s1_uniBadge_pm');
+            if (badgePm) {
+                badgePm.textContent = movimientosPM.length;
+                badgePm.className = movimientosPM.length > 0 ? "ml-1 px-1.5 py-0.5 bg-teal-100 text-teal-800 rounded-full text-[10px] font-bold" : "ml-1 px-1.5 py-0.5 bg-slate-200 text-slate-700 rounded-full text-[10px]";
+            }
+
+            const tbodyPm = document.getElementById('s1_uniModalTableBody_pm');
+            const emptyPm = document.getElementById('s1_uniEmpty_pm');
+            const tablePm = document.getElementById('s1_uniTable_pm');
+
+            if (movimientosPM.length === 0) {
+                emptyPm.classList.remove('hidden');
+                tablePm.classList.add('hidden');
+            } else {
+                emptyPm.classList.add('hidden');
+                tablePm.classList.remove('hidden');
+                
+                tbodyPm.innerHTML = movimientosPM.map(row => {
+                    const numero = row['_N_NUMERO'] || row['NUMERO'] || row['Numero'] || row['Número'] || '-';
+                    const articulo = row['_N_ARTICULO'] || row['ARTICULO'] || row['Articulo'] || row['Artículo'] || '-';
+                    const subinv = row['_N_SUBINV_DESTINO'] || row['SUBINV_DESTINO'] || row['Subinv_Destino'] || '-';
+                    const loc = row['_N_LOCALIZADOR_DESTINO'] || row['LOCALIZADOR_DESTINO'] || row['Localizador_Destino'] || '-';
+                    const ctdPend = row['_N_CTD_PENDIENTE'] || row['CTD_PENDIENTE'] || row['Ctd_Pendiente'] || '0';
+                    const cantSol = row['_N_CANTIDAD_SOLICITADA'] || row['CANTIDAD_SOLICITADA'] || row['Cantidad_Solicitada'] || '0';
+                    const cantEnt = row['_N_CANTIDAD_ENTREGADA'] || row['CANTIDAD_ENTREGADA'] || row['Cantidad_Entregada'] || row['_N_CANTIDAD'] || row['CANTIDAD'] || '0';
+                    const motivo = row['_N_MOTIVO'] || row['MOTIVO'] || row['Motivo'] || '-';
+                    const estadoLinea = row['_N_ESTADO_DE_LINEA'] || row['ESTADO_DE_LINEA'] || row['Estado_De_Linea'] || '-';
+                    const fechaEnt = row['_N_FECHA_TRX'] || row['FECHA_TRX'] || row['Fecha_Trx'] || row['FECHA_ENTREGA'] || row['Fecha Entrega'] || '-';
+                    const motivoTarea = row['_N_MOTIVO_TAREA'] || row['MOTIVO_TAREA'] || row['Motivo_Tarea'] || '-';
+
+                    let fechaStr = '-';
+                    if (fechaEnt instanceof Date) {
+                        fechaStr = fechaEnt.toLocaleDateString('es-AR');
+                    } else if (fechaEnt) {
+                        fechaStr = String(fechaEnt);
+                    }
+
+                    const cantSolNum = parseFloat(String(cantSol).replace(',', '.')) || 0;
+                    const cantEntNum = parseFloat(String(cantEnt).replace(',', '.')) || 0;
+                    const ctdPendNum = parseFloat(String(ctdPend).replace(',', '.')) || 0;
+
+                    const transaccion = `${numero} <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 ml-1 shadow-sm whitespace-nowrap">${estadoLinea}</span>`;
+                    const ubicacion = `<span class="text-slate-500">${subinv}</span> <i class="fa-solid fa-angle-right mx-1 text-slate-300 text-[10px]"></i> <span class="text-slate-700 font-medium">${loc}</span>`;
+                    
+                    const p = s1_formatLocalNumber(ctdPendNum);
+                    const s = s1_formatLocalNumber(cantSolNum);
+                    const e = s1_formatLocalNumber(cantEntNum);
+                    const cantidades = `<div class="flex flex-col gap-0.5 text-[10px]"><span class="text-slate-500">Sol: <b class="text-slate-700 text-xs">${s}</b></span><span class="text-slate-500">Ent: <b class="text-teal-700 text-xs">${e}</b></span><span class="text-slate-400">Pend: ${p}</span></div>`;
+
+                    const tareaBadge = `<span class="bg-teal-200 text-teal-900 px-2 py-1 rounded-md text-xs font-bold border border-teal-400 shadow-sm inline-block uppercase tracking-wide">${motivoTarea}</span>`;
+
+                    return `
+                        <tr class="hover:bg-teal-50 transition-colors border-b border-slate-100">
+                            <td class="p-2 px-4 text-xs font-medium text-slate-700">${transaccion}</td>
+                            <td class="p-2 px-4 text-xs font-mono font-semibold text-slate-700">${articulo}</td>
+                            <td class="p-2 px-4 text-xs">${ubicacion}</td>
+                            <td class="p-2 px-4 text-xs">${cantidades}</td>
+                            <td class="p-2 px-4 text-xs text-slate-700 font-medium">${motivo}</td>
+                            <td class="p-2 px-4 text-xs text-slate-500">${fechaStr}</td>
+                            <td class="p-2 px-4">${tareaBadge}</td>
+                        </tr>
+                    `;
+                }).join('');
+            }
+
+            s1_switchUniTab('bcmo');
+            modal.classList.remove('hidden');
         }
 
         function s1_renderInvalidTable() {
@@ -2225,7 +2721,12 @@ function s1_renderTable() {
                     <td class="p-3 text-sm text-slate-600 text-right">${s1_formatLocalNumber(item.Entregado)}</td><td class="p-3 text-sm text-slate-600 text-right">${s1_formatLocalNumber(item.Consumido)}</td><td class="p-3 text-sm text-slate-600 text-right font-medium">${s1_formatLocalNumber(item.Diferencia)}</td>
                     <td class="p-3 text-sm text-slate-600 text-center"><div class="w-full bg-slate-200 rounded-full h-2 mt-1 mb-1"><div class="bg-blue-600 h-2 rounded-full" style="width: ${Math.min(item.PorcentajeReal * 100, 100)}%"></div></div>${item['% Consumo']}</td>
                     <td class="p-3 text-sm"><span class="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 border ${bC}"><i class="fa-solid ${iC}"></i> ${eS} ${isMan ? '<i class="fa-solid fa-brain text-[10px] ml-1 opacity-70"></i>' : ''}</span></td>
-                    <td class="p-3 text-sm text-center"><button onclick="s1_showDetails('${gK}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg"><i class="fa-solid fa-eye"></i></button></td>
+                    <td class="p-3 text-sm text-center">
+                        <div class="flex items-center justify-center gap-2">
+                            <button onclick="s1_showDetails('${gK}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg" title="Ver detalle BCMO"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="s1_showPMDetails('${item.Contratista}', '${item.Obra.replace(/'/g, "\\'")}')" class="text-teal-600 hover:text-teal-800 bg-teal-50 hover:bg-teal-100 p-2 rounded-lg" title="Ver detalle PMOVXF"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -2391,17 +2892,14 @@ function s1_renderTable() {
                 });
             }
 
-            // Buscar movimientos de PM y filtrar para mostrar solo los que tienen diferencia > 0 en BCMO
+            // Buscar todos los movimientos del PM para esta obra
             const movimientos = s1_dataMateriales.filter(row => {
                 const motivo = String(row['_N_MOTIVO'] || row['MOTIVO'] || row['Motivo'] || '');
-                if (!matchObra(motivo, obra)) return false;
-
-                const articuloPM = cleanCode(row['_N_ARTICULO'] || row['ARTICULO'] || row['Articulo'] || row['Artículo'] || row['Item'] || row['Ítem'] || row['Código'] || row['Codigo']);
-                return articulosConDiferencia.hasOwnProperty(articuloPM);
+                return matchObra(motivo, obra);
             });
 
             document.getElementById('s1_pmModalTitle').textContent = `PM — ${obra}`;
-            document.getElementById('s1_pmModalSubtitle').textContent = `${movimientos.length} movimiento(s) filtrado(s) del PMOVXF con diferencia > 0`;
+            document.getElementById('s1_pmModalSubtitle').textContent = `${movimientos.length} movimiento(s) filtrado(s) del PMOVXF`;
 
             const tbody = document.getElementById('s1_pmModalTableBody');
             tbody.innerHTML = '';
@@ -2412,16 +2910,19 @@ function s1_renderTable() {
             } else {
                 emptyMsg.classList.add('hidden');
                 movimientos.forEach(row => {
-                    // Mapear campos flexiblemente segun cabeceras del PMOVXF
+                    const numero = row['_N_NUMERO'] || row['NUMERO'] || row['Numero'] || row['Número'] || '-';
+                    const articulo = row['_N_ARTICULO'] || row['ARTICULO'] || row['Articulo'] || row['Artículo'] || '-';
+                    const subinv = row['_N_SUBINV_DESTINO'] || row['SUBINV_DESTINO'] || row['Subinv_Destino'] || '-';
+                    const loc = row['_N_LOCALIZADOR_DESTINO'] || row['LOCALIZADOR_DESTINO'] || row['Localizador_Destino'] || '-';
+                    const ctdPend = row['_N_CTD_PENDIENTE'] || row['CTD_PENDIENTE'] || row['Ctd_Pendiente'] || '0';
+                    const cantSol = row['_N_CANTIDAD_SOLICITADA'] || row['CANTIDAD_SOLICITADA'] || row['Cantidad_Solicitada'] || '0';
+                    const cantEnt = row['_N_CANTIDAD_ENTREGADA'] || row['CANTIDAD_ENTREGADA'] || row['Cantidad_Entregada'] || row['_N_CANTIDAD'] || row['CANTIDAD'] || '0';
                     const motivo = row['_N_MOTIVO'] || row['MOTIVO'] || row['Motivo'] || '-';
-                    const articuloPMVal = row['_N_ARTICULO'] || row['ARTICULO'] || row['Articulo'] || row['Artículo'] || '-';
-                    const descBCMO = articulosConDiferencia[cleanCode(articuloPMVal)];
-                    const descFinal = descBCMO || row['_N_DESCRIPCION'] || row['_N_DESC_MATERIAL'] || row['DESCRIPCION'] || row['DESC_MATERIAL'] || row['Descripción'] || row['Descripcion'] || '-';
-                    const cantSol = row['_N_CANT_SOLICITADA'] || row['_N_CANTIDAD_SOLICITADA'] || row['CANT_SOLICITADA'] || row['CANTIDAD_SOLICITADA'] || row['Cantidad Solicitada'] || '';
-                    const cantEnt = row['_N_CANTIDAD_ENTREGADA'] || row['_N_CANT_ENTREGADA'] || row['CANTIDAD_ENTREGADA'] || row['CANT_ENTREGADA'] || row['Cantidad Entregada'] || row['_N_CANTIDAD'] || row['CANTIDAD'] || '';
-                    const fechaEnt = row['_N_FECHA_TRX'] || row['FECHA_TRX'] || row['Fecha_Trx'] || row['FECHA_ENTREGA'] || row['Fecha Entrega'] || '';
+                    const estadoLinea = row['_N_ESTADO_DE_LINEA'] || row['ESTADO_DE_LINEA'] || row['Estado_De_Linea'] || '-';
+                    const fechaEnt = row['_N_FECHA_TRX'] || row['FECHA_TRX'] || row['Fecha_Trx'] || row['FECHA_ENTREGA'] || row['Fecha Entrega'] || '-';
+                    const motivoTarea = row['_N_MOTIVO_TAREA'] || row['MOTIVO_TAREA'] || row['Motivo_Tarea'] || '-';
 
-                    let fechaStr = '';
+                    let fechaStr = '-';
                     if (fechaEnt instanceof Date) {
                         fechaStr = fechaEnt.toLocaleDateString('es-AR');
                     } else if (fechaEnt) {
@@ -2430,16 +2931,22 @@ function s1_renderTable() {
 
                     const cantSolNum = parseFloat(String(cantSol).replace(',', '.')) || 0;
                     const cantEntNum = parseFloat(String(cantEnt).replace(',', '.')) || 0;
+                    const ctdPendNum = parseFloat(String(ctdPend).replace(',', '.')) || 0;
 
                     const tr = document.createElement('tr');
                     tr.className = 'hover:bg-teal-50 transition-colors';
                     tr.innerHTML = `
+                        <td class="p-2 px-4 text-xs text-slate-700 font-medium">${numero}</td>
+                        <td class="p-2 px-4 text-xs text-slate-700 font-mono font-semibold">${articulo}</td>
+                        <td class="p-2 px-4 text-xs text-slate-600">${subinv}</td>
+                        <td class="p-2 px-4 text-xs text-slate-600">${loc}</td>
+                        <td class="p-2 px-4 text-xs text-slate-600 text-right font-mono">${s1_formatLocalNumber(ctdPendNum)}</td>
+                        <td class="p-2 px-4 text-xs text-slate-600 text-right font-mono">${s1_formatLocalNumber(cantSolNum)}</td>
+                        <td class="p-2 px-4 text-xs text-teal-700 text-right font-mono font-semibold">${s1_formatLocalNumber(cantEntNum)}</td>
                         <td class="p-2 px-4 text-xs text-slate-700 font-medium">${motivo}</td>
-                        <td class="p-2 px-4 text-xs text-slate-700 font-mono font-semibold">${articuloPMVal}</td>
-                        <td class="p-2 px-4 text-xs text-slate-600">${descFinal}</td>
-                        <td class="p-2 px-4 text-xs text-slate-600 text-right font-mono">${cantSol !== '' ? s1_formatLocalNumber(cantSolNum) : '-'}</td>
-                        <td class="p-2 px-4 text-xs text-teal-700 text-right font-mono font-semibold">${cantEnt !== '' ? s1_formatLocalNumber(cantEntNum) : '-'}</td>
-                        <td class="p-2 px-4 text-xs text-slate-500">${fechaStr || '-'}</td>
+                        <td class="p-2 px-4 text-xs text-slate-600">${estadoLinea}</td>
+                        <td class="p-2 px-4 text-xs text-slate-500">${fechaStr}</td>
+                        <td class="p-2 px-4 text-xs text-slate-600">${motivoTarea}</td>
                     `;
                     tbody.appendChild(tr);
                 });
