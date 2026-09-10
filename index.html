@@ -1840,6 +1840,7 @@
                                 Contratista: contratista,
                                 Obra: obra,
                                 Tarea: tarea,
+                                LocalizadorCod: locCod,
                                 Entregado: 0,
                                 Consumido: 0,
                                 Diferencia: 0,
@@ -2023,6 +2024,51 @@
                 d['% Consumo'] = (p * 100).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%';
             });
             setTabBadge('s1_excluidasCountBadge', s1_excluidasPorTareaData.length);
+
+            // RESCATE AUTOMÁTICO: si una obra excluida por tarea tiene MOTIVO_TAREA = ORED en el PMOVXF,
+            // se promueve al Dashboard Principal (con badge de trazabilidad), en vez de quedar oculta.
+            //
+            // IMPORTANTE: el objeto de "excluida" (Contratista, Obra, Tarea, LocalizadorCod, Entregado,
+            // Consumido, Diferencia, Detalles) NO tiene la misma forma que un item normal de
+            // s1_processedData. Si se empuja tal cual, s1_recalculateStates() —que corre a continuación,
+            // y de nuevo cada vez que cambia el umbral de verificación— lee item.OriginalPorcentajeReal
+            // para calcular '% Consumo', y al no existir muestra "NaN%" en el Dashboard. Por eso se
+            // completan acá los campos faltantes antes de promoverlo.
+            if (s1_dataMateriales && s1_dataMateriales.length > 0) {
+                const cleanStr = s => String(s || '').trim().toUpperCase().replace(/[\s\-_]/g, '');
+                const rescued = [];
+                const stillExcluded = [];
+
+                s1_excluidasPorTareaData.forEach(excl => {
+                    const obraKey = cleanStr(excl.Obra);
+                    const tieneOred = s1_dataMateriales.some(row => {
+                        const motivoTarea = String(row['_N_MOTIVO_TAREA'] || row['MOTIVO_TAREA'] || '').trim().toUpperCase();
+                        const motivo = cleanStr(row['_N_MOTIVO'] || row['MOTIVO'] || '');
+                        return motivoTarea === 'ORED' && (motivo === obraKey || motivo.includes(obraKey) || obraKey.includes(motivo));
+                    });
+
+                    if (tieneOred) {
+                        // Completar los campos que le faltan para comportarse como un item normal del Dashboard
+                        excl.OriginalPorcentajeReal = excl.Entregado > 0 ? (excl.Consumido / excl.Entregado) : (excl.Consumido > 0 ? 1 : 0);
+                        excl.PorcentajeReal = excl.OriginalPorcentajeReal;
+                        excl.tieneSoredConsumido = false;
+                        excl.tieneConsumoIgnorado = false;
+                        excl.onlyExcluded = false;
+                        excl.fallbackExcluidos = false;
+                        excl._rescatadaOred = true; // Flag de trazabilidad para el badge
+                        s1_processedData.push(excl);
+                        rescued.push(excl.Obra);
+                    } else {
+                        stillExcluded.push(excl);
+                    }
+                });
+
+                s1_excluidasPorTareaData = stillExcluded;
+                setTabBadge('s1_excluidasCountBadge', s1_excluidasPorTareaData.length);
+                if (rescued.length > 0) {
+                    showToastGlobal(`${rescued.length} obra(s) rescatadas automáticamente por TAREA ORED en PMOVXF.`, 'success');
+                }
+            }
 
             // Guardar el índice del Bloque Secundario (otras razones sociales) para la búsqueda transversal.
             // La tabla "Consumo en Otra EC" se termina de calcular en s1_recalculateStates(), una vez
@@ -2715,9 +2761,16 @@ function s1_renderTable() {
                 const fallbackAlert = item.fallbackExcluidos
                     ? `<i class="fa-solid fa-recycle text-violet-500 ml-2" title="Fallback aplicado: artículos activos en cero, se recalculó con artículos excluidos"></i>`
                     : '';
+                // Badge de trazabilidad: la obra fue rescatada automáticamente desde "Excluidas por Tarea"
+                // por registrar MOTIVO_TAREA = ORED en el PMOVXF.
+                const rescatadaBadge = item._rescatadaOred
+                    ? `<span class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-300" title="Incluida automáticamente por registrar TAREA ORED en PMOVXF">
+                           <i class="fa-solid fa-rotate-right"></i> ORED
+                       </span>`
+                    : '';
 
                 tr.innerHTML = `
-                    <td class="p-3 text-sm text-slate-700">${item.Contratista}</td><td class="p-3 text-sm font-medium text-blue-700 flex items-center">${item.Obra}${exclAlert}${fallbackAlert}</td>
+                    <td class="p-3 text-sm text-slate-700">${item.Contratista}</td><td class="p-3 text-sm font-medium text-blue-700 flex items-center">${item.Obra}${exclAlert}${fallbackAlert}${rescatadaBadge}</td>
                     <td class="p-3 text-sm text-slate-600 text-right">${s1_formatLocalNumber(item.Entregado)}</td><td class="p-3 text-sm text-slate-600 text-right">${s1_formatLocalNumber(item.Consumido)}</td><td class="p-3 text-sm text-slate-600 text-right font-medium">${s1_formatLocalNumber(item.Diferencia)}</td>
                     <td class="p-3 text-sm text-slate-600 text-center"><div class="w-full bg-slate-200 rounded-full h-2 mt-1 mb-1"><div class="bg-blue-600 h-2 rounded-full" style="width: ${Math.min(item.PorcentajeReal * 100, 100)}%"></div></div>${item['% Consumo']}</td>
                     <td class="p-3 text-sm"><span class="px-3 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1 border ${bC}"><i class="fa-solid ${iC}"></i> ${eS} ${isMan ? '<i class="fa-solid fa-brain text-[10px] ml-1 opacity-70"></i>' : ''}</span></td>
