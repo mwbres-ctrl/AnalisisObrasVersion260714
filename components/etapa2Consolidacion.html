@@ -164,25 +164,113 @@
 
     <!-- CONTENIDO PESTAÑA 1: DATOS -->
     <div id="tabDataContent" class="flex-1 flex flex-col min-h-0">
-        <!-- Filtros -->
-        <div class="bg-white border-b border-slate-200 px-4 py-3 shrink-0 flex flex-col gap-3">
+        <!-- Filtros Modernos (Filter Bar) -->
+        <div class="bg-white border-b border-slate-200 px-4 py-3 shrink-0 flex flex-col gap-3 shadow-sm z-30 relative">
             <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold text-slate-500 uppercase w-16">Estado:</span>
-                    <div id="summaryBadges" class="flex flex-wrap gap-2"></div>
+                
+                <!-- Búsqueda Global -->
+                <div class="relative w-64">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i class="fa-solid fa-search text-slate-400 text-xs"></i>
+                    </div>
+                    <input type="text" id="globalSearchInput" oninput="renderPreview()"
+                        class="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-slate-50 transition-all"
+                        placeholder="Buscar Nodo u Obra BF...">
                 </div>
-                <button type="button" onclick="openConfigReglas()"
-                    class="ml-auto bg-white border border-indigo-200 hover:bg-indigo-50 text-indigo-700 font-bold px-3 py-1.5 rounded text-xs transition-colors flex items-center gap-2 shadow-sm"><i
-                        class="fa-solid fa-list-ol"></i> Gestor Reglas</button>
-                <button type="button" onclick="openFaqModal()"
-                    class="bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 font-bold px-3 py-1.5 rounded text-xs transition-colors flex items-center gap-2 shadow-sm"><i
-                        class="fa-solid fa-circle-question"></i> Preguntas Frecuentes</button>
-                <div class="text-sm text-slate-600 font-medium bg-slate-100 px-3 py-1 rounded border border-slate-200"
-                    id="statsText">0 registros</div>
+
+                <!-- Dropdowns de Filtro -->
+                <div class="flex items-center gap-3 flex-1">
+                    <!-- Dropdown Sector Informante -->
+                    <div class="relative group">
+                        <button type="button" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
+                            Sector Informante <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                        </button>
+                        <div class="hidden group-hover:block absolute left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
+                            <div id="dropdownSectorContent" class="px-2 space-y-1"></div>
+                        </div>
+                    </div>
+                    <!-- Dropdown Estado -->
+                    <div class="relative group">
+                        <button type="button" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
+                            Estado <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                        </button>
+                        <div class="hidden group-hover:block absolute left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
+                            <div id="dropdownEstadoContent" class="px-2 space-y-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Modalidad -->
+                    <div class="relative group">
+                        <button type="button" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
+                            Modalidad <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                        </button>
+                        <div class="hidden group-hover:block absolute left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
+                            <div id="dropdownModalidadContent" class="px-2 space-y-1"></div>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Obra a Considerar -->
+                    <div class="relative group">
+                        <button type="button" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
+                            Obra a Considerar <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                        </button>
+                        <div class="hidden group-hover:block absolute left-0 mt-1 w-80 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
+                            <div id="dropdownObraConsContent" class="px-2 space-y-1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botones Extra -->
+                <div class="flex items-center gap-2 ml-auto">
+                    <button type="button" onclick="openSummaryModal()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-3 py-1.5 rounded-md text-xs transition-colors shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie"></i> Resumen
+                    </button>
+                    <div class="text-sm text-indigo-700 font-bold bg-indigo-50 px-3 py-1.5 rounded-md border border-indigo-200 shadow-sm"
+                        id="statsText">0 registros</div>
+                    <button type="button" onclick="openConfigReglas()"
+                        class="bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors shadow-sm" title="Gestor Reglas"><i class="fa-solid fa-sliders"></i></button>
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-slate-500 uppercase w-16">Modalidad:</span>
-                <div id="modalityBadges" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Modal Resumen Interactivo -->
+        <div id="summaryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+            <!-- Overlay Oscuro -->
+            <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onclick="closeSummaryModal()"></div>
+            
+            <!-- Contenedor Central -->
+            <div class="bg-white rounded-xl shadow-2xl relative w-full max-w-2xl flex flex-col mx-4 animate-fade-in-up">
+                <!-- Header -->
+                <div class="flex items-center justify-between p-4 border-b border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-indigo-600"></i> Resumen Interactivo
+                    </h3>
+                    <button type="button" onclick="closeSummaryModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+                
+                <!-- Tabla -->
+                <div class="p-4 overflow-auto custom-scrollbar bg-slate-50 max-h-[70vh]">
+                    <div class="overflow-hidden rounded-md border border-slate-200 shadow-sm w-full bg-white">
+                        <table class="w-full text-left text-xs whitespace-nowrap">
+                            <thead class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                                <tr>
+                                    <th class="py-1.5 px-3 font-semibold border-r">Sector Informante</th>
+                                    <th class="py-1.5 px-3 font-semibold border-r">Obra a considerar</th>
+                                    <th class="py-1.5 px-3 font-semibold text-center w-32">Cantidad de obras</th>
+                                </tr>
+                            </thead>
+                            <tbody id="interactiveSummaryBody" class="text-slate-700"></tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="p-3 border-t border-slate-200 bg-slate-50 flex justify-end rounded-b-xl">
+                    <button type="button" onclick="closeSummaryModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-1.5 rounded-md text-xs transition-colors">Cerrar</button>
+                </div>
             </div>
         </div>
 
@@ -204,45 +292,7 @@
                             <i class="fa-solid fa-pen-to-square"></i>
                         </th>
                     </tr>
-                    <tr class="filter-row border-b-2 border-slate-300 bg-slate-100">
-                        <th class="p-1 border-r border-slate-200"><input type="text" id="hFilterNodo"
-                                oninput="renderPreview()"
-                                class="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:border-indigo-500 outline-none"
-                                placeholder="Buscar..."></th>
-                        <th class="p-1 border-r border-slate-200 bg-indigo-50"><input type="text"
-                                id="hFilterObraBF" oninput="renderPreview()"
-                                class="w-full px-2 py-1 text-xs border border-indigo-200 bg-white rounded focus:border-indigo-500 outline-none"
-                                placeholder="Buscar..."></th>
-                        <th class="p-1 border-r border-slate-200"><input type="text" id="hFilterMod"
-                                oninput="renderPreview()"
-                                class="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:border-indigo-500 outline-none"
-                                placeholder="Buscar..."></th>
-                        <th class="p-1 border-r border-slate-200"><input type="text" id="hFilterEstOrig"
-                                oninput="renderPreview()"
-                                class="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:border-indigo-500 outline-none"
-                                placeholder="Buscar original..."></th>
-                        <th class="p-1 border-r border-slate-200 bg-indigo-50/50"><input type="text"
-                                id="hFilterAudit" oninput="renderPreview()"
-                                class="w-full px-2 py-1 text-xs border border-indigo-200 rounded focus:border-indigo-500 outline-none bg-white"
-                                placeholder="Buscar..."></th>
-                        <th class="p-1 border-r border-slate-200 bg-emerald-50/50"><input type="text"
-                                id="hFilterEstCalc" oninput="renderPreview()"
-                                class="w-full px-2 py-1 text-xs border border-emerald-200 rounded focus:border-emerald-500 outline-none bg-white"
-                                placeholder="Buscar..."></th>
-                        <th class="p-1 border-r border-slate-200 bg-amber-50/50"><input type="text"
-                                id="hFilterEstEnt" oninput="renderPreview()"
-                                class="w-full px-2 py-1 text-xs border border-amber-200 rounded focus:border-amber-500 outline-none bg-white"
-                                placeholder="Buscar..."></th>
-                        <th class="p-1 border-r border-slate-200 bg-blue-50/50"><input type="text"
-                                id="hFilterObraConsiderar" oninput="renderPreview()"
-                                class="w-full px-2 py-1 text-xs border border-blue-200 rounded focus:border-blue-500 outline-none bg-white"
-                                placeholder="Buscar..."></th>
-                        <th class="p-1 border-r border-slate-200"><input type="text" id="hFilterObs"
-                                oninput="renderPreview()"
-                                class="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:border-indigo-500 outline-none"
-                                placeholder="Buscar..."></th>
-                        <th class="p-1 text-center bg-slate-100"></th>
-                    </tr>
+
                 </thead>
                 <tbody id="tableBody" class="text-slate-700 border-b border-slate-200"></tbody>
             </table>
