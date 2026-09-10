@@ -8,7 +8,10 @@
    - dataAvance, dataAvanceCorporativo, dataBCMO, dataTarea, dataMateriales
    - dataConsolidada, filteredConsolidada, headersAvance
    - stateOverrides, fileUploadDates
-   - activeStateFilters, activeModalityFilters
+   - activeStateFilters = [];
+   - activeModalityFilters = [];
+   - activeObraConsiderarFilters = [];
+   - activeSectorFilters = [];
    - stateColorMap, corporativoEstadoMapping
    - showToast, showLoadingOverlay, hideLoadingOverlay, fadeSwapSection
    - evaluateExcelFormula, getActiveOverride, updateStepper, setTabBadge
@@ -16,6 +19,95 @@
      renderCaducidadTable, renderRecatTable
    - openEditModal, showDetails (de orphans.js / auditoria.js)
    -------------------------------------------------------------------------- */
+
+// --- POST-PROCESO: Etiquetado de Obras Reversionadas (E0, E1, E2...) ---
+/**
+ * Agrupa las filas de dataConsolidada por "nodo raíz" (sin el sufijo de versión EX)
+ * y aplica el etiquetado correcto sobre el campo "Obra a considerar" según:
+ *
+ *   CASO A: La versión más nueva tiene "A EJECUTAR"
+ *     → nueva versión: texto estándar + " - Versión X"
+ *     → versiones viejas con entregas: ídem con su número
+ *     → versiones viejas sin entregas: sin cambio
+ *
+ *   CASO B: La versión más nueva tiene "EN EJECUCIÓN" o "TERMINADO/CT"
+ *     → TODAS las versiones reciben el texto de la versión nueva + " - Versión X"
+ *
+ * Solo actúa sobre grupos con 2 o más versiones detectadas.
+ * Los nodos sin sufijo EX no se modifican.
+ */
+function _aplicarEtiquetadoVersionado(data) {
+    // Regex: captura el nodo raíz y el número de versión del sufijo EX (case-insensitive)
+    // Acepta separadores opcionales: espacio, guión, guión bajo antes de "E"
+    const REGEX_VERSION = /^(.*?)[- _]?E(\d+)$/i;
+
+    // --- PASO 1: Clasificar filas e identificar grupos con múltiples versiones ---
+    const grupos = new Map(); // clave: nodoRaíz → [ { fila, versionNum } ]
+
+    data.forEach((fila, idx) => {
+        const nodo = String(fila['Nodo'] || fila['NODO'] || '').trim();
+        const match = nodo.match(REGEX_VERSION);
+        if (!match) return; // nodo sin sufijo de versión → ignorar
+
+        const raiz = match[1].trim().toUpperCase();
+        const versionNum = parseInt(match[2], 10);
+
+        if (!grupos.has(raiz)) grupos.set(raiz, []);
+        grupos.get(raiz).push({ fila, idx, versionNum });
+    });
+
+    // --- PASO 2: Procesar solo grupos con 2+ versiones ---
+    grupos.forEach((versiones, raiz) => {
+        if (versiones.length < 2) return; // nodo único con sufijo E0 → ignorar
+
+        // Ordenar por número de versión de mayor a menor
+        versiones.sort((a, b) => b.versionNum - a.versionNum);
+        const nueva = versiones[0]; // La de número más alto = más reciente
+
+        const obraActualNueva = String(nueva.fila['Obra a considerar'] || '').trim();
+
+        // Detectar a qué caso pertenece según el texto de la versión más nueva
+        const esA_EJECUTAR = obraActualNueva.includes('A EJECUTAR');
+        const esEN_EJECUCION = obraActualNueva.includes('EN EJECUCIÓN') || obraActualNueva.includes('EN EJECUCION');
+        const esTerminadoCT = obraActualNueva.includes('TERMINADO/CT');
+
+        if (!esA_EJECUTAR && !esEN_EJECUCION && !esTerminadoCT) {
+            // La versión nueva no tiene una etiqueta relevante → no modificar el grupo
+            return;
+        }
+
+        // --- CASO A: Versión nueva = A EJECUTAR ---
+        if (esA_EJECUTAR) {
+            const textoBaseA = 'Considerar en hoja A EJECUTAR (solo lo entregado vs conteo)';
+
+            versiones.forEach(({ fila, versionNum }) => {
+                const esNueva = (versionNum === nueva.versionNum);
+                const tieneEntregasMat =
+                    fila['Estado de Entregas'] === 'Con entregas' ||
+                    fila['Estado de Entregas'] === 'Con entregas y pendientes';
+
+                if (esNueva) {
+                    // La versión nueva siempre se etiqueta
+                    fila['Obra a considerar'] = `${textoBaseA} - Versión ${versionNum}`;
+                } else {
+                    // Versiones viejas: solo si tienen material entregado
+                    if (tieneEntregasMat) {
+                        fila['Obra a considerar'] = `${textoBaseA} - Versión ${versionNum}`;
+                    }
+                    // Sin entregas → se deja el valor original intacto
+                }
+            });
+        }
+        // --- CASO B: Versión nueva = EN EJECUCIÓN o TERMINADO/CT ---
+        else {
+            // Usamos el texto exacto calculado para la versión nueva como base
+            // y lo aplicamos a TODAS las versiones del grupo
+            versiones.forEach(({ fila, versionNum }) => {
+                fila['Obra a considerar'] = `${obraActualNueva} - Versión ${versionNum}`;
+            });
+        }
+    });
+}
 
 // --- PROCESAMIENTO CORE CON AUDITORÍA Y SIN REGISTROS ---
 function procesarConsolidacion() {
@@ -72,10 +164,105 @@ function _procesarConsolidacionCore() {
         });
     }
 
-    // Combinar arrays si existen
+    // Combinar arrays si existen y resolver cruce
     const allAvance = [];
-    if (dataAvance) allAvance.push(...dataAvance);
-    if (dataAvanceCorporativo) allAvance.push(...dataAvanceCorporativo);
+    const mapAvance = new Map();
+
+    const getLatestDate = (row) => {
+        const parseDate = (d) => {
+            if (!d) return 0;
+            if (typeof d === 'number') return d;
+            const str = String(d).trim();
+            if (str === '-' || str === '') return 0;
+            const parts = str.split(/[T\s/:-]/);
+            if (parts.length >= 3) {
+                if (parts[0].length === 2 && parts[2].length === 4) {
+                    return new Date(parts[2], parts[1]-1, parts[0]).getTime() || 0;
+                }
+            }
+            return new Date(str).getTime() || 0;
+        };
+        return Math.max(
+            parseDate(row['_N_INICIO']),
+            parseDate(row['_N_FIN']),
+            parseDate(row['_N_CIERRE_TECNICO'])
+        );
+    };
+
+    if (dataAvance) {
+        dataAvance.forEach(row => {
+            const rowCopy = { ...row, 'Sector Informante': 'Obras' };
+            const k = String(rowCopy['_N_NODO'] || '').trim().toUpperCase();
+            if (k) mapAvance.set(k, rowCopy);
+            else allAvance.push(rowCopy);
+        });
+    }
+
+    if (dataAvanceCorporativo) {
+        function estandarizarEstadoCorporativo(estado) {
+            if (!estado) return "";
+            let est = String(estado).trim().toUpperCase();
+            const sinAcentos = est.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            
+            if (sinAcentos === "CIERRE TECNICO") return "CIERRE TECNICO";
+            if (sinAcentos === "FINALIZADA" || sinAcentos === "FINALIZADO") return "FINALIZADA";
+            if (sinAcentos === "A EJECUTAR") return "A EJECUTAR";
+            if (sinAcentos === "SUSPENDIDA" || sinAcentos === "SUSPENDIDO") return "SUSPENDIDA";
+            if (sinAcentos === "CANCELADA" || sinAcentos === "CANCELADO") return "CANCELADA";
+            if (sinAcentos === "EN EJECUCION") return "EN EJECUCIÓN";
+            if (sinAcentos === "TERMINADA" || sinAcentos === "TERMINADO") return "TERMINADO";
+            return est;
+        }
+
+        dataAvanceCorporativo.forEach(row => {
+            const rawEstado = row['ESTADO'] || row['_N_ESTADO'] || '';
+            const stdEstado = estandarizarEstadoCorporativo(rawEstado);
+
+            const filteredRow = {
+                '_N_NODO': row['_N_NODO'],
+                'NODO': row['NODO'] || row['_N_NODO'],
+                '_N_ESTADO': stdEstado,
+                'ESTADO': stdEstado,
+                '_N_INICIO': row['_N_INICIO'],
+                'INICIO': row['INICIO'] || row['_N_INICIO'],
+                '_N_FIN': row['_N_FIN'],
+                'FIN': row['FIN'] || row['_N_FIN'],
+                '_N_PUESTA_EN_M': row['_N_PUESTA_EN_M'] || row['_N_PUESTA_EN_MARCHA'],
+                'PUESTA EN M.': row['PUESTA EN M.'] || row['PUESTA EN MARCHA'] || row['_N_PUESTA_EN_M'] || row['_N_PUESTA_EN_MARCHA'],
+                '_N_CIERRE_TECNICO': row['_N_CIERRE_TECNICO'],
+                'CIERRE TECNICO': row['CIERRE TECNICO'] || row['_N_CIERRE_TECNICO'],
+                '_N_CONTRATISTA': row['_N_CONTRATISTA'],
+                'CONTRATISTA': row['CONTRATISTA'] || row['_N_CONTRATISTA'],
+                '_N_MODALIDAD_DE_LIQUIDACION': row['_N_MODALIDAD_DE_LIQUIDACION'],
+                'MODALIDAD DE LIQUIDACION': row['MODALIDAD DE LIQUIDACION'] || row['_N_MODALIDAD_DE_LIQUIDACION'],
+                '_ORIGEN': row['_ORIGEN'] || 'CORPORATIVO',
+                '_N_FECHA_CIERRE_CALCULADA': row['_N_FECHA_CIERRE_CALCULADA'],
+                'Sector Informante': 'Corporativos'
+            };
+
+            const k = String(filteredRow['_N_NODO'] || '').trim().toUpperCase();
+            if (k) {
+                if (mapAvance.has(k)) {
+                    const existingRow = mapAvance.get(k);
+                    const dateExisting = getLatestDate(existingRow);
+                    const dateNew = getLatestDate(filteredRow);
+                    
+                    if (dateNew > dateExisting) {
+                        mapAvance.set(k, filteredRow);
+                    }
+                } else {
+                    mapAvance.set(k, filteredRow);
+                }
+            } else {
+                allAvance.push(filteredRow);
+            }
+        });
+    }
+
+    // Agregar todos los procesados del mapa al array final
+    for (const row of mapAvance.values()) {
+        allAvance.push(row);
+    }
 
     allAvance.forEach(rowAvance => {
         const fila = { ...rowAvance };
@@ -277,28 +464,70 @@ function _procesarConsolidacionCore() {
         const estBCMO = (matchBCMO ? String(matchBCMO['_N_ESTADO_DE_LIQUIDACION'] || '').trim().toUpperCase() : "");
         const tieneEntregas = (estadoEntrega === "Con entregas" || estadoEntrega === "Con entregas y pendientes");
 
-        if (tieneEntregas &&
-            nuevoEstado === "TERMINADO" &&
-            estBCMO === "SIN CONSUMO" &&
-            modalidad === "LEGAJO") {
-            obraAConsiderar = "Considerar en hoja TERMINADO/CT";
-        } else if (tieneEntregas && nuevoEstado === "A EJECUTAR") {
-            if (modalidad === "TAREA" || modalidad === "LEGAJO") {
-                obraAConsiderar = "Considerar en hoja A EJECUTAR (solo lo entregado vs conteo)";
-            } else if (modalidad === "" || modalidad === "SIN MODALIDAD") {
-                obraAConsiderar = "ERROR: Definir Modalidad (A EJECUTAR - Entregado vs Conteo)";
+        // [RUTEO] Detectar si el registro proviene del sector Corporativo.
+        // Para corporativos, el motor de auditoría (BCMO/TAREA) no calcula nuevoEstado de forma
+        // representativa. En cambio, usamos el estado ya estandarizado en el paso de carga del corporativo.
+        const esCorporativo = (rowAvance['_ORIGEN'] === 'CORPORATIVO' || modalidad === 'CORPORATIVO');
+
+        // [RUTEO] Selección de la fuente de estado según el origen del registro:
+        //   - Corporativo → lee el campo ESTADO/_N_ESTADO estandarizado del filteredRow corporativo.
+        //   - Obras       → usa nuevoEstado, calculado por el motor de auditoría normal.
+        const estadoParaObra = esCorporativo
+            ? String(rowAvance['ESTADO'] || rowAvance['_N_ESTADO'] || '').trim().toUpperCase()
+            : nuevoEstado;
+
+        // [BRANCH CORPORATIVO] Para registros de sector Corporativo, se usan sus
+        // propios estados estandarizados. No se verifica modalidad porque siempre
+        // será "CORPORATIVO". El mapeo de estados es:
+        //   - FINALIZADA / CIERRE TECNICO → "Considerar en Hoja: TERMINADO/CT"
+        //   - A EJECUTAR                  → "Considerar en Hoja: A EJECUTAR"
+        //   - EN EJECUCIÓN                → "Considerar en Hoja: EN EJECUCIÓN"
+        if (esCorporativo) {
+            // [RUTEO CORP] Solo consideramos las obras que aún NO han sido consumidas por BCMO
+            if (tieneEntregas && estBCMO === "SIN CONSUMO") {
+                if (estadoParaObra === "FINALIZADA" || estadoParaObra === "CIERRE TECNICO" || estadoParaObra === "TERMINADO") {
+                    // [RUTEO CORP] FINALIZADA y CIERRE TECNICO equivalen a TERMINADO en el mundo corporativo
+                    obraAConsiderar = "Considerar en Hoja: TERMINADO/CT";
+                } else if (estadoParaObra === "A EJECUTAR") {
+                    // [RUTEO CORP] A EJECUTAR corporativo → hoja A EJECUTAR
+                    obraAConsiderar = "Considerar en Hoja: A EJECUTAR (lo entregado vs conteo)";
+                } else if (estadoParaObra === "EN EJECUCIÓN" || estadoParaObra === "EN EJECUCION") {
+                    // [RUTEO CORP] En ejecución corporativo → hoja En ejecución
+                    obraAConsiderar = "Considerar en Hoja: EN EJECUCIÓN (lo entregado + pendiente)";
+                }
             }
-        } else if (tieneEntregas &&
-            (nuevoEstado === "EN EJECUCIÓN" || nuevoEstado === "EN EJECUCION") &&
-            estBCMO === "SIN CONSUMO" &&
-            modalidad === "LEGAJO") {
-            obraAConsiderar = "Considerar en hoja En ejecución (lo entregado + pendiente)";
+        } else {
+            // [BRANCH OBRAS] Lógica original: depende de nuevoEstado, estBCMO y modalidad
+            if (tieneEntregas &&
+                estadoParaObra === "TERMINADO" &&
+                estBCMO === "SIN CONSUMO" &&
+                modalidad === "LEGAJO") {
+                obraAConsiderar = "Considerar en Hoja: TERMINADO/CT";
+            } else if (tieneEntregas &&
+                estadoParaObra === "TERMINADO" &&
+                estBCMO === "SIN CONSUMO" &&
+                (modalidad === "" || modalidad === "SIN MODALIDAD")) {
+                obraAConsiderar = "ERROR: Definir Modalidad (TERMINADO/CT - Sin Consumo)";
+            } else if (tieneEntregas && estadoParaObra === "A EJECUTAR") {
+                if (modalidad === "TAREA" || modalidad === "LEGAJO") {
+                    obraAConsiderar = "Considerar en Hoja: A EJECUTAR (lo entregado vs conteo)";
+                } else if (modalidad === "" || modalidad === "SIN MODALIDAD") {
+                    obraAConsiderar = "ERROR: Definir Modalidad (A EJECUTAR - Entregado vs Conteo)";
+                }
+            } else if (tieneEntregas &&
+                (estadoParaObra === "EN EJECUCIÓN" || estadoParaObra === "EN EJECUCION") &&
+                estBCMO === "SIN CONSUMO" &&
+                modalidad === "LEGAJO") {
+                obraAConsiderar = "Considerar en Hoja: EN EJECUCIÓN (lo entregado + pendiente)";
+            }
         }
 
         fila['Obra a considerar'] = obraAConsiderar;
-
         dataConsolidada.push(fila);
     });
+
+    // --- POST-PROCESO: Etiquetado de obras reversionadas (E0, E1, E2...) ---
+    _aplicarEtiquetadoVersionado(dataConsolidada);
 
     fadeSwapSection(document.getElementById('setupSection'), document.getElementById('resultsSection'), 'flex');
     document.getElementById('btnExportar').classList.remove('hidden');
@@ -319,7 +548,26 @@ function _procesarConsolidacionCore() {
     hideLoadingOverlay();
 }
 
+// Funciones Pop-up Resumen Interactivo
+window.openSummaryModal = function() {
+    const modal = document.getElementById('summaryModal');
+    if (modal) modal.classList.remove('hidden');
+};
+
+window.closeSummaryModal = function() {
+    const modal = document.getElementById('summaryModal');
+    if (modal) modal.classList.add('hidden');
+};
+
 // --- FILTROS MULTIPLES ---
+let activeSectorFilters = [];
+function toggleSectorFilter(sector) {
+    const idx = activeSectorFilters.indexOf(sector);
+    if (idx > -1) activeSectorFilters.splice(idx, 1);
+    else activeSectorFilters.push(sector);
+    renderPreview();
+}
+
 function toggleStateFilter(estado) {
     const idx = activeStateFilters.indexOf(estado);
     if (idx > -1) activeStateFilters.splice(idx, 1);
@@ -334,92 +582,134 @@ function toggleModalityFilter(mod) {
     renderPreview();
 }
 
+function toggleObraConsFilter(valor) {
+    const idx = activeObraConsiderarFilters.indexOf(valor);
+    if (idx > -1) activeObraConsiderarFilters.splice(idx, 1);
+    else activeObraConsiderarFilters.push(valor);
+    renderPreview();
+}
+
 function renderPreview() {
-    const fNodo = document.getElementById('hFilterNodo').value.trim().toLowerCase();
-    const fObraBf = document.getElementById('hFilterObraBF').value.trim().toLowerCase();
-    const fMod = document.getElementById('hFilterMod').value.trim().toLowerCase();
-    const fEstOrig = document.getElementById('hFilterEstOrig').value.trim().toLowerCase();
-    const fAudit = document.getElementById('hFilterAudit').value.trim().toLowerCase();
-    const fEstCalc = document.getElementById('hFilterEstCalc').value.trim().toLowerCase();
-    const fEstEnt = document.getElementById('hFilterEstEnt').value.trim().toLowerCase();
-    const fObraConsiderar = document.getElementById('hFilterObraConsiderar') ? document.getElementById('hFilterObraConsiderar').value.trim().toLowerCase() : "";
-    const fObs = document.getElementById('hFilterObs').value.trim().toLowerCase();
+    const globalSearch = document.getElementById('globalSearchInput') ? document.getElementById('globalSearchInput').value.trim().toLowerCase() : "";
 
     let baseFiltered = dataConsolidada.filter(item => {
         const n = String(item['Nodo'] || item['NODO'] || '').toLowerCase();
         const oBf = String(item['Obra BF'] || '').toLowerCase();
-        const m = String(item['Modalidad de Liquidación Calculada'] || item['Modalidad de Liquidación'] || item['MODALIDAD DE LIQUIDACIÓN'] || item['_ORIGEN'] || '').toLowerCase();
-        const eo = String(item['Estado (Original Excel)'] || item['Estado (Motor)'] || '').toLowerCase();
-        const au = String(item['_AUDIT_'] || '').toLowerCase();
-        const ec = String(item['Estado de Avance (Calculado)'] || '').toLowerCase();
-        const ee = String(item['Estado de Entregas'] || '').toLowerCase();
-        const oc = String(item['Obra a considerar'] || '').toLowerCase();
-        const ob = String(item['Acción Sugerida / Observación'] || '').toLowerCase();
-
-        if (fNodo && !n.includes(fNodo)) return false;
-        if (fObraBf && !oBf.includes(fObraBf)) return false;
-        if (fMod && !m.includes(fMod)) return false;
-        if (fEstOrig && !eo.includes(fEstOrig)) return false;
-        if (fAudit && !au.includes(fAudit)) return false;
-        if (fEstCalc && !ec.includes(fEstCalc)) return false;
-        if (fEstEnt && !ee.includes(fEstEnt)) return false;
-        if (fObraConsiderar && !oc.includes(fObraConsiderar)) return false;
-        if (fObs && !ob.includes(fObs)) return false;
+        
+        // Búsqueda global simplificada
+        if (globalSearch && !n.includes(globalSearch) && !oBf.includes(globalSearch)) return false;
         return true;
     });
 
-    const countsState = {}; const countsMod = {};
+    const countsState = {}; const countsMod = {}; const countsObraCons = {}; const countsSector = {};
 
     baseFiltered.forEach(i => {
         const e = i['Estado de Avance (Calculado)'] || 'Otro';
         countsState[e] = (countsState[e] || 0) + 1;
+        
         let m = (i['Modalidad de Liquidación Calculada'] || i['Modalidad de Liquidación'] || i['MODALIDAD DE LIQUIDACIÓN'] || '').toUpperCase().trim();
         m = m === '' ? (i['_ORIGEN'] === 'CORPORATIVO' ? 'CORPORATIVO' : 'SIN MODALIDAD') : m;
         countsMod[m] = (countsMod[m] || 0) + 1;
+        
+        const oc = i['Obra a considerar'] || '-';
+        countsObraCons[oc] = (countsObraCons[oc] || 0) + 1;
+
+        const sec = i['Sector Informante'] || 'Desconocido';
+        countsSector[sec] = (countsSector[sec] || 0) + 1;
     });
 
-    // Badges Estado Múltiple
-    const badgesContainer = document.getElementById('summaryBadges');
-    badgesContainer.innerHTML = '';
+    // Renderizado dinámico de los Dropdowns
+    const renderDropdownContent = (containerId, countsObj, activeArray, toggleFuncName, arrVarName) => {
+        const container = document.getElementById(containerId);
+        if(!container) return;
+        container.innerHTML = '';
+        
+        const allActive = activeArray.length === 0;
+        container.innerHTML += `
+            <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-100 rounded cursor-pointer transition-colors">
+                <input type="checkbox" ${allActive ? 'checked' : ''} onchange="${arrVarName}.length=0; renderPreview();" class="rounded text-indigo-600 focus:ring-indigo-500">
+                <span class="text-xs font-bold text-slate-700">Seleccionar Todos</span>
+            </label>
+            <div class="border-t border-slate-200 my-1"></div>
+        `;
 
-    const allActive = activeStateFilters.length === 0;
-    const btnAllClass = allActive ? "bg-slate-700 text-white" : "bg-white text-slate-600 border border-slate-300";
-    badgesContainer.innerHTML += `<button type="button" onclick="activeStateFilters=[]; renderPreview();" class="px-3 py-1 text-xs rounded font-semibold transition-colors shadow-sm ${btnAllClass}">TODOS</button>`;
+        for (const [val, count] of Object.entries(countsObj)) {
+            const isActive = activeArray.includes(val);
+            container.innerHTML += `
+                <label class="flex items-center justify-between px-2 py-1.5 hover:bg-slate-100 rounded cursor-pointer transition-colors">
+                    <div class="flex items-center gap-2 overflow-hidden w-full">
+                        <input type="checkbox" ${isActive ? 'checked' : ''} onchange="${toggleFuncName}('${val}')" class="rounded text-indigo-600 focus:ring-indigo-500 shrink-0">
+                        <span class="text-xs text-slate-600 truncate flex-1" title="${val}">${val}</span>
+                    </div>
+                    <span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 rounded-full font-mono shrink-0 ml-2">${count}</span>
+                </label>
+            `;
+        }
+    };
 
-    for (const [estado, cantidad] of Object.entries(countsState)) {
-        const isActive = activeStateFilters.includes(estado);
-        const style = stateColorMap[estado] || stateColorMap['DEFAULT'];
-        const btnClass = isActive ? `bg-slate-700 text-white shadow-inner` : `bg-white border text-slate-700 hover:bg-slate-50 ${style.badge}`;
-        badgesContainer.innerHTML += `<button type="button" onclick="toggleStateFilter('${estado}')" class="px-3 py-1 text-xs rounded border font-semibold transition-colors flex items-center gap-1 shadow-sm ${btnClass}">${estado} <span class="text-[10px] ml-1 px-1.5 rounded ${isActive ? 'bg-white/20' : 'bg-slate-200'}">${cantidad}</span></button>`;
-    }
+    renderDropdownContent('dropdownSectorContent', countsSector, activeSectorFilters, 'toggleSectorFilter', 'activeSectorFilters');
+    renderDropdownContent('dropdownEstadoContent', countsState, activeStateFilters, 'toggleStateFilter', 'activeStateFilters');
+    renderDropdownContent('dropdownModalidadContent', countsMod, activeModalityFilters, 'toggleModalityFilter', 'activeModalityFilters');
+    renderDropdownContent('dropdownObraConsContent', countsObraCons, activeObraConsiderarFilters, 'toggleObraConsFilter', 'activeObraConsiderarFilters');
 
-    // Badges Modalidad Múltiple
-    const modBadgesContainer = document.getElementById('modalityBadges');
-    modBadgesContainer.innerHTML = '';
-
-    const allModActive = activeModalityFilters.length === 0;
-    const btnModAllClass = allModActive ? "bg-slate-700 text-white" : "bg-white text-slate-600 border border-slate-300";
-    modBadgesContainer.innerHTML += `<button type="button" onclick="activeModalityFilters=[]; renderPreview();" class="px-3 py-1 text-xs rounded font-semibold transition-colors shadow-sm ${btnModAllClass}">TODAS</button>`;
-
-    for (const [mod, cantidad] of Object.entries(countsMod)) {
-        const isActive = activeModalityFilters.includes(mod);
-        let btnClass = isActive ? `bg-indigo-600 text-white` : `bg-white border-slate-300 text-slate-700 hover:bg-slate-50`;
-        if (mod === 'SIN MODALIDAD' && !isActive) btnClass = `bg-red-50 border-red-200 text-red-700`;
-        modBadgesContainer.innerHTML += `<button type="button" onclick="toggleModalityFilter('${mod}')" class="px-3 py-1 text-xs rounded border font-semibold transition-colors flex items-center gap-1 shadow-sm ${btnClass}">${mod} <span class="text-[10px] ml-1 px-1.5 rounded ${isActive ? 'bg-white/20' : 'bg-slate-200'}">${cantidad}</span></button>`;
-    }
-
-    // Filtrado Final Combinado
+    // Cruce Final
     filteredConsolidada = baseFiltered.filter(item => {
         if (activeStateFilters.length > 0 && !activeStateFilters.includes(item['Estado de Avance (Calculado)'])) return false;
+        
         let itemMod = (item['Modalidad de Liquidación Calculada'] || item['Modalidad de Liquidación'] || item['MODALIDAD DE LIQUIDACIÓN'] || '').toUpperCase().trim();
         itemMod = itemMod === '' ? (item['_ORIGEN'] === 'CORPORATIVO' ? 'CORPORATIVO' : 'SIN MODALIDAD') : itemMod;
         if (activeModalityFilters.length > 0 && !activeModalityFilters.includes(itemMod)) return false;
+        
+        const oc = item['Obra a considerar'] || '-';
+        if (activeObraConsiderarFilters.length > 0 && !activeObraConsiderarFilters.includes(oc)) return false;
+
+        const sec = item['Sector Informante'] || 'Desconocido';
+        if (activeSectorFilters.length > 0 && !activeSectorFilters.includes(sec)) return false;
+
         return true;
     });
 
-    document.getElementById('statsText').innerHTML = `<b>${filteredConsolidada.length}</b> de ${dataConsolidada.length} registros`;
+    const statsEl = document.getElementById('statsText');
+    if(statsEl) statsEl.innerHTML = `<b>${filteredConsolidada.length}</b> de ${dataConsolidada.length} registros`;
+
+    // --- RESUMEN INTERACTIVO ---
+    const summaryData = {};
+    filteredConsolidada.forEach(item => {
+        const sector = item['Sector Informante'] || 'Desconocido';
+        const obraCons = item['Obra a considerar'] || '-';
+        const key = sector + '|' + obraCons;
+        summaryData[key] = (summaryData[key] || 0) + 1;
+    });
+
+    const summaryBody = document.getElementById('interactiveSummaryBody');
+    if (summaryBody) {
+        summaryBody.innerHTML = '';
+        const sortedKeys = Object.keys(summaryData).sort((a, b) => {
+            const [secA, obsA] = a.split('|');
+            const [secB, obsB] = b.split('|');
+            if (secA !== secB) return secA.localeCompare(secB);
+            return obsA.localeCompare(obsB);
+        });
+
+        sortedKeys.forEach(key => {
+            const [sector, obraCons] = key.split('|');
+            const count = summaryData[key];
+            summaryBody.innerHTML += `
+                <tr class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td class="py-1.5 px-3 border-r border-slate-100">${sector}</td>
+                    <td class="py-1.5 px-3 border-r border-slate-100 font-medium">${obraCons}</td>
+                    <td class="py-1.5 px-3 text-center font-bold text-indigo-700 bg-indigo-50/30">${count}</td>
+                </tr>
+            `;
+        });
+        
+        if (sortedKeys.length === 0) {
+            summaryBody.innerHTML = `<tr><td colspan="3" class="py-3 text-center text-slate-500 italic">No hay datos para mostrar</td></tr>`;
+        }
+    }
 
     const tbody = document.getElementById('tableBody');
+    if(!tbody) return;
     tbody.innerHTML = '';
 
     filteredConsolidada.slice(0, 500).forEach((item, idx) => {
@@ -494,10 +784,16 @@ function exportToExcel() {
             if (!k.startsWith('_')) allHeadersSet.add(k);
         });
     }
+    
+    // Asegurar que las columnas clave y generadas dinámicamente estén en las cabeceras
+    ['Sector Informante', 'ESTADO', 'INICIO', 'FIN', 'PUESTA EN M.', 'CIERRE TECNICO', 'CONTRATISTA'].forEach(h => allHeadersSet.add(h));
+
     const activeHeaders = Array.from(allHeadersSet);
 
     const data = dataConsolidada.map(row => {
         const r = {};
+        // NODO siempre como primera columna
+        r['Nodo'] = row['Nodo'] || row['NODO'] || '';
         activeHeaders.forEach(h => {
             const normalizedH = h.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
             if (excludedHeaders.includes(normalizedH)) return;
