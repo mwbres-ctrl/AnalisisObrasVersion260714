@@ -125,6 +125,15 @@ function aplicarCaducidad(nodoOriginal, fechaInicio, fechaCierre) {
 
     const logId = nodoOriginal + "_" + new Date().getTime();
 
+    // Capturar el Nodo corregido del override activo ANTES de revertirlo, para no perder
+    // esa corrección al forzar FINALIZADO. Si no había corrección previa, queda vacío (comportamiento igual al anterior).
+    let correctedNodoPrevio = "";
+    Object.values(stateOverrides).forEach(log => {
+        if (log.nodo === nodoOriginal && !log.reverted && log.correctedNodo) {
+            correctedNodoPrevio = log.correctedNodo;
+        }
+    });
+
     // Revertir posibles modificaciones anteriores sobre el mismo nodo
     Object.values(stateOverrides).forEach(log => {
         if (log.nodo === nodoOriginal && !log.reverted) {
@@ -135,7 +144,7 @@ function aplicarCaducidad(nodoOriginal, fechaInicio, fechaCierre) {
 
     stateOverrides[logId] = {
         nodo: nodoOriginal,
-        correctedNodo: "",
+        correctedNodo: correctedNodoPrevio,
         newState: "FINALIZADO",
         newModality: "",
         orphanJustification: "",

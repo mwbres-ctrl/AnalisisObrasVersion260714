@@ -115,6 +115,26 @@ function procesarConsolidacion() {
     setTimeout(_procesarConsolidacionCore, 60);
 }
 
+// Limpia únicamente los resultados de Etapa 2 (dataConsolidada, filtros, búsqueda),
+// sin tocar los archivos/análisis de Etapa 1 (dataBCMO, dataTarea, dataMateriales, etc.)
+// ni el historial de cambios manuales (stateOverrides). Mirror local de "Limpiar BCMO" de Etapa 1.
+function limpiarEtapa2() {
+    if (!confirm("¿Limpiar los resultados de Etapa 2? Vas a tener que presionar \"Procesar y Consolidar\" de nuevo. Los archivos y el análisis de Etapa 1, y el historial de cambios manuales, no se ven afectados.")) return;
+
+    dataConsolidada = [];
+    filteredConsolidada = [];
+    activeStateFilters = [];
+    activeModalityFilters = [];
+    activeObraConsiderarFilters = [];
+    activeSectorFilters = [];
+
+    const searchInput = document.getElementById('globalSearchInput');
+    if (searchInput) searchInput.value = '';
+
+    renderPreview();
+    showToast("Etapa 2 limpiada. Presioná \"Procesar y Consolidar\" para volver a generarla.", "info");
+}
+
 function _procesarConsolidacionCore() {
     dataConsolidada = [];
     const formula = document.getElementById('formulaInput').value;
