@@ -1328,13 +1328,22 @@
             const dateStr = new Date().toLocaleString('es-AR');
 
             if (hStr.includes('MOTIVO') && hStr.includes('FECHA_TRX')) {
-                // Es el PMOVXF
+                // Es el PMOVXF - requiere que el Avance General ya esté cargado (secuencia obligatoria, es el paso 4)
+                if (!s1_dataAvanceGeneral || s1_dataAvanceGeneral.length === 0) {
+                    showToastGlobal("Cargue primero el Avance General (paso 3) antes del PMOVXF.", "error");
+                    return;
+                }
                 s1_dataMateriales = normalizarDataset(data);
                 s1_fileUploadDates.pmovxf = dateStr;
                 s1_actualizarEstadoUI('s1_statusMateriales', true, dateStr);
+                s1_checkReadyToAnalyze();
                 showToastGlobal("PMOVXF cargado exitosamente en Etapa 1.", "success");
             } else if (hStr.includes('ESTADO DE LIQUIDACION') || (hStr.includes('ENTREGADO') && hStr.includes('CONSUMIDO') && hStr.includes('TAREA'))) {
-                // Es el BCMO - solo almacenar y habilitar botón, NO procesar aun
+                // Es el BCMO - requiere que el Reporte de Localizadores ya esté cargado (secuencia obligatoria)
+                if (!s1_localizadorMap || s1_localizadorMap.size === 0) {
+                    showToastGlobal("Cargue primero el Reporte de Localizadores (paso 1) antes del BCMO.", "error");
+                    return;
+                }
                 s1_currentRawData = data;
                 s1_fileUploadDates.bcmo = dateStr;
                 s1_actualizarEstadoUI('s1_statusBCMO', true, dateStr);
@@ -1418,6 +1427,10 @@
         }
 
         function s1_handleAvanceGeneralFileRaw(data, dateStr) {
+            if (!s1_currentRawData || s1_currentRawData.length === 0) {
+                showToastGlobal("Cargue primero el archivo BCMO (paso 2) antes del Avance General.", "error");
+                return;
+            }
             s1_dataAvanceGeneral = data;
             const headers = Object.keys(data[0]);
             const campoEmpresa = headers.find(h => {
@@ -1427,6 +1440,7 @@
             window._s1_campoEmpresaAvance = campoEmpresa;
             const empresas = [...new Set(data.map(r => String(r[campoEmpresa] || '').trim()).filter(Boolean))].sort();
             s1_actualizarEstadoUI('s1_statusAvanceGeneral', true, dateStr);
+            s1_checkReadyToAnalyze();
             showToastGlobal(`Avance General cargado. ${data.length} registros.`, "success");
             s1_abrirModalEmpresa(empresas);
         }
@@ -1434,6 +1448,10 @@
         function s1_handleAvanceGeneralFile(file) {
             const procesar = (json) => {
                 if (!json || json.length === 0) { showToastGlobal("El archivo Avance General está vacío.", "error"); return; }
+                if (!s1_currentRawData || s1_currentRawData.length === 0) {
+                    showToastGlobal("Cargue primero el archivo BCMO (paso 2) antes del Avance General.", "error");
+                    return;
+                }
                 s1_dataAvanceGeneral = json;
                 const headers = Object.keys(json[0]);
                 const campoEmpresa = headers.find(h => {
@@ -1444,6 +1462,7 @@
                 const empresas = [...new Set(json.map(r => String(r[campoEmpresa] || '').trim()).filter(Boolean))].sort();
                 const dateStr = new Date().toLocaleString('es-AR');
                 s1_actualizarEstadoUI('s1_statusAvanceGeneral', true, dateStr);
+                s1_checkReadyToAnalyze();
                 showToastGlobal(`Avance General cargado. ${json.length} registros detectados.`, "success");
                 s1_abrirModalEmpresa(empresas);
             };
@@ -1557,34 +1576,70 @@
         function s1_checkReadyToAnalyze() {
             const btn = document.getElementById('s1_btnAnalizar');
             if (!btn) return;
-            const tieneBCMO = s1_currentRawData && s1_currentRawData.length > 0;
             const tieneLocalizadores = s1_localizadorMap && s1_localizadorMap.size > 0;
+            const tieneBCMO = s1_currentRawData && s1_currentRawData.length > 0;
+            const tieneAvance = s1_dataAvanceGeneral && s1_dataAvanceGeneral.length > 0;
+            const tienePM = s1_dataMateriales && s1_dataMateriales.length > 0;
 
-            if (tieneBCMO && tieneLocalizadores) {
+            const faltantes = [];
+            if (!tieneLocalizadores) faltantes.push('Reporte de Localizadores');
+            if (!tieneBCMO) faltantes.push('archivo BCMO');
+            if (!tieneAvance) faltantes.push('Avance General');
+            if (!tienePM) faltantes.push('PMOVXF');
+
+            if (faltantes.length === 0) {
                 btn.disabled = false;
                 btn.className = 'w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 text-sm border border-blue-800 shadow-md animate-pulse';
                 btn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Analizar BCMO';
-            } else if (tieneBCMO && !tieneLocalizadores) {
-                btn.disabled = true;
-                btn.className = 'w-full bg-amber-500 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-amber-600';
-                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Cargue el Reporte de Localizadores para continuar';
-            } else if (!tieneBCMO && tieneLocalizadores) {
-                btn.disabled = true;
-                btn.className = 'w-full bg-amber-500 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-amber-600';
-                btn.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Cargue el archivo BCMO para continuar';
             } else {
                 btn.disabled = true;
-                btn.className = 'w-full bg-slate-200 text-slate-400 font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-slate-300';
-                btn.innerHTML = '<i class="fa-solid fa-magnifying-glass-chart"></i> Analizar BCMO';
+                btn.className = 'w-full bg-amber-500 text-white font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-amber-600';
+                btn.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Falta cargar: ${faltantes[0]}`;
             }
+
+            s1_actualizarSecuenciaCarga();
+        }
+
+        // Secuencia obligatoria de carga: 1) Reporte de Localizadores -> 2) BCMO -> 3) Avance General -> 4) PMOVXF.
+        // No es una dependencia de datos (cada archivo se guarda independiente al parsearse), es un orden de
+        // flujo guiado: Localizadores dispara la selección de empresa auditada (paso de "configuración inicial"),
+        // BCMO es el archivo central, Avance General se usa durante el análisis del BCMO, y PMOVXF es lo último
+        // que se necesita (Verificar Consumo / Etapa 2). Se bloquea tanto visualmente (botones grises,
+        // pointer-events-none) como a nivel de validación (ver gates en s1_clasificarArchivo /
+        // s1_handleAvanceGeneralFileRaw / s1_handleLocalizadoresFileRaw), para que no se pueda saltear el orden.
+        function s1_actualizarSecuenciaCarga() {
+            const tieneLocalizadores = s1_localizadorMap && s1_localizadorMap.size > 0;
+            const tieneBCMO = s1_currentRawData && s1_currentRawData.length > 0;
+            const tieneAvance = s1_dataAvanceGeneral && s1_dataAvanceGeneral.length > 0;
+
+            const setEnabled = (id, enabled) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.toggle('opacity-40', !enabled);
+                el.classList.toggle('pointer-events-none', !enabled);
+            };
+
+            // Paso 2 (BCMO/PM, dropzone compartida): habilitada recién con Localizadores cargado
+            setEnabled('s1_dropZoneWrapper', tieneLocalizadores);
+            // Paso 3 (Avance General): habilitado recién con BCMO cargado
+            setEnabled('s1_avanceGeneralWrapper', tieneBCMO);
+            // Paso 4 (PMOVXF): comparte dropzone con BCMO, pero visualmente se avisa que hace falta Avance
+            const pmHint = document.getElementById('s1_pmSecuenciaHint');
+            if (pmHint) pmHint.classList.toggle('hidden', tieneAvance);
         }
 
         function s1_lanzarAnalisisBCMO() {
-            if (!s1_currentRawData || s1_currentRawData.length === 0) {
-                showToastGlobal("Cargue primero el archivo BCMO.", "error"); return;
-            }
             if (!s1_localizadorMap || s1_localizadorMap.size === 0) {
-                showToastGlobal("Debe cargar el Reporte de Localizadores antes de analizar (Requerido).", "error"); return;
+                showToastGlobal("Debe cargar el Reporte de Localizadores (paso 1) antes de analizar.", "error"); return;
+            }
+            if (!s1_currentRawData || s1_currentRawData.length === 0) {
+                showToastGlobal("Cargue el archivo BCMO (paso 2) antes de analizar.", "error"); return;
+            }
+            if (!s1_dataAvanceGeneral || s1_dataAvanceGeneral.length === 0) {
+                showToastGlobal("Cargue el Avance General (paso 3) antes de analizar.", "error"); return;
+            }
+            if (!s1_dataMateriales || s1_dataMateriales.length === 0) {
+                showToastGlobal("Cargue el PMOVXF (paso 4) antes de analizar.", "error"); return;
             }
             if (!s1_empresaAuditada) {
                 const empresas = [...new Set(Array.from(s1_localizadorMap.values()))].filter(Boolean).sort();
@@ -1646,9 +1701,11 @@
                     el.classList.add('border-slate-100', 'bg-slate-50');
                     el.classList.remove('border-emerald-200', 'bg-emerald-50');
                     el.querySelector('i').className = 'fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle';
-                    el.querySelector('.file-date').textContent = (id === 's1_statusBCMO' || id === 's1_statusLocalizadores') ? 'Requerido' : 'Opcional';
+                    el.querySelector('.file-date').textContent = 'Requerido';
                 }
             });
+
+            s1_checkReadyToAnalyze();
         }
 
         function s1_formatLocalNumber(num) { return num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
