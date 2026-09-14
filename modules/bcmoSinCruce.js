@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Módulo: BCMO Sin Cruce (modules/bcmoSinCruce.js)
-   Lógica de la pestaña "BCMO Sin Cruce en Avance de Obras"
+   Módulo: BCMO Sin Cruce con Sub-pestañas (modules/bcmoSinCruce.js)
+   Lógica de la pestaña "BCMO Sin Cruce en Avance de Obras" con split
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
@@ -11,6 +11,8 @@
    -------------------------------------------------------------------------- */
 
 let activeBcmoSinCruceEstadoFilters = [];
+let bcmoSinCruceActiveSubTab = 'principal'; // 'principal' o 'descartadas'
+let bcmoSinCruceFilterOnlySuggestions = false; // checkbox "Solo con sugerencia"
 
 function renderBcmoSinCruceTable() {
     if (!dataBCMO || dataBCMO.length === 0) {
@@ -34,25 +36,71 @@ function renderBcmoSinCruceTable() {
         return nodoBCMO !== '' && !nodosEnAvance.has(nodoBCMO);
     });
 
+    // ===== CRITERIO PRINCIPAL =====
+    // Sub-tab "Principal": SIN CONSUMO AND Entregado > 0
+    let principal = sinCruce.filter(row => {
+        const est = String(row['_N_ESTADO_DE_LIQUIDACION'] || '').trim().toUpperCase();
+        const entregado = parseFloat(row['_N_ENTREGADO'] || 0);
+        return est === 'SIN CONSUMO' && entregado > 0;
+    });
+
+    // ===== DESCARTADAS =====
+    // Sub-tab "Descartadas": Todo lo que NO cumple el criterio principal
+    let descartadas = sinCruce.filter(row => {
+        const est = String(row['_N_ESTADO_DE_LIQUIDACION'] || '').trim().toUpperCase();
+        const entregado = parseFloat(row['_N_ENTREGADO'] || 0);
+        // NO cumple el criterio principal
+        return !(est === 'SIN CONSUMO' && entregado > 0);
+    });
+
+    // Badge count: SOLO los del principal (los realmente accionables)
+    setTabBadge('tabBcmoSinCruceCount', principal.length);
+
+    // Seleccionar dataset activo según sub-tab
+    let datasetActivo = bcmoSinCruceActiveSubTab === 'principal' ? principal : descartadas;
+
     const tbody = document.getElementById('bcmoSinCruceTableBody');
     const emptyState = document.getElementById('emptyBcmoSinCruceState');
     const filterText = document.getElementById('hFilterBcmoSinCruce').value.trim().toLowerCase();
-    const hideSinConsumo = document.getElementById('bcmoSinCruceHideSinConsumo').checked;
 
-    // Ocultar SIN CONSUMO si el checkbox está activo
-    if (hideSinConsumo) {
-        sinCruce = sinCruce.filter(row => {
-            const est = String(row['_N_ESTADO_DE_LIQUIDACION'] || '').trim().toUpperCase();
-            return est !== 'SIN CONSUMO';
+    // Aplicar filtro de "Solo con sugerencia" SOLO en la sub-tab principal
+    if (bcmoSinCruceActiveSubTab === 'principal' && bcmoSinCruceFilterOnlySuggestions) {
+        datasetActivo = datasetActivo.filter(row => {
+            const nodoBCMO = String(row['_N_TAREA_/_OBRA'] || row['_N_TAREA'] || row['_N_OBRA'] || '').trim();
+            const nodoPrefijo = nodoBCMO.toUpperCase().replace(/\s/g, '').substring(0, 5);
+            
+            // Nodos para sugerencia: del avance con Estado de Entregas = "Sin registro de materiales a entregar"
+            const nodosParaSugerencia = new Set();
+            dataConsolidada.forEach(r => {
+                if (r['Estado de Entregas'] === 'Sin registro de materiales a entregar') {
+                    const n = String(r['Nodo'] || r['Nodo Original'] || r['NODO'] || '').trim().toUpperCase();
+                    if (n) nodosParaSugerencia.add(n);
+                }
+            });
+            const nodosAvanceArray = Array.from(nodosParaSugerencia);
+            
+            const posibles = nodosAvanceArray
+                .filter(n => n.replace(/\s/g, '').startsWith(nodoPrefijo) || nodoPrefijo.startsWith(n.replace(/\s/g, '').substring(0, 5)))
+                .slice(0, 3);
+            
+            // Solo mostrar si hay sugerencia (posibles.length > 0)
+            return posibles.length > 0;
         });
     }
 
-    // Actualizar botón de pestaña con el total pre-filtro
-    setTabBadge('tabBcmoSinCruceCount', sinCruce.length);
+    // Actualizar UI de sub-tabs
+    document.getElementById('bcmoSinCruceTabPrincipal').classList.toggle('active', bcmoSinCruceActiveSubTab === 'principal');
+    document.getElementById('bcmoSinCruceTabDescartadas').classList.toggle('active', bcmoSinCruceActiveSubTab === 'descartadas');
 
-    // Badges de estados de liquidación
+    // Mostrar/ocultar checkbox "Solo con sugerencia" según la sub-tab
+    const checkboxContainer = document.getElementById('bcmoSinCruceOnlySuggestionsContainer');
+    if (checkboxContainer) {
+        checkboxContainer.classList.toggle('hidden', bcmoSinCruceActiveSubTab !== 'principal');
+    }
+
+    // Badges de estados de liquidación (para la sub-tab activa)
     const countsEstado = {};
-    sinCruce.forEach(row => {
+    datasetActivo.forEach(row => {
         const e = String(row['_N_ESTADO_DE_LIQUIDACION'] || 'SIN ESTADO').trim().toUpperCase();
         countsEstado[e] = (countsEstado[e] || 0) + 1;
     });
@@ -74,12 +122,12 @@ function renderBcmoSinCruceTable() {
         const isActive = activeBcmoSinCruceEstadoFilters.includes(estado);
         const style = estadoColorMap[estado] || estadoColorMap['DEFAULT'];
         const btnClass = isActive ? 'bg-amber-600 text-white shadow-inner' : `bg-white border ${style.badge} hover:bg-amber-50`;
-        badgesContainer.innerHTML += `<button type="button" onclick="toggleBcmoSinCruceEstadoFilter('${estado}')" class="px-3 py-1 text-[10px] rounded border font-bold shadow-sm transition-colors ${btnClass}">${estado} <span class="px-1 ml-0.5 rounded bg-white/50 text-slate-800">${cantidad}</span></button>`;
+        badgesContainer.innerHTML += `<button type="button" onclick="toggleBcmoSinCruceEstadoFilter('${estado}')" class="px-3 py-1 text-[10px] rounded border font-bold shadow-sm transition-colors ${btnClass}">${estado} (${cantidad})</button>`;
     }
 
     // Aplicar filtro de badges de estado
     if (activeBcmoSinCruceEstadoFilters.length > 0) {
-        sinCruce = sinCruce.filter(row => {
+        datasetActivo = datasetActivo.filter(row => {
             const e = String(row['_N_ESTADO_DE_LIQUIDACION'] || 'SIN ESTADO').trim().toUpperCase();
             return activeBcmoSinCruceEstadoFilters.includes(e);
         });
@@ -87,7 +135,7 @@ function renderBcmoSinCruceTable() {
 
     // Aplicar búsqueda de texto
     if (filterText) {
-        sinCruce = sinCruce.filter(row => {
+        datasetActivo = datasetActivo.filter(row => {
             const nodo = String(row['_N_TAREA_/_OBRA'] || row['_N_TAREA'] || row['_N_OBRA'] || '').toLowerCase();
             const cont = String(row['_N_CONTRATISTA'] || '').toLowerCase();
             const est  = String(row['_N_ESTADO_DE_LIQUIDACION'] || '').toLowerCase();
@@ -95,17 +143,21 @@ function renderBcmoSinCruceTable() {
         });
     }
 
-    document.getElementById('bcmoSinCruceCountText').textContent = `${sinCruce.length} obras`;
+    // Actualizar etiqueta de sub-tab
+    const subTabLabel = bcmoSinCruceActiveSubTab === 'principal' 
+        ? `${principal.length} obras (accionables)`
+        : `${descartadas.length} obras (descartadas)`;
+    document.getElementById('bcmoSinCruceCountText').textContent = `${datasetActivo.length} obras mostradas`;
+    
     tbody.innerHTML = '';
 
-    if (sinCruce.length === 0) {
+    if (datasetActivo.length === 0) {
         emptyState.classList.remove('hidden');
         return;
     }
     emptyState.classList.add('hidden');
 
-    // Calcular posibles coincidencias (similitud de prefijo) para hint tipográfico
-    // REQUERIMIENTO: Solo sugerir nodos de Avance que tengan Estado de Entregas = "Sin registro de materiales a entregar"
+    // Calcular posibles coincidencias
     const nodosParaSugerencia = new Set();
     dataConsolidada.forEach(row => {
         if (row['Estado de Entregas'] === 'Sin registro de materiales a entregar') {
@@ -115,7 +167,7 @@ function renderBcmoSinCruceTable() {
     });
     const nodosAvanceArray = Array.from(nodosParaSugerencia);
 
-    sinCruce.forEach((row, idx) => {
+    datasetActivo.forEach((row, idx) => {
         const nodoBCMO = String(row['_N_TAREA_/_OBRA'] || row['_N_TAREA'] || row['_N_OBRA'] || '').trim();
         const estLiq   = String(row['_N_ESTADO_DE_LIQUIDACION'] || '-').trim().toUpperCase();
         const pctCons  = parseFloat(row['_N_%_CONSUMO'] || 0);
@@ -134,7 +186,7 @@ function renderBcmoSinCruceTable() {
             estBadge = 'bg-blue-100 text-blue-800 border border-blue-200';
         }
 
-        // Buscar posible coincidencia (comparte los primeros 4 chars)
+        // Buscar posible coincidencia
         const nodoPrefijo = nodoBCMO.toUpperCase().replace(/\s/g, '').substring(0, 5);
         const posibles = nodosAvanceArray
             .filter(n => n.replace(/\s/g, '').startsWith(nodoPrefijo) || nodoPrefijo.startsWith(n.replace(/\s/g, '').substring(0, 5)))
@@ -174,5 +226,16 @@ function toggleBcmoSinCruceEstadoFilter(estado) {
     const idx = activeBcmoSinCruceEstadoFilters.indexOf(estado);
     if (idx > -1) activeBcmoSinCruceEstadoFilters.splice(idx, 1);
     else activeBcmoSinCruceEstadoFilters.push(estado);
+    renderBcmoSinCruceTable();
+}
+
+function switchBcmoSinCruceSubTab(subTab) {
+    bcmoSinCruceActiveSubTab = subTab;
+    activeBcmoSinCruceEstadoFilters = []; // Reset filters when switching tabs
+    renderBcmoSinCruceTable();
+}
+
+function toggleBcmoSinCruceOnlySuggestions() {
+    bcmoSinCruceFilterOnlySuggestions = !bcmoSinCruceFilterOnlySuggestions;
     renderBcmoSinCruceTable();
 }
