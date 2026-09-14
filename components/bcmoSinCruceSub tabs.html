@@ -1,0 +1,77 @@
+<!-- CONTENIDO PESTAÑA: BCMO SIN CRUCE (CON SUB-PESTAÑAS) -->
+<div id="tabBcmoSinCruceContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50">
+    <!-- Cabecera y Sub-pestañas -->
+    <div class="bg-white border-b border-slate-200 px-4 py-3 shrink-0 flex flex-col gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+                <i class="fa-solid fa-link-slash text-amber-600 text-lg"></i>
+                <div>
+                    <h2 class="text-base font-bold text-slate-800">BCMO Sin Cruce en Avance de Obras</h2>
+                    <p class="text-[10px] text-slate-500">Registros del BCMO que no tienen cruce con el Avance de Obras.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="text-sm text-amber-700 font-bold bg-amber-50 px-3 py-1 rounded border border-amber-200" id="bcmoSinCruceCountText">0 obras</div>
+            </div>
+        </div>
+
+        <!-- SUB-PESTAÑAS -->
+        <div class="flex items-center gap-2 border-b border-slate-200 -mx-4 px-4">
+            <button type="button" id="bcmoSinCruceTabPrincipal" onclick="switchBcmoSinCruceSubTab('principal')"
+                class="active px-4 py-2 text-sm font-semibold text-slate-700 border-b-2 border-amber-600 transition-colors whitespace-nowrap">
+                <i class="fa-solid fa-star text-amber-500 mr-1"></i> Principal
+            </button>
+            <button type="button" id="bcmoSinCruceTabDescartadas" onclick="switchBcmoSinCruceSubTab('descartadas')"
+                class="px-4 py-2 text-sm font-semibold text-slate-500 border-b-2 border-transparent hover:text-slate-700 transition-colors whitespace-nowrap">
+                <i class="fa-solid fa-filter-circle-xmark text-slate-400 mr-1"></i> Descartadas
+            </button>
+        </div>
+
+        <!-- CONTROLES DE FILTROS (se muestran en ambas sub-pestañas) -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <!-- Badges de Estados -->
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-xs font-bold text-slate-600 uppercase">Estado:</span>
+                <div id="bcmoSinCruceEstadoBadges" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <!-- Búsqueda de texto -->
+            <div class="w-72">
+                <input type="text" id="hFilterBcmoSinCruce" oninput="renderBcmoSinCruceTable()" 
+                    class="w-full px-3 py-1.5 text-xs border border-amber-200 rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-300 outline-none bg-white shadow-sm"
+                    placeholder="Buscar nodo, contratista, estado...">
+            </div>
+
+            <!-- Checkbox "Solo con sugerencia" (SOLO en sub-tab principal) -->
+            <div id="bcmoSinCruceOnlySuggestionsContainer" class="hidden">
+                <label class="flex items-center gap-2 text-xs font-bold text-slate-600 bg-white px-3 py-1.5 rounded border border-amber-200 cursor-pointer hover:bg-amber-50 transition-colors">
+                    <input type="checkbox" id="bcmoSinCruceOnlySuggestions" onchange="toggleBcmoSinCruceOnlySuggestions()" class="accent-amber-600 w-4 h-4">
+                    ☐ Solo con sugerencia
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="flex-1 overflow-auto custom-scrollbar p-0">
+        <table class="w-full text-left text-sm whitespace-nowrap">
+            <thead class="bg-slate-50 sticky top-0 border-b border-slate-200">
+                <tr>
+                    <th class="p-3 font-semibold text-xs text-slate-600 border-r w-12 text-center">#</th>
+                    <th class="p-3 font-semibold text-xs text-slate-600 border-r">Nodo BCMO</th>
+                    <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado Liquidación</th>
+                    <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">% Consumo</th>
+                    <th class="p-3 font-semibold text-xs text-slate-600 border-r">Contratista</th>
+                    <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">Entregado</th>
+                    <th class="p-3 font-semibold text-xs text-slate-600">Posibles Coincidencias</th>
+                </tr>
+            </thead>
+            <tbody id="bcmoSinCruceTableBody" class="divide-y divide-slate-100"></tbody>
+        </table>
+        <div id="emptyBcmoSinCruceState" class="hidden p-8 text-center text-slate-400">
+            <i class="fa-solid fa-check-double text-4xl mb-3 opacity-30 text-emerald-500"></i>
+            <p class="text-sm font-semibold text-slate-600">¡Excelente! No hay registros en esta sub-pestaña.</p>
+            <p class="text-xs">El cruce entre BCMO y Avance de Obras es completo.</p>
+        </div>
+    </div>
+</div>
