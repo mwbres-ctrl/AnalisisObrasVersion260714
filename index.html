@@ -38,25 +38,15 @@
     <header
         class="bg-white border-b border-slate-300 shadow-sm h-16 flex items-center justify-between px-6 shrink-0 z-20">
         <div class="flex items-center gap-3">
-            <button type="button" onclick="showSetupSection()"
-                class="text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-sm font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-2 shadow-sm">
-                <i class="fa-solid fa-folder-open"></i> Archivos y Etapas
-            </button>
             <button type="button" id="btnGoToResults" onclick="showResultsSection()"
                 class="hidden text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-sm font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-2 shadow-sm">
                 <i class="fa-solid fa-table"></i> Ver Resultados
             </button>
-            <div class="w-px h-5 bg-slate-300 mx-1"></div>
-            <button type="button" onclick="toggleConfig()"
-                class="text-slate-500 hover:text-indigo-600 text-sm font-medium transition-colors flex items-center gap-1">
-                <i class="fa-solid fa-gear"></i> Ajustes / Memoria
-            </button>
-            <div class="w-px h-5 bg-slate-300 mx-1"></div>
-            <button type="button" onclick="resetApp()"
-                class="text-rose-500 hover:text-rose-700 text-sm font-medium transition-colors flex items-center gap-1"
-                title="Borrar todo">
-                <i class="fa-solid fa-trash-can"></i> Reiniciar Cruce
-            </button>
+            <!-- "Archivos y Etapas" se movió a la barra de Etapa 1 (etapa1BCMO.html, botón "Archivos y Etapas").
+                 "Ajustes / Memoria" (Fórmula Obra BF + Guardar/Cargar Sesión) y "Reiniciar Cruce" se sacaron
+                 del header: no se usaban / cada etapa ya tiene su propio botón de limpieza local
+                 (Limpiar BCMO en Etapa 1, Limpiar Etapa 2 en Etapa 2). Las funciones toggleConfig() y
+                 resetApp() siguen existiendo por si se necesitan restaurar en el futuro. -->
         </div>
 
         <!-- CONTROLES DE USUARIO Y FECHA VISIBLES -->
