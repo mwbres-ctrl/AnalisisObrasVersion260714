@@ -354,7 +354,7 @@ function _procesarConsolidacionCore() {
                 if (!fila['_ES_HUERFANO'] && override && override.orphanJustification) {
                     // Mantenemos la observacion de justificacion
                 } else {
-                    observacion = "Sector de auditoría de control de contratista debe reclamar a Obras";
+                    observacion = "⚠️ Reclamar a Obras registrar modalidad de liquidación";
                 }
             }
         }
@@ -523,16 +523,9 @@ function _procesarConsolidacionCore() {
                 estBCMO === "SIN CONSUMO" &&
                 modalidad === "LEGAJO") {
                 obraAConsiderar = "Considerar en Hoja: TERMINADO/CT";
-            } else if (tieneEntregas &&
-                estadoParaObra === "TERMINADO" &&
-                estBCMO === "SIN CONSUMO" &&
-                (modalidad === "" || modalidad === "SIN MODALIDAD")) {
-                obraAConsiderar = "ERROR: Definir Modalidad (TERMINADO/CT - Sin Consumo)";
             } else if (tieneEntregas && estadoParaObra === "A EJECUTAR") {
                 if (modalidad === "TAREA" || modalidad === "LEGAJO") {
                     obraAConsiderar = "Considerar en Hoja: A EJECUTAR (lo entregado vs conteo)";
-                } else if (modalidad === "" || modalidad === "SIN MODALIDAD") {
-                    obraAConsiderar = "ERROR: Definir Modalidad (A EJECUTAR - Entregado vs Conteo)";
                 }
             } else if (tieneEntregas &&
                 (estadoParaObra === "EN EJECUCIÓN" || estadoParaObra === "EN EJECUCION") &&
@@ -552,7 +545,8 @@ function _procesarConsolidacionCore() {
     fadeSwapSection(document.getElementById('setupSection'), document.getElementById('resultsSection'), 'flex');
     document.getElementById('btnExportar').classList.remove('hidden');
     document.getElementById('btnExportar').classList.add('flex');
-    document.getElementById('btnGoToResults').classList.remove('hidden');
+    const btnGoToRes = document.getElementById('btnGoToResults');
+    if (btnGoToRes) btnGoToRes.classList.remove('hidden');
     updateStepper(2);
 
     // Actualizar solapa de estandarizacion si estamos mostrando "Recategorizados"
@@ -740,7 +734,7 @@ function renderPreview() {
         if (modText === '' && item['_ORIGEN'] === 'CORPORATIVO') modText = 'CORP';
 
         let modHtml = modText === '' || modText === 'SIN MODALIDAD'
-            ? `<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold border border-red-200">SIN MOD</span>`
+            ? `<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[10px] font-bold border border-red-200" title="Requiere registrar modalidad"><i class="fa-solid fa-triangle-exclamation mr-1 text-[9px]"></i>SIN MOD</span>`
             : `<span class="bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-bold border border-slate-300">${modText}</span>`;
 
         if (item['_MODIFICADO_MODALIDAD_']) {
@@ -902,4 +896,121 @@ function exportToExcel() {
 
     XLSX.writeFile(wb, `Auditoria_Obras_${new Date().getTime()}.xlsx`);
     showToast("Reporte Maestro Exportado Exitosamente.", "success");
+}
+
+// --- VISTA OBRAS SIN MODALIDAD (RECLAMO POR SECTOR) ---
+function filterSinModBySector(sectorVal) {
+    const sel = document.getElementById('sinModSectorFilter');
+    if (sel) sel.value = sectorVal;
+    renderSinModalidadTable();
+}
+
+function renderSinModalidadTable() {
+    if (!dataConsolidada) return;
+
+    const sectorFilter = document.getElementById('sinModSectorFilter') ? document.getElementById('sinModSectorFilter').value : 'TODOS';
+    const searchText = document.getElementById('sinModalidadSearch') ? document.getElementById('sinModalidadSearch').value.trim().toLowerCase() : '';
+
+    const allSinMod = dataConsolidada.filter(item => {
+        let m = (item['Modalidad de Liquidación Calculada'] || item['Modalidad de Liquidación'] || item['MODALIDAD DE LIQUIDACIÓN'] || '').toUpperCase().trim();
+        m = m === '' ? (item['_ORIGEN'] === 'CORPORATIVO' ? 'CORPORATIVO' : 'SIN MODALIDAD') : m;
+        return m === 'SIN MODALIDAD';
+    });
+
+    const totalCount = allSinMod.length;
+    let obrasCount = 0;
+    let corpCount = 0;
+
+    allSinMod.forEach(item => {
+        const origen = String(item['_ORIGEN'] || '').toUpperCase();
+        const sector = String(item['Sector Informante'] || '').toUpperCase();
+        if (origen === 'CORPORATIVO' || sector.includes('CORP')) {
+            corpCount++;
+        } else {
+            obrasCount++;
+        }
+    });
+
+    // Actualizar KPIs
+    const elTotal = document.getElementById('sinModTotalCount');
+    if (elTotal) elTotal.textContent = totalCount;
+    const elObras = document.getElementById('sinModObrasCount');
+    if (elObras) elObras.textContent = obrasCount;
+    const elCorp = document.getElementById('sinModCorpCount');
+    if (elCorp) elCorp.textContent = corpCount;
+    const elText = document.getElementById('sinModCountText');
+    if (elText) elText.textContent = `${totalCount} obras sin modalidad`;
+
+    if (typeof setTabBadge === 'function') {
+        setTabBadge('tabSinModalidadCount', totalCount);
+    }
+
+    // Filtrar según dropdown de sector y buscador
+    const filtered = allSinMod.filter(item => {
+        const origen = String(item['_ORIGEN'] || '').toUpperCase();
+        const sector = String(item['Sector Informante'] || '').toUpperCase();
+        const esCorp = (origen === 'CORPORATIVO' || sector.includes('CORP'));
+
+        if (sectorFilter === 'OBRAS' && esCorp) return false;
+        if (sectorFilter === 'CORPORATIVO' && !esCorp) return false;
+
+        if (searchText) {
+            const nodo = String(item['Nodo'] || item['NODO'] || '').toLowerCase();
+            const obraBf = String(item['Obra BF'] || '').toLowerCase();
+            const estOrig = String(item['Estado (Original Excel)'] || '').toLowerCase();
+            const estCalc = String(item['Estado de Avance (Calculado)'] || '').toLowerCase();
+            const secInf = String(item['Sector Informante'] || '').toLowerCase();
+            const combined = `${nodo} ${obraBf} ${estOrig} ${estCalc} ${secInf}`;
+            if (!combined.includes(searchText)) return false;
+        }
+        return true;
+    });
+
+    const tbody = document.getElementById('sinModalidadTableBody');
+    const emptyState = document.getElementById('emptySinModalidadState');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    if (filtered.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+    }
+    if (emptyState) emptyState.classList.add('hidden');
+
+    filtered.forEach((item, index) => {
+        const origen = String(item['_ORIGEN'] || '').toUpperCase();
+        const secInf = item['Sector Informante'] || (origen === 'CORPORATIVO' ? 'Corporativo' : 'Obras');
+        const esCorp = (origen === 'CORPORATIVO' || String(secInf).toUpperCase().includes('CORP'));
+
+        const sectorBadge = esCorp
+            ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[10px] font-bold border border-purple-200"><i class="fa-solid fa-building mr-1"></i>Corporativo</span>`
+            : `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-bold border border-indigo-200"><i class="fa-solid fa-hard-hat mr-1"></i>Obras</span>`;
+
+        const nodoOrig = item['Nodo Original'] || item['Nodo'] || item['NODO'] || '';
+        const estOrig = item['Estado (Original Excel)'] || '';
+
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors text-xs';
+        tr.innerHTML = `
+            <td class="p-3 border-r border-slate-100 text-slate-400 font-mono text-center">${index + 1}</td>
+            <td class="p-3 border-r border-slate-100">${sectorBadge}</td>
+            <td class="p-3 border-r border-slate-100 font-medium text-slate-800">${item['Nodo'] || item['NODO'] || '-'}</td>
+            <td class="p-3 border-r border-slate-100 font-bold text-indigo-700 bg-indigo-50/20">${item['Obra BF'] || '-'}</td>
+            <td class="p-3 border-r border-slate-100 text-slate-600">${item['Estado (Original Excel)'] || '-'}</td>
+            <td class="p-3 border-r border-slate-100 text-slate-700 font-medium">${item['Estado de Avance (Calculado)'] || '-'}</td>
+            <td class="p-3 border-r border-slate-100 text-center bg-rose-50/30">
+                <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold border border-red-200" title="Requiere registrar modalidad">
+                    <i class="fa-solid fa-triangle-exclamation mr-1 text-[9px]"></i>SIN MOD
+                </span>
+            </td>
+            <td class="p-3 text-center">
+                <button type="button" onclick="openEditModal('${nodoOrig}', '${estOrig}', '')" 
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[11px] font-bold transition-colors shadow-sm flex items-center gap-1 mx-auto"
+                    title="Definir o forzar modalidad">
+                    <i class="fa-solid fa-pen-to-square"></i> Asignar
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
 }
