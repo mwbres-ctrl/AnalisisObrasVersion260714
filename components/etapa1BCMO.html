@@ -126,38 +126,81 @@
     <main class="flex-grow p-4 md:p-6 mx-auto w-full flex flex-col z-0 overflow-y-auto custom-scrollbar">
         <section class="flex-grow flex flex-col h-full space-y-4">
 
-            <div id="s1_uploadWrapper" class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full min-h-[400px]">
-                <!-- Secuencia de carga: 1) Localizadores -> 2) BCMO (+4 PMOVXF) -> 3) Avance General -->
-                <div class="flex flex-col gap-4">
-                    <div id="s1_dropZone" class="s1-drop-zone border-2 border-dashed border-blue-300 bg-white hover:bg-slate-50 rounded-2xl p-8 text-center cursor-pointer flex flex-col items-center justify-center flex-1 transition-colors shadow-sm">
+            <!-- Banner Informativo de Secuencia de Carga -->
+            <div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-xl text-xs flex items-center gap-2.5 shadow-sm shrink-0 mb-2">
+                <i class="fa-solid fa-circle-info text-blue-600 text-base shrink-0"></i>
+                <p class="leading-relaxed"><b>Secuencia de Carga:</b> Para realizar el análisis es necesario cargar los <b>4 archivos en orden secuencial del 1 al 4</b>. Cada paso se habilitará automáticamente al completar el anterior.</p>
+            </div>
 
-                        <!-- Paso 1: Reporte de Localizadores (siempre habilitado, es el primer paso) -->
-                        <div class="w-full pb-4 border-b border-slate-200">
-                            <p class="text-slate-500 text-xs mb-2 text-center"><span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-violet-600 text-white text-[10px] font-bold mr-1">1</span><i class="fa-solid fa-link mr-1 text-violet-500"></i><b>Reporte de Localizadores</b> (Obligatorio — determina la Razón Social)</p>
+            <div id="s1_uploadWrapper" class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full min-h-[400px]">
+                <!-- Secuencia de carga: 1 -> 2 -> 3 -> 4 -->
+                <div class="flex flex-col gap-4">
+                    <div id="s1_dropZone" class="s1-drop-zone border-2 border-dashed border-blue-300 bg-white hover:bg-slate-50 rounded-2xl p-6 text-center cursor-pointer flex flex-col justify-between flex-1 transition-colors shadow-sm gap-4">
+
+                        <!-- Paso 1: Reporte de Localizadores -->
+                        <div class="w-full pb-3 border-b border-slate-200 text-left">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-violet-600 text-white text-[10px] font-bold">1</span>
+                                    Reporte de Localizadores
+                                </span>
+                                <span class="text-[10px] bg-violet-100 text-violet-700 px-2 py-0.5 rounded font-semibold">Paso 1</span>
+                            </div>
+                            <p class="text-slate-500 text-[11px] mb-2">Mapea la Razón Social y empresa auditada.</p>
                             <input type="file" id="s1_localizadoresInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
-                            <button onclick="document.getElementById('s1_localizadoresInput').click()" class="bg-violet-50 hover:bg-violet-100 text-violet-700 border border-violet-300 font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
+                            <button type="button" onclick="document.getElementById('s1_localizadoresInput').click()" class="bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-link"></i> Cargar Reporte de Localizadores
                             </button>
                         </div>
 
-                        <!-- Paso 2 (BCMO) y Paso 4 (PMOVXF): se habilita recién con Localizadores cargado -->
-                        <div id="s1_dropZoneWrapper" class="w-full pt-4 opacity-40 pointer-events-none transition-opacity">
-                            <i class="fa-solid fa-file-excel text-4xl text-blue-500 mb-3"></i>
-                            <h3 class="text-base font-bold text-slate-700 mb-1"><span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold mr-1">2</span>Carga de Archivos</h3>
-                            <p class="text-slate-500 text-sm mb-3">Suelte aquí o seleccione:<br><b>BCMO (Obligatorio)</b> y <b>PMOVXF (Obligatorio)</b></p>
+                        <!-- Paso 2: Archivo BCMO -->
+                        <div id="s1_dropZoneWrapper" class="w-full pb-3 border-b border-slate-200 text-left opacity-40 pointer-events-none transition-opacity">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold">2</span>
+                                    Archivo BCMO
+                                </span>
+                                <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold">Paso 2</span>
+                            </div>
+                            <p class="text-slate-500 text-[11px] mb-2">Reporte de liquidación y consumos base de obra.</p>
                             <input type="file" id="s1_fileInput" accept=".xlsx, .xls, .csv, .txt" multiple class="hidden">
-                            <button onclick="document.getElementById('s1_fileInput').click()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors shadow-sm">Explorar archivos</button>
-                            <p id="s1_pmSecuenciaHint" class="text-[11px] text-amber-600 mt-2"><span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-500 text-white text-[9px] font-bold mr-1">4</span>El PMOVXF se habilita después de cargar el Avance General (paso 3)</p>
+                            <button type="button" onclick="document.getElementById('s1_fileInput').click()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-file-excel"></i> Cargar Archivo BCMO
+                            </button>
                         </div>
 
-                        <!-- Paso 3: Avance General (se habilita recién con BCMO cargado) -->
-                        <div id="s1_avanceGeneralWrapper" class="mt-4 border-t border-slate-200 pt-4 w-full opacity-40 pointer-events-none transition-opacity">
-                            <p class="text-slate-500 text-xs mb-2 text-center"><span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold mr-1">3</span><i class="fa-solid fa-filter-circle-xmark mr-1 text-orange-400"></i><b>Avance General</b> (Obligatorio — filtra Obras Reasignadas)</p>
+                        <!-- Paso 3: Avance General -->
+                        <div id="s1_avanceGeneralWrapper" class="w-full pb-3 border-b border-slate-200 text-left opacity-40 pointer-events-none transition-opacity">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold">3</span>
+                                    Avance General
+                                </span>
+                                <span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-semibold">Paso 3</span>
+                            </div>
+                            <p class="text-slate-500 text-[11px] mb-2">Filtra Obras Reasignadas y modalidades.</p>
                             <input type="file" id="s1_avanceGeneralInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
-                            <button onclick="document.getElementById('s1_avanceGeneralInput').click()" class="bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-300 font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
+                            <button type="button" onclick="document.getElementById('s1_avanceGeneralInput').click()" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-file-arrow-up"></i> Cargar Avance General
                             </button>
                         </div>
+
+                        <!-- Paso 4: PMOVXF -->
+                        <div id="s1_pmovxfWrapper" class="w-full text-left opacity-40 pointer-events-none transition-opacity">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold">4</span>
+                                    PMOVXF (Detalle PM)
+                                </span>
+                                <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">Paso 4</span>
+                            </div>
+                            <p class="text-slate-500 text-[11px] mb-2">Movimientos y entregas operativas de materiales.</p>
+                            <input type="file" id="s1_pmovxfInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
+                            <button type="button" onclick="document.getElementById('s1_pmovxfInput').click()" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-boxes-stacked"></i> Cargar PMOVXF
+                            </button>
+                        </div>
+
                     </div>
                     <!-- Botón Analizar -->
                     <button id="s1_btnAnalizar" onclick="s1_lanzarAnalisisBCMO()" disabled
@@ -167,27 +210,52 @@
                 </div>
                 <!-- Archivos Reconocidos -->
                 <div class="flex flex-col gap-4">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex-1">
-                        <h4 class="text-base font-bold text-slate-700 border-b border-slate-200 pb-3 mb-4"><i class="fa-solid fa-list-check text-blue-600 mr-2"></i>Archivos Reconocidos</h4>
-                        <div class="space-y-4 text-sm">
-                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100" id="s1_statusBCMO">
-                                <span class="text-slate-600 font-medium"><i class="fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle"></i>Archivo BCMO</span>
-                                <span class="text-xs text-slate-400 italic file-date">Requerido</span>
-                            </div>
-                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100" id="s1_statusMateriales">
-                                <span class="text-slate-600 font-medium"><i class="fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle"></i>PMOVXF (Detalle PM)</span>
-                                <span class="text-xs text-slate-400 italic file-date">Opcional</span>
-                            </div>
-                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded border border-slate-100" id="s1_statusAvanceGeneral">
-                                <span class="text-slate-600 font-medium"><i class="fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle"></i>Avance General</span>
-                                <span class="text-xs text-slate-400 italic file-date">Opcional</span>
-                            </div>
-                            <div class="flex items-center justify-between p-3 bg-slate-50 rounded border border-violet-100" id="s1_statusLocalizadores">
-                                <span class="text-slate-600 font-medium"><i class="fa-regular fa-circle text-slate-400 mr-2 text-lg align-middle"></i>Reporte de Localizadores</span>
-                                <span class="text-xs text-violet-500 italic file-date font-bold">Requerido</span>
+                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex-1 flex flex-col justify-between">
+                        <div>
+                            <h4 class="text-base font-bold text-slate-700 border-b border-slate-200 pb-3 mb-4 flex items-center justify-between">
+                                <span><i class="fa-solid fa-list-check text-blue-600 mr-2"></i>Archivos Reconocidos</span>
+                                <span class="text-xs text-slate-400 font-normal">Estado de carga</span>
+                            </h4>
+                            <div class="space-y-3.5 text-sm">
+                                <!-- Paso 1 -->
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 transition-all" id="s1_statusLocalizadores">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-regular fa-circle text-slate-400 text-lg align-middle"></i>
+                                        <span class="w-5 h-5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold flex items-center justify-center">1</span>
+                                        <span class="text-slate-700 font-medium">Reporte de Localizadores</span>
+                                    </div>
+                                    <span class="text-xs text-slate-400 italic file-date">Pendiente</span>
+                                </div>
+                                <!-- Paso 2 -->
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 transition-all" id="s1_statusBCMO">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-regular fa-circle text-slate-400 text-lg align-middle"></i>
+                                        <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center">2</span>
+                                        <span class="text-slate-700 font-medium">Archivo BCMO</span>
+                                    </div>
+                                    <span class="text-xs text-slate-400 italic file-date">Pendiente</span>
+                                </div>
+                                <!-- Paso 3 -->
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 transition-all" id="s1_statusAvanceGeneral">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-regular fa-circle text-slate-400 text-lg align-middle"></i>
+                                        <span class="w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-[10px] font-bold flex items-center justify-center">3</span>
+                                        <span class="text-slate-700 font-medium">Avance General</span>
+                                    </div>
+                                    <span class="text-xs text-slate-400 italic file-date">Pendiente</span>
+                                </div>
+                                <!-- Paso 4 -->
+                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 transition-all" id="s1_statusMateriales">
+                                    <div class="flex items-center gap-2.5">
+                                        <i class="fa-regular fa-circle text-slate-400 text-lg align-middle"></i>
+                                        <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold flex items-center justify-center">4</span>
+                                        <span class="text-slate-700 font-medium">PMOVXF (Detalle PM)</span>
+                                    </div>
+                                    <span class="text-xs text-slate-400 italic file-date">Pendiente</span>
+                                </div>
                             </div>
                         </div>
-                        <p class="text-xs text-slate-400 mt-5 italic"><i class="fa-solid fa-circle-info mr-1"></i>Puede cargar todos los archivos antes de analizar.</p>
+                        <p class="text-xs text-slate-400 mt-5 pt-3 border-t border-slate-100 flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-blue-500"></i> Complete los 4 pasos en orden para proceder con el análisis.</p>
                     </div>
                 </div>
             </div>
@@ -239,7 +307,15 @@
                         <button onclick="inyectarAlConsolidador()"
                             class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-sm ml-2"><i
                                 class="fa-solid fa-share-from-square"></i> Inyectar al Consolidador</button>
-                    </div>
+                    
+<button type="button"
+        onclick="navigateToStep(0)"
+        class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200
+               text-xs font-bold px-3 py-1.5 rounded transition-colors
+               flex items-center gap-2 shadow-sm">
+    <i class="fa-solid fa-folder-open"></i> Cargar / Modificar Archivos
+</button>
+</div>
                 </div>
 
                 <div id="s1_tabDashboard"

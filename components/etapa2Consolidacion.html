@@ -103,14 +103,14 @@
 <!-- [SPLIT-MARKER] resultsSection begin -->
 <div id="resultsSection" class="hidden flex-1 flex flex-col min-h-0 relative bg-white">
     <!-- Pestañas de Navegación -->
-    <div class="flex items-center border-b border-slate-200 bg-slate-50 px-4 pt-2 shrink-0 relative">
+    <div class="flex items-center border-b border-slate-200 bg-slate-50 px-4 pt-2 shrink-0 relative" style="z-index:100;">
         <button type="button" onclick="switchTab('data')" id="tabDataBtn"
             class="tab-btn active px-5 py-2.5 text-sm text-slate-600 font-medium rounded-t-lg transition-colors focus:outline-none flex items-center gap-2 whitespace-nowrap">
             <i class="fa-solid fa-table"></i> Resultados Consolidados
         </button>
 
         <!-- MENÚ AGRUPADO: DIAGNÓSTICO -->
-        <div class="relative">
+        <div class="relative" style="z-index:200;">
             <button type="button" onclick="s1_toggleDiagMenu(event)" id="tabDiagBtn"
                 class="tab-btn px-5 py-2.5 text-sm text-slate-600 font-medium rounded-t-lg transition-colors focus:outline-none flex items-center gap-2 whitespace-nowrap">
                 <i class="fa-solid fa-list-check"></i> Diagnóstico
@@ -118,7 +118,7 @@
                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
             </button>
             <div id="diagMenuDropdown"
-                class="hidden absolute left-0 top-full mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-lg z-30 py-1.5">
+                class="hidden absolute left-0 top-full mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-xl py-1.5" style="z-index:9999;">
                 <button type="button" onclick="switchTab('recat')" id="tabRecatBtn"
                     class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
                     <span class="flex items-center gap-2"><i class="fa-solid fa-code-compare w-4 text-slate-400"></i> Reporte de Conversión</span>
@@ -147,6 +147,11 @@
                     <span class="flex items-center gap-2"><i class="fa-solid fa-hourglass-end w-4 text-slate-400"></i> Gestor de Caducidad</span>
                     <span id="tabCaducidadCount" class="tab-count-badge hidden"></span>
                 </button>
+                <button type="button" onclick="switchTab('sinmodalidad')" id="tabSinModalidadBtn"
+                    class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation w-4 text-rose-500"></i> Obras sin Modalidad</span>
+                    <span id="tabSinModalidadCount" class="tab-count-badge hidden"></span>
+                </button>
             </div>
         </div>
 
@@ -160,6 +165,13 @@
             class="tab-btn px-5 py-2.5 text-sm text-slate-600 font-medium rounded-t-lg transition-colors focus:outline-none flex items-center gap-2 whitespace-nowrap">
             <i class="fa-solid fa-gauge-high"></i> Dashboard BF
         </button>
+
+        <div class="ml-auto flex items-center gap-2 pb-1">
+            <button type="button" onclick="navigateToStep(1)"
+                class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold px-3 py-1.5 rounded transition-colors flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-folder-open"></i> Cargar / Modificar Archivos
+            </button>
+        </div>
     </div>
 
     <!-- CONTENIDO PESTAÑA 1: DATOS -->
@@ -541,52 +553,174 @@
     <!-- CONTENIDO PESTAÑA: BCMO SIN CRUCE -->
     <div id="tabBcmoSinCruceContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
         <div class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <!-- Cabecera -->
             <div class="p-4 border-b border-amber-200 bg-amber-50 flex flex-col gap-3">
+                <!-- Información contextual -->
                 <div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
                     <i class="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
-                    <p><b>¿Qué muestra esta vista?</b> Obras del sistema BCMO cuyos nodos <b>no tienen coincidencia</b> en el Avance de Obras cargado. Esto generalmente indica un <b>error tipográfico en la nomenclatura del nodo</b> dentro del BCMO o que la obra fue omitida en el reporte de Avance. Verifique el sistema origen antes de realizar correcciones.</p>
+                    <p><b>¿Qué muestra esta vista?</b> Obras del BCMO (Etapa 1) que <b>no cruzan</b> con el Avance de Obras, están en estado <b>SIN CONSUMO</b> y tienen <b>materiales entregados</b>. Son candidatas a error tipográfico en el nodo o a obras omitidas en el reporte.</p>
                 </div>
+
+                <!-- Título + contador -->
                 <div class="flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg font-bold text-amber-800"><i class="fa-solid fa-link-slash mr-2"></i>BCMO Sin Cruce en Avance de Obras</h2>
-                        <p class="text-xs text-amber-700 mt-1">Obras registradas en <b>BCMO</b> que <b>NO</b> tienen nodo coincidente en el Avance de Obras. Posibles errores tipográficos.</p>
+                        <h2 class="text-lg font-bold text-amber-800"><i class="fa-solid fa-link-slash mr-2"></i>BCMO Sin Cruce · Sin Consumo · Con Entregas</h2>
+                        <p class="text-xs text-amber-700 mt-1">Obras de <b>BCMO (Etapa 1)</b> sin nodo en Avance · estado <b>SIN CONSUMO</b> · <b>Entregado &gt; 0</b></p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <label class="flex items-center gap-2 text-xs font-bold text-slate-600 bg-white px-3 py-1.5 rounded border border-slate-300 cursor-pointer hover:bg-slate-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="bcmoSinCruceHideSinConsumo" onchange="renderBcmoSinCruceTable()" class="accent-amber-600 w-4 h-4">
-                            Ocultar SIN CONSUMO
-                        </label>
-                        <div class="text-sm text-amber-700 font-bold bg-white px-3 py-1.5 rounded border border-amber-200 shadow-sm" id="bcmoSinCruceCountText">0 obras</div>
-                    </div>
+                    <div class="text-sm text-amber-700 font-bold bg-white px-3 py-1.5 rounded border border-amber-200 shadow-sm" id="bcmoSinCruceCountText">0 obras</div>
                 </div>
-                <div class="flex flex-wrap items-center justify-between gap-3 mt-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-amber-700 uppercase">Estado Liq.:</span>
-                        <div id="bcmoSinCruceEstadoBadges" class="flex flex-wrap gap-2"></div>
-                    </div>
-                    <div class="w-72">
-                        <input type="text" id="hFilterBcmoSinCruce" oninput="renderBcmoSinCruceTable()" class="w-full px-3 py-1.5 text-xs border border-amber-200 rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none shadow-sm bg-white" placeholder="Buscar nodo, contratista, estado...">
+
+                <!-- Filtros fijos (chips informativos) + filtro opcional + buscador -->
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Chips de filtros fijos -->
+                    <span class="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 text-slate-600 border border-slate-300">
+                        <i class="fa-solid fa-lock text-[9px]"></i> SIN CONSUMO
+                    </span>
+                    <span class="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">
+                        <i class="fa-solid fa-lock text-[9px]"></i> Entregado &gt; 0
+                    </span>
+
+                    <!-- Separador -->
+                    <span class="text-slate-300 text-sm">|</span>
+
+                    <!-- Filtro opcional: solo con similitud -->
+                    <label class="flex items-center gap-2 text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded border border-indigo-200 cursor-pointer hover:bg-indigo-100 transition-colors shadow-sm">
+                        <input type="checkbox" id="bcmoSinCruceSoloSugerencia" onchange="renderBcmoSinCruceTable()" class="accent-indigo-600 w-4 h-4">
+                        <i class="fa-solid fa-link text-[10px]"></i> Solo con Posible Coincidencia
+                    </label>
+
+                    <!-- Buscador libre -->
+                    <div class="ml-auto w-64 relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fa-solid fa-search text-slate-400 text-xs"></i>
+                        </div>
+                        <input type="text" id="hFilterBcmoSinCruce" oninput="renderBcmoSinCruceTable()"
+                            class="w-full pl-8 pr-3 py-1.5 text-xs border border-amber-200 rounded focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none shadow-sm bg-white"
+                            placeholder="Buscar nodo o contratista...">
                     </div>
                 </div>
             </div>
+
+            <!-- Tabla -->
             <div class="flex-1 overflow-auto custom-scrollbar p-0">
                 <table class="w-full text-left text-sm whitespace-nowrap">
                     <thead class="bg-slate-50 sticky top-0 border-b border-slate-200">
                         <tr>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">#</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r bg-amber-50 text-amber-800">Nodo BCMO</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado de Liquidación</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 text-right border-r">% Consumo</th>
+                            <th class="p-3 font-semibold text-xs text-slate-500 border-r w-10">#</th>
+                            <th class="p-3 font-semibold text-xs text-amber-800 border-r bg-amber-50">Nodo BCMO</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Contratista</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">Entregado</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 text-center">Posible Coincidencia (Avance)</th>
+                            <th class="p-3 font-semibold text-xs text-emerald-700 border-r text-center bg-emerald-50">Entregado</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-right">% Consumo</th>
+                            <th class="p-3 font-semibold text-xs text-indigo-700 text-left">Posible Coincidencia (Avance)</th>
                         </tr>
                     </thead>
                     <tbody id="bcmoSinCruceTableBody" class="divide-y divide-slate-100"></tbody>
                 </table>
-                <div id="emptyBcmoSinCruceState" class="hidden p-8 text-center text-slate-400">
-                    <i class="fa-solid fa-check-double text-4xl mb-3 opacity-30 text-emerald-500"></i>
-                    <p class="text-sm font-semibold text-slate-600">¡Excelente! Todos los nodos BCMO tienen coincidencia en el Avance de Obras.</p>
+                <div id="emptyBcmoSinCruceState" class="hidden p-10 text-center text-slate-400">
+                    <i class="fa-solid fa-check-double text-5xl mb-4 opacity-20 text-emerald-500"></i>
+                    <p class="text-sm font-semibold text-slate-600">No hay obras que cumplan los criterios.</p>
+                    <p class="text-xs mt-1 text-slate-400">Sin consumo + materiales entregados + sin cruce en Avance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PESTAÑA: OBRAS SIN MODALIDAD -->
+    <div id="tabSinModalidadContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
+        <div class="max-w-7xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <!-- Cabecera -->
+            <div class="p-4 border-b border-rose-200 bg-rose-50 flex flex-col gap-3">
+                <!-- Información contextual -->
+                <div class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
+                    <i class="fa-solid fa-circle-exclamation mt-0.5 text-amber-500"></i>
+                    <p><b>Reclamo por Sector:</b> Esta vista aísla todas las obras que <b>no cuentan con modalidad de liquidación informada</b>. Utilice las métricas por sector para realizar los reclamos correspondientes a <b>Obras</b> o al área de <b>Corporativo</b>.</p>
+                </div>
+
+                <!-- Título + contador -->
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-rose-800 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Obras sin Modalidad Informada
+                        </h2>
+                        <p class="text-xs text-rose-700 mt-0.5">Listado consolidado para reclamo y asignación directa de modalidad de liquidación</p>
+                    </div>
+                    <div class="text-sm text-rose-700 font-bold bg-white px-3 py-1.5 rounded border border-rose-200 shadow-sm" id="sinModCountText">0 obras sin modalidad</div>
+                </div>
+
+                <!-- Tarjetas KPI por Sector -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Sin Modalidad</span>
+                            <span class="text-lg font-extrabold text-slate-800" id="sinModTotalCount">0</span>
+                        </div>
+                        <div class="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+                            <i class="fa-solid fa-folder-minus"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-300 transition-colors" onclick="filterSinModBySector('OBRAS')">
+                        <div>
+                            <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Reclamar a Sector Obras</span>
+                            <span class="text-lg font-extrabold text-indigo-700" id="sinModObrasCount">0</span>
+                        </div>
+                        <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                            <i class="fa-solid fa-hard-hat"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-purple-300 transition-colors" onclick="filterSinModBySector('CORPORATIVO')">
+                        <div>
+                            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block">Reclamar a Corporativo</span>
+                            <span class="text-lg font-extrabold text-purple-700" id="sinModCorpCount">0</span>
+                        </div>
+                        <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buscador + Filtros por Sector -->
+                <div class="flex flex-wrap items-center gap-3 mt-1">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold text-slate-600">Sector:</span>
+                        <select id="sinModSectorFilter" onchange="renderSinModalidadTable()" class="px-2.5 py-1.5 text-xs border border-slate-300 rounded focus:border-rose-500 outline-none bg-white font-semibold text-slate-700 shadow-sm">
+                            <option value="TODOS">-- Todos los Sectores --</option>
+                            <option value="OBRAS">Sector Obras</option>
+                            <option value="CORPORATIVO">Sector Corporativo</option>
+                        </select>
+                    </div>
+
+                    <div class="ml-auto w-72 relative">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <i class="fa-solid fa-search text-slate-400 text-xs"></i>
+                        </div>
+                        <input type="text" id="sinModalidadSearch" oninput="renderSinModalidadTable()"
+                            class="w-full pl-8 pr-3 py-1.5 text-xs border border-rose-200 rounded focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none shadow-sm bg-white"
+                            placeholder="Buscar nodo, obra, estado...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="flex-1 overflow-auto custom-scrollbar p-0">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-50 sticky top-0 border-b border-slate-200">
+                        <tr>
+                            <th class="p-3 font-semibold text-xs text-slate-500 border-r w-10">#</th>
+                            <th class="p-3 font-semibold text-xs text-slate-700 border-r">Sector Informante / Origen</th>
+                            <th class="p-3 font-semibold text-xs text-slate-700 border-r">Nodo</th>
+                            <th class="p-3 font-semibold text-xs text-indigo-700 border-r bg-indigo-50/50">Obra BF</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado Original</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado Calculado</th>
+                            <th class="p-3 font-semibold text-xs text-rose-700 border-r text-center bg-rose-50/50">Modalidad</th>
+                            <th class="p-3 font-semibold text-xs text-slate-700 text-center w-28">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sinModalidadTableBody" class="divide-y divide-slate-100"></tbody>
+                </table>
+                <div id="emptySinModalidadState" class="hidden p-10 text-center text-slate-400">
+                    <i class="fa-solid fa-circle-check text-5xl mb-4 opacity-20 text-emerald-500"></i>
+                    <p class="text-sm font-semibold text-slate-600">¡Excelente! No hay obras sin modalidad en la vista seleccionada.</p>
+                    <p class="text-xs mt-1 text-slate-400">Todas las obras cuentan con su modalidad asignada o forzada correctamente.</p>
                 </div>
             </div>
         </div>
