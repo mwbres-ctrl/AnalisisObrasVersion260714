@@ -21,9 +21,9 @@ function procesarHistorialTareas(rawData) {
     const sample = rawData[0];
     const keys = Object.keys(sample);
 
-    const colPermitir = keys.find(k => normalizeKey(k) === "PERMITE_DECLARAR_MATERIAL") || "Permite Declarar Material";
+    const colPermitir = keys.find(k => normalizeKey(k).includes("PERMITE_DECLARAR") || normalizeKey(k).includes("PERMITIR_DECLARAR")) || "Permite Declarar Material";
     const colObraBF = keys.find(k => normalizeKey(k) === "OBRA_BF") || "Obra BF";
-    const colEstadoDecl = keys.find(k => normalizeKey(k) === "ESTADO_DECLARACION") || "Estado Declaración";
+    const colEstadoDecl = keys.find(k => normalizeKey(k).includes("DECLARA") || normalizeKey(k).includes("ESTADO_DECL")) || "Estado Declaración";
     const colEstadoTarea = keys.find(k => normalizeKey(k) === "ESTADO_TAREA") || "Estado Tarea";
     const colEstadoObraBF = keys.find(k => normalizeKey(k) === "ESTADO_OBRA_BF") || "Estado Obra BF";
     const colContratista = keys.find(k => normalizeKey(k) === "CONTRATISTA" || normalizeKey(k) === "NOMBRE_PROV" || normalizeKey(k) === "PROVEEDOR") || "Contratista";
@@ -32,9 +32,9 @@ function procesarHistorialTareas(rawData) {
     const grupos = {};
 
     rawData.forEach(row => {
-        // 2. Filtrar donde "Permite Declarar Material" sea "Si"
-        const valPermitir = String(row[colPermitir] || '').trim();
-        if (valPermitir !== config.valorPermitir) return;
+        // 2. Filtrar donde "Permite Declarar Material" sea "Si" (tolerante a mayúsculas y tildes)
+        const valPermitir = String(row[colPermitir] || '').trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (colPermitir in row && valPermitir && valPermitir !== "SI") return;
 
         // 3. Excluir registros por estados
         const valEstadoTarea = String(row[colEstadoTarea] || '').trim().toUpperCase();

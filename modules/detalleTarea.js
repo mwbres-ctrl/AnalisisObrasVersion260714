@@ -64,11 +64,14 @@ function renderDetalleTareasTable() {
     const emptyState = document.getElementById('emptyDetalleTareasState');
     if (!tbody) return;
 
-    const datosBase = window.dataTarea || [];
+    const datosBase = (typeof dataTarea !== 'undefined' && dataTarea) ? dataTarea : (window.dataTarea || []);
 
-    // Poblar los selects solo si todavía no tienen opciones cargadas (evita resetear la selección en cada tecla)
+    // Poblar los selects cuando los datos están disponibles o cambian
     const selEstado = document.getElementById('dtFiltroEstado');
-    if (selEstado && selEstado.options.length <= 1) poblarFiltrosDetalleTareas(datosBase);
+    if (selEstado && (selEstado.options.length <= 1 || selEstado.dataset.loadedCount !== String(datosBase.length))) {
+        poblarFiltrosDetalleTareas(datosBase);
+        if (selEstado) selEstado.dataset.loadedCount = String(datosBase.length);
+    }
 
     const filtroObra = (document.getElementById('dtFiltroObra')?.value || '').trim().toUpperCase();
     const filtroEstado = document.getElementById('dtFiltroEstado')?.value || '';
@@ -163,7 +166,8 @@ function closeDetalleTareaModal() {
    Exportar (respeta los filtros aplicados en pantalla)
    -------------------------------------------------------------------------- */
 function exportarDetalleTareas() {
-    const datos = (dtDatosFiltrados && dtDatosFiltrados.length > 0) ? dtDatosFiltrados : (window.dataTarea || []);
+    const fallbackData = (typeof dataTarea !== 'undefined' && dataTarea) ? dataTarea : (window.dataTarea || []);
+    const datos = (dtDatosFiltrados && dtDatosFiltrados.length > 0) ? dtDatosFiltrados : fallbackData;
     if (!datos || datos.length === 0) {
         showToast("No hay datos de Tareas para exportar.", "error");
         return;

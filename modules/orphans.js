@@ -45,15 +45,21 @@ function renderOrphansTable() {
 
             if (!cDateRaw || String(cDateRaw).trim() === '') return true; // Mostrar si no tiene ninguna de las dos
 
-            let cDate;
-            if (cDateRaw instanceof Date) {
-                cDate = cDateRaw;
-            } else {
-                let parts = String(cDateRaw).split('/');
-                if (parts.length === 3) cDate = new Date(parts[2], parts[1] - 1, parts[0]);
-                else cDate = new Date(cDateRaw);
+            let cDate = typeof parseCaducidadDate === 'function' ? parseCaducidadDate(cDateRaw) : null;
+            if (!cDate) {
+                if (cDateRaw instanceof Date) {
+                    cDate = cDateRaw;
+                } else if (typeof cDateRaw === 'number' && cDateRaw > 1000 && cDateRaw < 100000) {
+                    const utcMs = Math.round((cDateRaw - 25569) * 86400 * 1000);
+                    const dUtc = new Date(utcMs);
+                    cDate = new Date(dUtc.getUTCFullYear(), dUtc.getUTCMonth(), dUtc.getUTCDate());
+                } else {
+                    let parts = String(cDateRaw).split('/');
+                    if (parts.length === 3) cDate = new Date(parts[2], parts[1] - 1, parts[0]);
+                    else cDate = new Date(cDateRaw);
+                }
             }
-            if (cDate && !isNaN(cDate.getTime())) {
+            if (cDate && !isNaN(cDate.getTime()) && cDate.getFullYear() >= 1980) {
                 cDate.setHours(0, 0, 0, 0);
                 if (cDate < limitDate) return false; // Ocultar si es mas antigua
             }

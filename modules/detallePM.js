@@ -10,59 +10,40 @@
    -------------------------------------------------------------------------- */
 
 /**
- * Inicializa la solapa PM: puebla los dropdowns y renderiza la tabla.
+ * Inicializa la solapa PM: puebla las sugerencias de obras, dropdown de estados y renderiza la tabla.
  * Se llama la primera vez que el usuario hace clic en la pestaña.
  */
 function initDetallePMTab() {
-    poblarDropdownsMotivoYEstados();
+    poblarSugerenciasObrasPM();
+    poblarDropdownEstadosEntrega();
     renderDetallePMTable();
 }
 
 /**
- * Puebla los dropdowns de Motivo de Obra y Estado de Línea
- * con los valores únicos presentes en dataMateriales.
+ * Puebla el datalist de sugerencias con los motivos/nodos únicos presentes en dataMateriales.
  */
-function poblarDropdownsMotivoYEstados() {
+function poblarSugerenciasObrasPM() {
     if (!dataMateriales || dataMateriales.length === 0) return;
+    const datalist = document.getElementById('pmObrasDatalist');
+    if (!datalist) return;
 
-    const selectMotivo = document.getElementById('pmFilterMotivoSelect');
-    const selectEstadoLinea = document.getElementById('pmFilterEstadoLinea');
-    const selectEstadoEntrega = document.getElementById('pmFilterEstadoEntrega');
-
-    // Preservar selecciones actuales
-    const prevMotivo = selectMotivo.value;
-    const prevEstadoLinea = selectEstadoLinea.value;
-    const prevEstadoEntrega = selectEstadoEntrega.value;
-
-    // Obtener valores únicos de MOTIVO
     const motivos = [...new Set(
         dataMateriales.map(r => String(r['_N_MOTIVO'] || r['MOTIVO'] || '').trim().toUpperCase())
             .filter(m => m !== '')
     )].sort();
 
-    selectMotivo.innerHTML = '<option value="">-- Todos los Motivos --</option>';
-    motivos.forEach(m => {
-        const opt = document.createElement('option');
-        opt.value = m;
-        opt.textContent = m;
-        selectMotivo.appendChild(opt);
-    });
+    datalist.innerHTML = motivos.map(m => `<option value="${m}"></option>`).join('');
+}
 
-    // Obtener valores únicos de ESTADO_DE_LINEA
-    const estadosLinea = [...new Set(
-        dataMateriales.map(r => String(r['_N_ESTADO_DE_LINEA'] || r['ESTADO_DE_LINEA'] || '').trim().toUpperCase())
-            .filter(e => e !== '')
-    )].sort();
+/**
+ * Puebla el dropdown de Estado de Entrega (Consol.) desde dataConsolidada.
+ */
+function poblarDropdownEstadosEntrega() {
+    const selectEstadoEntrega = document.getElementById('pmFilterEstadoEntrega');
+    if (!selectEstadoEntrega || !dataConsolidada || dataConsolidada.length === 0) return;
 
-    selectEstadoLinea.innerHTML = '<option value="">Todos</option>';
-    estadosLinea.forEach(e => {
-        const opt = document.createElement('option');
-        opt.value = e;
-        opt.textContent = e;
-        selectEstadoLinea.appendChild(opt);
-    });
+    const prevVal = selectEstadoEntrega.value;
 
-    // Obtener valores únicos de Estado de Entrega (desde Resultados Consolidados)
     const estadosEntrega = [...new Set(
         dataConsolidada.map(r => String(r['Estado de Entregas'] || '').trim())
             .filter(e => e !== '' && e !== '-')
@@ -76,46 +57,64 @@ function poblarDropdownsMotivoYEstados() {
         selectEstadoEntrega.appendChild(opt);
     });
 
-    // Restaurar selecciones previas si siguen siendo válidas
-    if (prevMotivo) selectMotivo.value = prevMotivo;
-    if (prevEstadoLinea) selectEstadoLinea.value = prevEstadoLinea;
-    if (prevEstadoEntrega) selectEstadoEntrega.value = prevEstadoEntrega;
+    if (prevVal) selectEstadoEntrega.value = prevVal;
+}
+
+// Compatibilidad
+function poblarDropdownsMotivoYEstados() {
+    poblarSugerenciasObrasPM();
+    poblarDropdownEstadosEntrega();
 }
 
 /**
- * Limpia todos los filtros de la solapa PM.
+ * Limpia los filtros de la solapa PM.
  */
 function limpiarFiltrosPM() {
-    document.getElementById('pmFilterMotivoSelect').value = '';
-    document.getElementById('pmFilterMasivo').value = '';
-    document.getElementById('pmFilterTexto').value = '';
-    document.getElementById('pmFilterEstadoLinea').value = '';
-    document.getElementById('pmFilterEstadoEntrega').value = '';
+    const input = document.getElementById('pmFilterObraInput');
+    if (input) input.value = '';
+    const selEntrega = document.getElementById('pmFilterEstadoEntrega');
+    if (selEntrega) selEntrega.value = '';
     renderDetallePMTable();
 }
 
 /**
- * Parsear texto del filtro masivo: acepta líneas y/o espacios como separadores.
- * Retorna un Set de códigos en mayúsculas.
+ * Parsear texto del filtro unificado:
+ * Acepta saltos de línea, comas, punto y coma, tabs y/o espacios como separadores.
+ * Retorna un objeto con Sets de códigos exactos y sub-tokens para matching rápido.
  */
-function parsearCodigosMasivos(texto) {
+function parsearFiltroObrasPM(texto) {
     if (!texto || texto.trim() === '') return null;
-    // Separar por saltos de línea, luego cada línea puede tener múltiples palabras
-    const codigos = new Set();
-    texto.split('\n').forEach(linea => {
-        linea.trim().split(/\s+/).forEach(part => {
-            // Reagrupar tokens que forman códigos compuestos (ej "ML056C MTP")
-            if (part) codigos.add(part.toUpperCase());
-        });
-        // También agregar la línea completa normalizada (código compuesto)
-        const lineaCompleta = linea.trim().toUpperCase();
-        if (lineaCompleta) codigos.add(lineaCompleta);
+    const rawTrimmed = texto.trim();
+    const rawUpper = rawTrimmed.toUpperCase();
+
+    // Separar por saltos de línea, coma, punto y coma, tabulador
+    const partesPrincipales = rawTrimmed.split(/[\r\n,;\t]+/);
+    const codigosExactos = new Set();
+    const subTokens = new Set();
+
+    partesPrincipales.forEach(p => {
+        const item = p.trim().toUpperCase();
+        if (item) {
+            codigosExactos.add(item);
+            item.split(/\s+/).forEach(t => {
+                if (t.length >= 2) subTokens.add(t);
+            });
+        }
     });
-    return codigos.size > 0 ? codigos : null;
+
+    const tokensEspacio = rawUpper.split(/\s+/).filter(t => t.length >= 2);
+    tokensEspacio.forEach(t => subTokens.add(t));
+
+    return {
+        raw: rawUpper,
+        esUnicaPalabra: codigosExactos.size === 1 && !rawTrimmed.includes('\n') && !rawTrimmed.includes(',') && !rawTrimmed.includes(';'),
+        codigosExactos,
+        subTokens
+    };
 }
 
 /**
- * Renderiza la tabla de Detalle de Obras (PM) aplicando todos los filtros.
+ * Renderiza la tabla de Detalle de Obras (PM) aplicando el filtro unificado.
  */
 function renderDetallePMTable() {
     const tbody = document.getElementById('detallePMTableBody');
@@ -127,24 +126,28 @@ function renderDetallePMTable() {
 
     // Si no hay datos PM, mostrar estado vacío
     if (!dataMateriales || dataMateriales.length === 0) {
-        emptyState.classList.remove('hidden');
-        countText.textContent = '0 registros';
+        if (emptyState) emptyState.classList.remove('hidden');
+        if (countText) countText.textContent = '0 registros';
         return;
     }
 
-    // Leer filtros
-    const fMotivoSelect = document.getElementById('pmFilterMotivoSelect').value.trim().toUpperCase();
-    const fMasivoTexto = document.getElementById('pmFilterMasivo').value;
-    const fTexto = document.getElementById('pmFilterTexto').value.trim().toLowerCase();
-    const fEstadoLinea = document.getElementById('pmFilterEstadoLinea').value.trim().toUpperCase();
-    const fEstadoEntrega = document.getElementById('pmFilterEstadoEntrega').value.trim();
+    // Asegurar que el datalist y el dropdown estén poblados
+    const datalist = document.getElementById('pmObrasDatalist');
+    if (datalist && datalist.children.length === 0) {
+        poblarSugerenciasObrasPM();
+    }
+    const selectEstadoEntrega = document.getElementById('pmFilterEstadoEntrega');
+    if (selectEstadoEntrega && selectEstadoEntrega.options.length <= 1) {
+        poblarDropdownEstadosEntrega();
+    }
 
-    // Parsear códigos masivos
-    const codigosMasivos = parsearCodigosMasivos(fMasivoTexto);
+    const inputVal = document.getElementById('pmFilterObraInput')?.value || '';
+    const filtroParsed = parsearFiltroObrasPM(inputVal);
+    const fEstadoEntrega = selectEstadoEntrega ? selectEstadoEntrega.value.trim() : '';
 
     // Construir mapa de Estado de Entregas desde dataConsolidada por Nodo (MOTIVO)
     const mapaEstadoEntrega = {};
-    dataConsolidada.forEach(row => {
+    (dataConsolidada || []).forEach(row => {
         const nodo = String(row['Nodo'] || row['NODO'] || '').trim().toUpperCase();
         if (nodo) {
             mapaEstadoEntrega[nodo] = String(row['Estado de Entregas'] || '-').trim();
@@ -154,24 +157,7 @@ function renderDetallePMTable() {
     // Filtrar registros del PM
     let registros = dataMateriales.filter(row => {
         const motivo = String(row['_N_MOTIVO'] || row['MOTIVO'] || '').trim().toUpperCase();
-        const estadoLinea = String(row['_N_ESTADO_DE_LINEA'] || row['ESTADO_DE_LINEA'] || '').trim().toUpperCase();
-        const proveedor = String(row['_N_NOMBRE_PROV'] || row['NOMBRE_PROV'] || '').trim().toLowerCase();
-        const locDest = String(row['_N_LOCALIZADOR_DESTINO'] || row['LOCALIZADOR_DESTINO'] || '').trim().toLowerCase();
-        const articulo = String(row['_N_ARTICULO'] || row['ARTICULO'] || '').trim().toLowerCase();
-        const fechaTrx = String(row['_N_FECHA_TRX'] || row['FECHA_TRX'] || '').trim().toLowerCase();
-
-        // Filtro masivo tiene precedencia sobre el dropdown
-        if (codigosMasivos && codigosMasivos.size > 0) {
-            const motivoTokens = motivo.split(/\s+/);
-            const matchExacto = codigosMasivos.has(motivo);
-            const matchParcial = motivoTokens.some(t => codigosMasivos.has(t));
-            if (!matchExacto && !matchParcial) return false;
-        } else if (fMotivoSelect && motivo !== fMotivoSelect) {
-            return false;
-        }
-
-        // Filtro por Estado de Línea
-        if (fEstadoLinea && estadoLinea !== fEstadoLinea) return false;
+        if (!motivo) return false;
 
         // Filtro por Estado de Entrega (vinculado desde consolidado)
         if (fEstadoEntrega) {
@@ -179,27 +165,42 @@ function renderDetallePMTable() {
             if (estEnt !== fEstadoEntrega) return false;
         }
 
-        // Filtro de texto general (busca en proveedor, artículo, localizador, fecha)
-        if (fTexto) {
-            const hayMatch = proveedor.includes(fTexto)
-                || locDest.includes(fTexto)
-                || articulo.includes(fTexto)
-                || fechaTrx.includes(fTexto)
-                || motivo.toLowerCase().includes(fTexto)
-                || estadoLinea.toLowerCase().includes(fTexto);
-            if (!hayMatch) return false;
+        if (filtroParsed) {
+            // Caso 1: Coincidencia exacta con alguno de los códigos ingresados/pegados
+            if (filtroParsed.codigosExactos.has(motivo)) return true;
+
+            // Caso 2: Si es una búsqueda simple/tipeo corto, buscar si el motivo contiene el texto
+            if (filtroParsed.esUnicaPalabra) {
+                if (motivo.includes(filtroParsed.raw)) return true;
+            }
+
+            // Caso 3: Búsqueda masiva - coincidencia por sub-tokens o prefijo (ej: código BF "AV079" matchea "AV079 FO0")
+            const motivoTokens = motivo.split(/\s+/);
+            const matchToken = motivoTokens.some(t => filtroParsed.codigosExactos.has(t) || filtroParsed.subTokens.has(t));
+            if (matchToken) return true;
+
+            const matchPrefijo = [...filtroParsed.codigosExactos].some(c => motivo.startsWith(c) || c.startsWith(motivo));
+            if (matchPrefijo) return true;
+
+            return false;
         }
 
         return true;
     });
 
-    countText.textContent = `${registros.length} registros`;
+    if (countText) {
+        if (filtroParsed) {
+            countText.textContent = `${registros.length} de ${dataMateriales.length} registros`;
+        } else {
+            countText.textContent = `${registros.length} registros`;
+        }
+    }
 
     if (registros.length === 0) {
-        emptyState.classList.remove('hidden');
+        if (emptyState) emptyState.classList.remove('hidden');
         return;
     }
-    emptyState.classList.add('hidden');
+    if (emptyState) emptyState.classList.add('hidden');
 
     // Helpers de formato
     const fmtNum = val => {

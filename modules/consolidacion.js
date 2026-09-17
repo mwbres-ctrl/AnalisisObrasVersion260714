@@ -197,7 +197,7 @@ function _procesarConsolidacionCore() {
             const parts = str.split(/[T\s/:-]/);
             if (parts.length >= 3) {
                 if (parts[0].length === 2 && parts[2].length === 4) {
-                    return new Date(parts[2], parts[1]-1, parts[0]).getTime() || 0;
+                    return new Date(parts[2], parts[1] - 1, parts[0]).getTime() || 0;
                 }
             }
             return new Date(str).getTime() || 0;
@@ -223,7 +223,7 @@ function _procesarConsolidacionCore() {
             if (!estado) return "";
             let est = String(estado).trim().toUpperCase();
             const sinAcentos = est.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            
+
             if (sinAcentos === "CIERRE TECNICO") return "CIERRE TECNICO";
             if (sinAcentos === "FINALIZADA" || sinAcentos === "FINALIZADO") return "FINALIZADA";
             if (sinAcentos === "A EJECUTAR") return "A EJECUTAR";
@@ -266,7 +266,7 @@ function _procesarConsolidacionCore() {
                     const existingRow = mapAvance.get(k);
                     const dateExisting = getLatestDate(existingRow);
                     const dateNew = getLatestDate(filteredRow);
-                    
+
                     if (dateNew > dateExisting) {
                         mapAvance.set(k, filteredRow);
                     }
@@ -549,26 +549,33 @@ function _procesarConsolidacionCore() {
     if (btnGoToRes) btnGoToRes.classList.remove('hidden');
     updateStepper(2);
 
-    // Actualizar solapa de estandarizacion si estamos mostrando "Recategorizados"
-    if (document.getElementById('tabRecatContent') && !document.getElementById('tabRecatContent').classList.contains('hidden')) {
-        renderRecatTable();
-    }
-
     renderPreview();
     renderAuditTable();
     renderOrphansTable();
     renderBcmoSinCruceTable();
     renderCaducidadTable();
+    if (typeof renderSinModalidadTable === 'function') {
+        renderSinModalidadTable();
+    }
+    if (typeof renderValidacionContratistaTable === 'function') {
+        renderValidacionContratistaTable();
+    }
+    if (typeof renderRecatTable === 'function') {
+        renderRecatTable();
+    }
+    if (typeof renderDetalleTareasTable === 'function') {
+        renderDetalleTareasTable();
+    }
     hideLoadingOverlay();
 }
 
 // Funciones Pop-up Resumen Interactivo
-window.openSummaryModal = function() {
+window.openSummaryModal = function () {
     const modal = document.getElementById('summaryModal');
     if (modal) modal.classList.remove('hidden');
 };
 
-window.closeSummaryModal = function() {
+window.closeSummaryModal = function () {
     const modal = document.getElementById('summaryModal');
     if (modal) modal.classList.add('hidden');
 };
@@ -609,7 +616,7 @@ function renderPreview() {
     let baseFiltered = dataConsolidada.filter(item => {
         const n = String(item['Nodo'] || item['NODO'] || '').toLowerCase();
         const oBf = String(item['Obra BF'] || '').toLowerCase();
-        
+
         // Búsqueda global simplificada
         if (globalSearch && !n.includes(globalSearch) && !oBf.includes(globalSearch)) return false;
         return true;
@@ -620,11 +627,11 @@ function renderPreview() {
     baseFiltered.forEach(i => {
         const e = i['Estado de Avance (Calculado)'] || 'Otro';
         countsState[e] = (countsState[e] || 0) + 1;
-        
+
         let m = (i['Modalidad de Liquidación Calculada'] || i['Modalidad de Liquidación'] || i['MODALIDAD DE LIQUIDACIÓN'] || '').toUpperCase().trim();
         m = m === '' ? (i['_ORIGEN'] === 'CORPORATIVO' ? 'CORPORATIVO' : 'SIN MODALIDAD') : m;
         countsMod[m] = (countsMod[m] || 0) + 1;
-        
+
         const oc = i['Obra a considerar'] || '-';
         countsObraCons[oc] = (countsObraCons[oc] || 0) + 1;
 
@@ -635,9 +642,9 @@ function renderPreview() {
     // Renderizado dinámico de los Dropdowns
     const renderDropdownContent = (containerId, countsObj, activeArray, toggleFuncName, arrVarName) => {
         const container = document.getElementById(containerId);
-        if(!container) return;
+        if (!container) return;
         container.innerHTML = '';
-        
+
         const allActive = activeArray.length === 0;
         container.innerHTML += `
             <label class="flex items-center gap-2 px-2 py-1.5 hover:bg-slate-100 rounded cursor-pointer transition-colors">
@@ -669,11 +676,11 @@ function renderPreview() {
     // Cruce Final
     filteredConsolidada = baseFiltered.filter(item => {
         if (activeStateFilters.length > 0 && !activeStateFilters.includes(item['Estado de Avance (Calculado)'])) return false;
-        
+
         let itemMod = (item['Modalidad de Liquidación Calculada'] || item['Modalidad de Liquidación'] || item['MODALIDAD DE LIQUIDACIÓN'] || '').toUpperCase().trim();
         itemMod = itemMod === '' ? (item['_ORIGEN'] === 'CORPORATIVO' ? 'CORPORATIVO' : 'SIN MODALIDAD') : itemMod;
         if (activeModalityFilters.length > 0 && !activeModalityFilters.includes(itemMod)) return false;
-        
+
         const oc = item['Obra a considerar'] || '-';
         if (activeObraConsiderarFilters.length > 0 && !activeObraConsiderarFilters.includes(oc)) return false;
 
@@ -684,7 +691,7 @@ function renderPreview() {
     });
 
     const statsEl = document.getElementById('statsText');
-    if(statsEl) statsEl.innerHTML = `<b>${filteredConsolidada.length}</b> de ${dataConsolidada.length} registros`;
+    if (statsEl) statsEl.innerHTML = `<b>${filteredConsolidada.length}</b> de ${dataConsolidada.length} registros`;
 
     // --- RESUMEN INTERACTIVO ---
     const summaryData = {};
@@ -716,14 +723,14 @@ function renderPreview() {
                 </tr>
             `;
         });
-        
+
         if (sortedKeys.length === 0) {
             summaryBody.innerHTML = `<tr><td colspan="3" class="py-3 text-center text-slate-500 italic">No hay datos para mostrar</td></tr>`;
         }
     }
 
     const tbody = document.getElementById('tableBody');
-    if(!tbody) return;
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     filteredConsolidada.slice(0, 500).forEach((item, idx) => {
@@ -798,7 +805,7 @@ function exportToExcel() {
             if (!k.startsWith('_')) allHeadersSet.add(k);
         });
     }
-    
+
     // Asegurar que las columnas clave y generadas dinámicamente estén en las cabeceras
     ['Sector Informante', 'ESTADO', 'INICIO', 'FIN', 'PUESTA EN M.', 'CIERRE TECNICO', 'CONTRATISTA'].forEach(h => allHeadersSet.add(h));
 
@@ -899,21 +906,162 @@ function exportToExcel() {
 }
 
 // --- VISTA OBRAS SIN MODALIDAD (RECLAMO POR SECTOR) ---
-function filterSinModBySector(sectorVal) {
-    const sel = document.getElementById('sinModSectorFilter');
-    if (sel) sel.value = sectorVal;
+function toggleSinModHeader() {
+    const body = document.getElementById('sinModCollapsibleBody');
+    const icon = document.getElementById('iconToggleSinModHeader');
+    if (!body) return;
+
+    const isHidden = body.classList.contains('hidden');
+    if (isHidden) {
+        body.classList.remove('hidden');
+        if (icon) {
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        }
+    } else {
+        body.classList.add('hidden');
+        if (icon) {
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+}
+
+function syncSinModSector(sectorVal) {
+    const s = document.getElementById('sinModQuickSectorFilter');
+    if (s && s.value !== sectorVal) s.value = sectorVal;
     renderSinModalidadTable();
 }
 
-function renderSinModalidadTable() {
-    if (!dataConsolidada) return;
+function filterSinModBySector(sectorVal) {
+    syncSinModSector(sectorVal);
+}
 
-    const sectorFilter = document.getElementById('sinModSectorFilter') ? document.getElementById('sinModSectorFilter').value : 'TODOS';
+function getFilteredSinModalidadList() {
+    if (!dataConsolidada) return [];
+
+    const sectorFilter = document.getElementById('sinModQuickSectorFilter')?.value || 'TODOS';
     const searchText = document.getElementById('sinModalidadSearch') ? document.getElementById('sinModalidadSearch').value.trim().toLowerCase() : '';
 
     const allSinMod = dataConsolidada.filter(item => {
         let m = (item['Modalidad de Liquidación Calculada'] || item['Modalidad de Liquidación'] || item['MODALIDAD DE LIQUIDACIÓN'] || '').toUpperCase().trim();
         m = m === '' ? (item['_ORIGEN'] === 'CORPORATIVO' ? 'CORPORATIVO' : 'SIN MODALIDAD') : m;
+
+        // Excluir obras CANCELADAS
+        const estadoOriginal = String(item['Estado (Original Excel)'] || item['Estado Original'] || item['_PRISTINE_ESTADO'] || '').toUpperCase();
+        const estadoCalculado = String(item['Estado de Avance (Calculado)'] || item['Estado Calculado'] || item['_N_ESTADO'] || '').toUpperCase();
+
+        if (estadoOriginal === 'CANCELADA' || estadoCalculado === 'CANCELADA') {
+            return false;
+        }
+
+        return m === 'SIN MODALIDAD';
+    });
+
+    return allSinMod.filter(item => {
+        const origen = String(item['_ORIGEN'] || '').toUpperCase();
+        const sector = String(item['Sector Informante'] || '').toUpperCase();
+        const esCorp = (origen === 'CORPORATIVO' || sector.includes('CORP'));
+
+        if (sectorFilter === 'OBRAS' && esCorp) return false;
+        if (sectorFilter === 'CORPORATIVO' && !esCorp) return false;
+
+        if (searchText) {
+            const nodo = String(item['Nodo'] || item['NODO'] || '').toLowerCase();
+            const estOrig = String(item['Estado (Original Excel)'] || '').toLowerCase();
+            const secInf = String(item['Sector Informante'] || '').toLowerCase();
+            const combined = `${nodo} ${estOrig} ${secInf}`;
+            if (!combined.includes(searchText)) return false;
+        }
+        return true;
+    });
+}
+
+function exportSinModalidadToExcel() {
+    const list = getFilteredSinModalidadList();
+    if (!list || list.length === 0) {
+        showToast("No hay obras sin modalidad para exportar.", "error");
+        return;
+    }
+
+    const sector = (document.getElementById('sinModQuickSectorFilter')?.value || 'TODOS').toUpperCase();
+    const rows = [
+        ["#", "Sector Informante / Origen", "Nodo", "Estado Original", "Modalidad"]
+    ];
+
+    list.forEach((item, idx) => {
+        const origen = String(item['_ORIGEN'] || '').toUpperCase();
+        const secInf = item['Sector Informante'] || (origen === 'CORPORATIVO' ? 'Corporativo' : 'Obras');
+        rows.push([
+            idx + 1,
+            secInf,
+            item['Nodo'] || item['NODO'] || '-',
+            item['Estado (Original Excel)'] || '-',
+            "SIN MODALIDAD"
+        ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sin Modalidad");
+
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `Obras_Sin_Modalidad_${sector}_${today}.xlsx`);
+    showToast("Excel de Obras sin Modalidad exportado exitosamente.", "success");
+}
+
+function enviarMailReclamoSinModalidad() {
+    const list = getFilteredSinModalidadList();
+    if (!list || list.length === 0) {
+        showToast("No hay obras sin modalidad en la vista seleccionada.", "error");
+        return;
+    }
+
+    const sector = (document.getElementById('sinModQuickSectorFilter')?.value || 'TODOS').toUpperCase();
+    const sectorNombre = sector === 'OBRAS' ? 'Gerencia de Obras' : (sector === 'CORPORATIVO' ? 'Sector Corporativo' : 'Sectores Informantes (Obras / Corporativo)');
+
+    const asunto = `URGENTE: Regularización de Modalidad de Liquidación (LEGAJO / TAREA) - ${sectorNombre}`;
+
+    let cuerpo = `Estimados,\n\n`;
+    cuerpo += `Se solicita la regularización urgente de la Modalidad de Liquidación para las siguientes obras informadas sin modalidad asignada.\n`;
+    cuerpo += `Es condición necesaria definir si cada obra debe ser procesada bajo la modalidad de LEGAJO o TAREA:\n\n`;
+
+    list.slice(0, 40).forEach((item, idx) => {
+        const nodo = item['Nodo'] || item['NODO'] || '-';
+        const est = item['Estado (Original Excel)'] || '-';
+        const sec = item['Sector Informante'] || (item['_ORIGEN'] === 'CORPORATIVO' ? 'Corporativo' : 'Obras');
+        cuerpo += `${idx + 1}. Nodo/Obra: ${nodo} | Estado: ${est} | Sector: ${sec}\n`;
+    });
+
+    if (list.length > 40) {
+        cuerpo += `\n... y ${list.length - 40} obras adicionales (ver archivo adjunto o sistema).\n`;
+    }
+
+    cuerpo += `\nAgradecemos regularizar la asignación a la brevedad para poder avanzar con el analisis de la auditoria.\n`;
+
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+    window.location.href = mailtoLink;
+    showToast("Abriendo cliente de correo...", "info");
+}
+
+function renderSinModalidadTable() {
+    if (!dataConsolidada) return;
+
+    const sectorFilter = document.getElementById('sinModQuickSectorFilter')?.value || 'TODOS';
+    const searchText = document.getElementById('sinModalidadSearch') ? document.getElementById('sinModalidadSearch').value.trim().toLowerCase() : '';
+
+    const allSinMod = dataConsolidada.filter(item => {
+        let m = (item['Modalidad de Liquidación Calculada'] || item['Modalidad de Liquidación'] || item['MODALIDAD DE LIQUIDACIÓN'] || '').toUpperCase().trim();
+        m = m === '' ? (item['_ORIGEN'] === 'CORPORATIVO' ? 'CORPORATIVO' : 'SIN MODALIDAD') : m;
+
+        // Excluir obras CANCELADAS
+        const estadoOriginal = String(item['Estado (Original Excel)'] || item['Estado Original'] || item['_PRISTINE_ESTADO'] || '').toUpperCase();
+        const estadoCalculado = String(item['Estado de Avance (Calculado)'] || item['Estado Calculado'] || item['_N_ESTADO'] || '').toUpperCase();
+
+        if (estadoOriginal === 'CANCELADA' || estadoCalculado === 'CANCELADA') {
+            return false;
+        }
+
         return m === 'SIN MODALIDAD';
     });
 
@@ -956,11 +1104,9 @@ function renderSinModalidadTable() {
 
         if (searchText) {
             const nodo = String(item['Nodo'] || item['NODO'] || '').toLowerCase();
-            const obraBf = String(item['Obra BF'] || '').toLowerCase();
             const estOrig = String(item['Estado (Original Excel)'] || '').toLowerCase();
-            const estCalc = String(item['Estado de Avance (Calculado)'] || '').toLowerCase();
             const secInf = String(item['Sector Informante'] || '').toLowerCase();
-            const combined = `${nodo} ${obraBf} ${estOrig} ${estCalc} ${secInf}`;
+            const combined = `${nodo} ${estOrig} ${secInf}`;
             if (!combined.includes(searchText)) return false;
         }
         return true;
@@ -995,9 +1141,7 @@ function renderSinModalidadTable() {
             <td class="p-3 border-r border-slate-100 text-slate-400 font-mono text-center">${index + 1}</td>
             <td class="p-3 border-r border-slate-100">${sectorBadge}</td>
             <td class="p-3 border-r border-slate-100 font-medium text-slate-800">${item['Nodo'] || item['NODO'] || '-'}</td>
-            <td class="p-3 border-r border-slate-100 font-bold text-indigo-700 bg-indigo-50/20">${item['Obra BF'] || '-'}</td>
             <td class="p-3 border-r border-slate-100 text-slate-600">${item['Estado (Original Excel)'] || '-'}</td>
-            <td class="p-3 border-r border-slate-100 text-slate-700 font-medium">${item['Estado de Avance (Calculado)'] || '-'}</td>
             <td class="p-3 border-r border-slate-100 text-center bg-rose-50/30">
                 <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold border border-red-200" title="Requiere registrar modalidad">
                     <i class="fa-solid fa-triangle-exclamation mr-1 text-[9px]"></i>SIN MOD
