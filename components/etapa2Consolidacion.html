@@ -1,113 +1,339 @@
 <!-- TARJETA ETAPA 2 -->
-<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 relative overflow-hidden">
+<div class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
     <div class="absolute top-0 left-0 w-1.5 h-full bg-indigo-500"></div>
-    <div class="mb-6 flex justify-between items-start gap-4">
-        <div>
-            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-sm">Etapa 2</span>
-                Estado de Obra - Legajo/Ticket (Consolidación Analítica)
-            </h2>
-            <p class="text-slate-500 text-sm mt-1">Cargue los archivos maestros para el cruce final.
-                <b>Nota:</b> El archivo Sistema TAREA es opcional, al igual que el Avance Corporativo.
-            </p>
+    <div class="flex-1">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-sm font-semibold">Etapa 2</span>
+            Estado de Obra - Legajo/Ticket (Consolidación Analítica)
+        </h2>
+        <p class="text-slate-500 text-sm mt-1">Carga de datos maestros, vinculación de archivos depurados de la Etapa 1 y cruce final.</p>
+        <div id="s2_cardResumenArchivos" class="flex flex-wrap items-center gap-2 mt-3 text-xs">
+            <span id="s2_pillBCMO" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]">
+                <i class="fa-regular fa-circle text-slate-400"></i> BCMO
+            </span>
+            <span id="s2_pillPMOVXF" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]">
+                <i class="fa-regular fa-circle text-slate-400"></i> PMOVXF
+            </span>
+            <span id="s2_pillAvance" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]">
+                <i class="fa-regular fa-circle text-slate-400"></i> Avance
+            </span>
+            <span id="s2_pillTarea" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]">
+                <i class="fa-regular fa-circle text-slate-400"></i> TAREA (Opcional)
+            </span>
+            <span id="s2_pillCorp" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]">
+                <i class="fa-regular fa-circle text-slate-400"></i> Corp (Opcional)
+            </span>
         </div>
+    </div>
+    <div class="shrink-0 flex flex-col sm:flex-row items-center gap-3">
         <button type="button" onclick="openFaqModal()"
-            class="bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 font-bold px-4 py-2 rounded text-xs transition-colors flex items-center gap-2 shadow-sm whitespace-nowrap">
+            class="bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 font-bold px-4 py-2.5 rounded-lg text-xs transition-colors flex items-center gap-2 shadow-sm whitespace-nowrap">
             <i class="fa-solid fa-circle-question"></i> Preguntas Frecuentes
         </button>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Dropzone y Controles -->
-        <div class="flex flex-col gap-4">
-            <!-- Dropzone Original -->
-            <div id="dropZone"
-                class="drop-zone border-2 border-dashed border-slate-300 bg-slate-50 hover:bg-slate-100 rounded-lg p-6 text-center cursor-pointer transition-colors flex flex-col items-center justify-center">
-                <i class="fa-solid fa-cloud-arrow-up text-4xl text-indigo-400 mb-3"></i>
-                <h3 class="font-bold text-slate-700 text-base mb-1">Carga de Datos Maestros</h3>
-                <p class="text-slate-500 text-xs mb-4">Suelte aquí o seleccione:<br><b>Avance</b>
-                    y (Opcional) <b>TAREA</b>
-                </p>
-                <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" multiple class="hidden">
-                <button type="button" onclick="document.getElementById('fileInput').click()"
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded text-sm font-semibold shadow-sm">
-                    Explorar archivos
-                </button>
-            </div>
-
-            <!-- Carga Corporativo (Opcional) NUEVA -->
-            <div class="p-4 border border-indigo-100 bg-indigo-50/50 rounded-lg">
-                <h4 class="text-xs font-bold text-indigo-800 uppercase mb-2">Sector Corporativo
-                    (Opcional)</h4>
-                <div class="flex items-center gap-3">
-                    <input type="file" id="fileCorporativo" accept=".xlsx, .xls, .csv" class="hidden"
-                        onchange="preAnalizarCorporativo(event)">
-                    <button type="button" onclick="document.getElementById('fileCorporativo').click()"
-                        class="bg-white border border-indigo-300 text-indigo-600 px-4 py-2 rounded text-xs font-bold hover:bg-indigo-50 transition-colors shadow-sm whitespace-nowrap">
-                        <i class="fa-solid fa-building-user mr-2"></i> Cargar Corporativo
-                    </button>
-                    <button type="button" id="btnDeleteCorp" onclick="eliminarCargaCorp()"
-                        class="hidden text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 w-8 h-8 rounded flex items-center justify-center transition-colors shadow-sm"
-                        title="Eliminar archivo">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                    <div id="statusCorporativo"
-                        class="text-[10px] text-slate-500 italic break-words flex-1">No cargado</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Indicadores -->
-        <div class="flex flex-col gap-3">
-            <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 flex-1">
-                <h4 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2 mb-3">
-                    Archivos Reconocidos</h4>
-                <div class="space-y-3 text-xs">
-                    <div class="flex items-center justify-between" id="statusAvance">
-                        <span class="text-slate-500"><i class="fa-regular fa-circle mr-2"></i>Avance de
-                            Obras (Principal)</span>
-                        <span class="text-[10px] text-slate-400 italic file-date"></span>
-                    </div>
-                    <div class="flex items-center justify-between" id="statusBCMO">
-                        <span class="text-slate-500"><i class="fa-regular fa-circle mr-2"></i>BCMO <span
-                                class="text-blue-500 font-semibold">(Inyectado desde Etapa
-                                1)</span></span>
-                        <span class="text-[10px] text-slate-400 italic file-date"></span>
-                    </div>
-                    <div class="flex items-center justify-between" id="statusTarea">
-                        <span class="text-slate-500"><i class="fa-regular fa-circle mr-2"></i>Sistema
-                            TAREA <span class="text-indigo-400 font-semibold">(Opcional)</span></span>
-                        <span class="text-[10px] text-slate-400 italic file-date"></span>
-                    </div>
-                    <div class="flex items-center justify-between" id="statusMateriales">
-                        <span class="text-slate-500"><i
-                                class="fa-regular fa-circle mr-2"></i>PMOVXF <span class="text-teal-500 font-semibold">(Inyectado desde Etapa 1)</span></span>
-                        <span class="text-[10px] text-slate-400 italic file-date"></span>
-                    </div>
-                    <div class="flex items-center justify-between" id="statusCorpInd">
-                        <span class="text-slate-500"><i class="fa-regular fa-circle mr-2"></i>Avance
-                            Corporativo <span
-                                class="text-indigo-400 font-semibold">(Opcional)</span></span>
-                        <span class="text-[10px] text-slate-400 italic file-date"></span>
-                    </div>
-                </div>
-            </div>
-            <button type="button" id="btnConsolidar" onclick="procesarConsolidacion()" disabled
-                class="w-full bg-slate-300 text-slate-500 font-bold py-3 rounded shadow-sm text-sm cursor-not-allowed transition-colors">
-                Procesar y Consolidar
-            </button>
-        </div>
+        <button type="button" onclick="openConsolidacionModule()"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold transition-colors flex items-center gap-2 px-6 py-3 rounded-lg shadow-md border border-indigo-700 whitespace-nowrap">
+            <i class="fa-solid fa-layer-group"></i> Abrir Consolidación
+        </button>
     </div>
 </div>
 
 <!-- [SPLIT-MARKER] resultsSection begin -->
+
+<!-- MODULO DE CARGA DEDICADO ETAPA 2 -->
+<div id="s2_consolidacionModule" class="hidden absolute inset-0 z-40 bg-slate-50 flex-col overflow-hidden">
+    <nav class="bg-white border-b border-slate-300 shadow-sm p-4 flex justify-between items-center z-20 relative shrink-0">
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="closeConsolidacionModule()"
+                class="text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-colors mr-1 w-8 h-8 rounded-full flex items-center justify-center border border-slate-200"
+                title="Volver a Etapas">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <i class="fa-solid fa-layer-group text-xl text-indigo-600"></i>
+            <h1 class="text-lg font-bold text-slate-800 tracking-wide">Módulo de Consolidación (Etapa 2)</h1>
+            <span class="text-xs font-medium bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded ml-2 hidden sm:inline-block">Cruce Analítico Maestro</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="openFaqModal()"
+                class="bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-sm">
+                <i class="fa-solid fa-circle-question"></i> <span class="hidden sm:inline">Preguntas Frecuentes</span>
+            </button>
+        </div>
+    </nav>
+
+    <main class="flex-grow p-4 md:p-6 mx-auto w-full max-w-6xl flex flex-col z-0 overflow-y-auto custom-scrollbar">
+        <!-- Banner Informativo -->
+        <div class="bg-indigo-50 border border-indigo-200 text-indigo-900 p-3.5 rounded-xl text-xs flex items-center gap-3 shadow-sm shrink-0 mb-5">
+            <i class="fa-solid fa-shield-halved text-indigo-600 text-lg shrink-0"></i>
+            <p class="leading-relaxed">
+                <b>Control de Integridad de Auditoría:</b> Los archivos depurados y validados en la <b>Etapa 1</b> (BCMO, PMOVXF y Avance General) se transfieren de forma directa y quedan <b>bloqueados</b> en esta etapa para preservar el cruce. Aquí puede verificar su estado y complementar con los archivos opcionales (Sistema TAREA y Avance Corporativo).
+            </p>
+        </div>
+
+        <!-- ═══════ SECCIÓN A: Datos integrados desde Etapa 1 ═══════ -->
+        <div class="mb-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-lock text-emerald-600 text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800">Datos integrados desde Etapa 1</h3>
+                    <p class="text-xs text-slate-500">Archivos depurados y validados. Bloqueados para preservar la integridad del cruce.</p>
+                </div>
+                <div class="ml-auto h-px flex-grow bg-emerald-100 hidden sm:block"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <!-- ═══ TARJETA 1: BCMO (Depurado Etapa 1) ═══ -->
+                <div id="s2_cardBCMO" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group border-t-4 border-t-blue-500">
+                    <div class="flex items-start justify-between p-5 pb-3">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <i class="fa-solid fa-file-excel text-blue-600 text-xl"></i>
+                        </div>
+                        <span id="s2_badgeBCMO" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                            Pendiente
+                        </span>
+                    </div>
+                    <div class="px-5 pb-4 flex-grow">
+                        <h3 class="text-sm font-bold text-slate-800 mb-1.5">BCMO Consolidado</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">Inyectado automáticamente desde la <b class="text-blue-600">Etapa 1</b> con verificación de consumos depurada.</p>
+                        <div id="s2_bodyBCMO" class="mt-3">
+                            <!-- Contenido dinámico via JS -->
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 mx-5"></div>
+                    <div class="flex items-center justify-between px-5 py-3 text-[11px] text-slate-400 gap-2">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-link text-slate-300"></i> Integrado desde Etapa 1</span>
+                        <span class="text-slate-300 font-medium">Revisar</span>
+                    </div>
+                </div>
+
+                <!-- ═══ TARJETA 2: PMOVXF (Detalle PM) ═══ -->
+                <div id="s2_cardPMOVXF" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group border-t-4 border-t-amber-500">
+                    <div class="flex items-start justify-between p-5 pb-3">
+                        <div class="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <i class="fa-solid fa-boxes-stacked text-amber-600 text-xl"></i>
+                        </div>
+                        <span id="s2_badgePMOVXF" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                            No cargado
+                        </span>
+                    </div>
+                    <div class="px-5 pb-4 flex-grow">
+                        <h3 class="text-sm font-bold text-slate-800 mb-1.5">PMOVXF (Materiales)</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">Detalle de consumos y movimientos PM transferidos desde la Etapa 1.</p>
+                        <div id="s2_bodyPMOVXF" class="mt-3">
+                            <!-- Contenido dinámico via JS -->
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 mx-5"></div>
+                    <div class="flex items-center justify-between px-5 py-3 text-[11px] text-slate-400 gap-2">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-slate-300"></i> Auditoría PM Activa</span>
+                        <span class="text-slate-300 font-medium">Protegido</span>
+                    </div>
+                </div>
+
+                <!-- ═══ TARJETA 3: Avance de Obras (Principal) ═══ -->
+                <div id="s2_cardAvance" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group border-t-4 border-t-orange-500">
+                    <div class="flex items-start justify-between p-5 pb-3">
+                        <div class="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <i class="fa-solid fa-chart-line text-orange-500 text-xl"></i>
+                        </div>
+                        <span id="s2_badgeAvance" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                            Pendiente
+                        </span>
+                    </div>
+                    <div class="px-5 pb-4 flex-grow">
+                        <h3 class="text-sm font-bold text-slate-800 mb-1.5">Avance de Obras (Principal) <span class="text-rose-500">*</span></h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">Reporte de Localizadores y Razón Social maestro. Base analítica del cruce de legajos.</p>
+                        <div id="s2_bodyAvance" class="mt-3">
+                            <!-- Contenido dinámico via JS -->
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 mx-5"></div>
+                    <div class="flex items-center justify-between px-5 py-3 text-[11px] text-slate-400 gap-2">
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-arrows-rotate text-slate-300"></i> Sincronizado</span>
+                        <span class="text-slate-300 font-medium">Caché activa</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ═══════ SECCIÓN B: Archivos Complementarios ═══════ -->
+        <div class="mb-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-cloud-arrow-up text-indigo-600 text-sm"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800">Archivos complementarios</h3>
+                    <p class="text-xs text-slate-500">Datos opcionales para enriquecer el cruce analítico final.</p>
+                </div>
+                <div class="ml-auto h-px flex-grow bg-indigo-100 hidden sm:block"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+                <!-- ═══ TARJETA 4: Sistema TAREA (Opcional) ═══ -->
+                <div id="s2_cardTarea" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group border-t-4 border-t-indigo-500">
+                    <div class="flex items-start justify-between p-5 pb-3">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <i class="fa-solid fa-file-invoice text-indigo-600 text-xl"></i>
+                        </div>
+                        <span id="s2_badgeTarea" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-indigo-700 bg-indigo-100 px-2.5 py-1 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+                            Opcional
+                        </span>
+                    </div>
+                    <div class="px-5 pb-4 flex-grow">
+                        <h3 class="text-sm font-bold text-slate-800 mb-1.5">Sistema TAREA</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">Cruce opcional de rendición por orden de trabajo y cuadrilla operativa.</p>
+                        <div id="s2_bodyTarea" class="mt-3">
+                            <input type="file" id="s2_fileTarea" accept=".xlsx, .xls, .csv" class="hidden" onchange="s2_handleFileTarea(event)">
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 mx-5"></div>
+                    <div class="flex items-center justify-between px-5 py-3 gap-3">
+                        <span class="text-[11px] text-slate-400 font-mono">Formato: .xlsx / .csv</span>
+                        <button type="button" onclick="document.getElementById('s2_fileTarea').click()"
+                            class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-lg transition-colors">
+                            <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Cargar TAREA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ═══ TARJETA 5: Avance Corporativo (Opcional) ═══ -->
+                <div id="s2_cardCorp" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group border-t-4 border-t-teal-500">
+                    <div class="flex items-start justify-between p-5 pb-3">
+                        <div class="w-12 h-12 rounded-2xl bg-teal-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                            <i class="fa-solid fa-building-user text-teal-600 text-xl"></i>
+                        </div>
+                        <span id="s2_badgeCorp" class="inline-flex items-center gap-1.5 text-[11px] font-bold text-teal-700 bg-teal-100 px-2.5 py-1 rounded-full">
+                            <span class="w-1.5 h-1.5 rounded-full bg-teal-400"></span>
+                            Opcional
+                        </span>
+                    </div>
+                    <div class="px-5 pb-4 flex-grow">
+                        <h3 class="text-sm font-bold text-slate-800 mb-1.5">Sector Corporativo</h3>
+                        <p class="text-xs text-slate-500 leading-relaxed">Archivo adicional corporativo para homologación de centros de costos.</p>
+                        <div id="s2_bodyCorp" class="mt-3">
+                            <p id="statusCorporativoText" class="text-[11px] text-slate-400 italic">No cargado</p>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-100 mx-5"></div>
+                    <div class="flex items-center justify-between px-5 py-3 gap-3">
+                        <input type="file" id="fileCorporativo" accept=".xlsx, .xls, .csv" class="hidden" onchange="preAnalizarCorporativo(event)">
+                        <div id="statusCorporativo" class="text-[11px] text-slate-400 italic">-</div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" id="btnDeleteCorp" onclick="eliminarCargaCorp()"
+                                class="hidden text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 w-7 h-7 rounded-lg flex items-center justify-center transition-colors shadow-sm shrink-0"
+                                title="Eliminar corporativo">
+                                <i class="fa-solid fa-trash-can text-[10px]"></i>
+                            </button>
+                            <button type="button" onclick="document.getElementById('fileCorporativo').click()"
+                                class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-lg transition-colors">
+                                <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Cargar Corporativo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ TARJETA 6: Resumen de Validación ═══ -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl shadow-sm flex flex-col relative overflow-hidden">
+                    <div class="flex items-center justify-between px-5 pt-4 pb-2">
+                        <h4 class="text-xs font-bold text-slate-200 uppercase tracking-widest flex items-center gap-2">
+                            <i class="fa-solid fa-list-check text-slate-400"></i>
+                            Reglas de Negocio
+                        </h4>
+                        <i class="fa-solid fa-gears text-slate-600 text-lg"></i>
+                    </div>
+                    <div class="px-5 pb-3 flex-grow">
+                        <p class="text-xs text-slate-300 leading-relaxed mb-4">El motor auditará consistencia de tickets, códigos de ítem presupuestario y desviaciones de obra en tiempo real.</p>
+                        <div class="space-y-2.5 text-xs">
+                            <div id="statusBCMO" class="flex items-center justify-between">
+                                <span class="text-slate-200 flex items-center gap-2"><i class="fa-regular fa-circle text-slate-500 text-[8px]"></i> Cruce BCMO / Legajo</span>
+                                <span class="text-emerald-400 font-bold">Activo</span>
+                            </div>
+                            <div id="statusMateriales" class="flex items-center justify-between">
+                                <span class="text-slate-200 flex items-center gap-2"><i class="fa-regular fa-circle text-slate-500 text-[8px]"></i> Control de Inventario PM</span>
+                                <span class="text-emerald-400 font-bold">Activo</span>
+                            </div>
+                            <div id="statusAvance" class="flex items-center justify-between">
+                                <span class="text-slate-200 flex items-center gap-2"><i class="fa-solid fa-circle-dot text-amber-400 text-[8px]"></i> Avance Principal</span>
+                                <span class="text-amber-400 font-bold" id="s2_txtRequisitos">Pendiente</span>
+                            </div>
+                            <div id="statusTarea" class="flex items-center justify-between">
+                                <span class="text-slate-300 flex items-center gap-2"><i class="fa-regular fa-circle text-slate-600 text-[8px]"></i> Sistema TAREA</span>
+                                <span class="text-slate-400 font-medium">Opcional</span>
+                            </div>
+                            <div id="statusCorpInd" class="flex items-center justify-between">
+                                <span class="text-slate-300 flex items-center gap-2"><i class="fa-regular fa-circle text-slate-600 text-[8px]"></i> Sector Corporativo</span>
+                                <span class="text-slate-400 font-medium">Opcional</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-t border-slate-800 mx-5 mt-2"></div>
+                    <div class="px-5 py-3 text-[11px] text-slate-400 font-medium flex items-center gap-1.5 hover:text-slate-200 cursor-default transition-colors">
+                        <i class="fa-solid fa-arrows-rotate"></i> Mapeo automático de columnas
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <!-- BARRA INFERIOR DE ACCIÓN -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 mt-auto">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-slate-800">Listo para generar el Cruce Final</h3>
+                    <p class="text-xs text-slate-500" id="s2_statusConsolidarInfo">Se cruzará la información depurada para auditoría integral.</p>
+                </div>
+            </div>
+            <button type="button" id="btnConsolidar" onclick="procesarConsolidacion()" disabled
+                class="w-full sm:w-auto min-w-[240px] bg-slate-300 text-slate-500 font-bold py-3 px-6 rounded-xl shadow-sm text-sm cursor-not-allowed transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-bolt"></i> Procesar y Consolidar
+            </button>
+        </div>
+    </main>
+</div>
+
 <div id="resultsSection" class="hidden flex-1 flex flex-col min-h-0 relative bg-white">
     <!-- Pestañas de Navegación -->
-    <div class="flex items-center border-b border-slate-200 bg-slate-50 px-4 pt-2 shrink-0 relative" style="z-index:100;">
+    <div class="flex items-center border-b border-slate-200 bg-slate-50 px-4 pt-2 shrink-0 relative"
+        style="z-index:100;">
         <button type="button" onclick="switchTab('data')" id="tabDataBtn"
             class="tab-btn active px-5 py-2.5 text-sm text-slate-600 font-medium rounded-t-lg transition-colors focus:outline-none flex items-center gap-2 whitespace-nowrap">
             <i class="fa-solid fa-table"></i> Resultados Consolidados
         </button>
+
+        <!-- MENÚ AGRUPADO: PRE-AUDITORÍA -->
+        <div class="relative" style="z-index:200;">
+            <button type="button" onclick="s1_togglePreAuditMenu(event)" id="tabPreAuditBtn"
+                class="tab-btn px-5 py-2.5 text-sm text-slate-600 font-medium rounded-t-lg transition-colors focus:outline-none flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-clipboard-check"></i> Pre-Auditoría
+                <span id="tabPreAuditCount" class="tab-count-badge hidden"></span>
+                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+            </button>
+            <div id="preAuditMenuDropdown"
+                class="hidden absolute left-0 top-full mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-xl py-1.5"
+                style="z-index:9999;">
+                <button type="button" onclick="switchTab('validacioncontratista')" id="tabValidacionContratistaBtn"
+                    class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-envelope-circle-check w-4 text-slate-400"></i> Listado de Obras</span>
+                    <span id="tabValidacionContratistaCount" class="tab-count-badge hidden ml-auto"></span>
+                </button>
+                <button type="button" onclick="switchTab('sinmodalidad')" id="tabSinModalidadBtn"
+                    class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation w-4 text-rose-500"></i> Obras sin Modalidad</span>
+                    <span id="tabSinModalidadCount" class="tab-count-badge hidden ml-auto"></span>
+                </button>
+            </div>
+        </div>
 
         <!-- MENÚ AGRUPADO: DIAGNÓSTICO -->
         <div class="relative" style="z-index:200;">
@@ -118,48 +344,44 @@
                 <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
             </button>
             <div id="diagMenuDropdown"
-                class="hidden absolute left-0 top-full mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-xl py-1.5" style="z-index:9999;">
+                class="hidden absolute left-0 top-full mt-1 w-64 bg-white border border-slate-200 rounded-lg shadow-xl py-1.5"
+                style="z-index:9999;">
                 <button type="button" onclick="switchTab('recat')" id="tabRecatBtn"
                     class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-code-compare w-4 text-slate-400"></i> Reporte de Conversión</span>
-                    <span id="tabRecatCount" class="tab-count-badge hidden"></span>
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-code-compare w-4 text-slate-400"></i>
+                        Reporte de Conversión</span>
+                    <span id="tabRecatCount" class="tab-count-badge hidden ml-auto"></span>
                 </button>
                 <button type="button" onclick="switchTab('audit')" id="tabAuditBtn"
                     class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left w-4 text-slate-400"></i> Registro de Cambios</span>
+                    <span class="flex items-center gap-2"><i
+                            class="fa-solid fa-clock-rotate-left w-4 text-slate-400"></i> Registro de Cambios</span>
                 </button>
                 <button type="button" onclick="switchTab('orphans')" id="tabOrphansBtn"
                     class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation w-4 text-slate-400"></i> Nodos sin Registro</span>
-                    <span id="tabOrphansCount" class="tab-count-badge hidden"></span>
+                    <span class="flex items-center gap-2"><i
+                            class="fa-solid fa-triangle-exclamation w-4 text-slate-400"></i> Nodos sin Registro</span>
+                    <span id="tabOrphansCount" class="tab-count-badge hidden ml-auto"></span>
                 </button>
                 <button type="button" onclick="switchTab('detallepm')" id="tabDetallePMBtn"
                     class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-boxes-stacked w-4 text-slate-400"></i> Detalle de Obras (PM)</span>
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-boxes-stacked w-4 text-slate-400"></i>
+                        Detalle de Obras (PM)</span>
                 </button>
                 <button type="button" onclick="switchTab('bcmosincruce')" id="tabBcmoSinCruceBtn"
                     class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-link-slash w-4 text-slate-400"></i> BCMO Sin Cruce</span>
-                    <span id="tabBcmoSinCruceCount" class="tab-count-badge hidden"></span>
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-link-slash w-4 text-slate-400"></i> BCMO
+                        Sin Cruce</span>
+                    <span id="tabBcmoSinCruceCount" class="tab-count-badge hidden ml-auto"></span>
                 </button>
                 <button type="button" onclick="switchTab('caducidad')" id="tabCaducidadBtn"
                     class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-hourglass-end w-4 text-slate-400"></i> Gestor de Caducidad</span>
-                    <span id="tabCaducidadCount" class="tab-count-badge hidden"></span>
-                </button>
-                <button type="button" onclick="switchTab('sinmodalidad')" id="tabSinModalidadBtn"
-                    class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
-                    <span class="flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation w-4 text-rose-500"></i> Obras sin Modalidad</span>
-                    <span id="tabSinModalidadCount" class="tab-count-badge hidden"></span>
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-hourglass-end w-4 text-slate-400"></i>
+                        Gestor de Caducidad</span>
+                    <span id="tabCaducidadCount" class="tab-count-badge hidden ml-auto"></span>
                 </button>
             </div>
         </div>
-
-        <button type="button" onclick="switchTab('validacioncontratista')" id="tabValidacionContratistaBtn"
-            class="tab-btn px-5 py-2.5 text-sm text-slate-600 font-medium rounded-t-lg transition-colors focus:outline-none flex items-center gap-2 whitespace-nowrap">
-            <i class="fa-solid fa-envelope-circle-check"></i> Listado de Obras
-            <span id="tabValidacionContratistaCount" class="tab-count-badge hidden"></span>
-        </button>
 
         <button type="button" onclick="switchTab('detalletareas')" id="tabDetalleTareasBtn"
             class="tab-btn px-5 py-2.5 text-sm text-slate-600 font-medium rounded-t-lg transition-colors focus:outline-none flex items-center gap-2 whitespace-nowrap">
@@ -179,7 +401,7 @@
         <!-- Filtros Modernos (Filter Bar) -->
         <div class="bg-white border-b border-slate-200 px-4 py-3 shrink-0 flex flex-col gap-3 shadow-sm z-30 relative">
             <div class="flex flex-wrap items-center justify-between gap-4">
-                
+
                 <!-- Búsqueda Global -->
                 <div class="relative w-64">
                     <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -194,39 +416,47 @@
                 <div class="flex items-center gap-3 flex-1">
                     <!-- Dropdown Sector Informante -->
                     <div class="relative group">
-                        <button type="button" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
+                        <button type="button"
+                            class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
                             Sector Informante <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
                         </button>
-                        <div class="hidden group-hover:block absolute left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
+                        <div
+                            class="hidden group-hover:block absolute left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
                             <div id="dropdownSectorContent" class="px-2 space-y-1"></div>
                         </div>
                     </div>
                     <!-- Dropdown Estado -->
                     <div class="relative group">
-                        <button type="button" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
+                        <button type="button"
+                            class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
                             Estado <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
                         </button>
-                        <div class="hidden group-hover:block absolute left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
+                        <div
+                            class="hidden group-hover:block absolute left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
                             <div id="dropdownEstadoContent" class="px-2 space-y-1"></div>
                         </div>
                     </div>
 
                     <!-- Dropdown Modalidad -->
                     <div class="relative group">
-                        <button type="button" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
+                        <button type="button"
+                            class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
                             Modalidad <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
                         </button>
-                        <div class="hidden group-hover:block absolute left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
+                        <div
+                            class="hidden group-hover:block absolute left-0 mt-1 w-56 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
                             <div id="dropdownModalidadContent" class="px-2 space-y-1"></div>
                         </div>
                     </div>
 
                     <!-- Dropdown Obra a Considerar -->
                     <div class="relative group">
-                        <button type="button" class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
+                        <button type="button"
+                            class="bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors flex items-center gap-2 shadow-sm">
                             Obra a Considerar <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
                         </button>
-                        <div class="hidden group-hover:block absolute left-0 mt-1 w-80 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
+                        <div
+                            class="hidden group-hover:block absolute left-0 mt-1 w-80 bg-white border border-slate-200 rounded-lg shadow-xl z-40 py-2 max-h-64 overflow-y-auto">
                             <div id="dropdownObraConsContent" class="px-2 space-y-1"></div>
                         </div>
                     </div>
@@ -241,10 +471,12 @@
                     <div class="text-sm text-indigo-700 font-bold bg-indigo-50 px-3 py-1.5 rounded-md border border-indigo-200 shadow-sm"
                         id="statsText">0 registros</div>
                     <button type="button" onclick="openConfigReglas()"
-                        class="bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors shadow-sm" title="Gestor Reglas"><i class="fa-solid fa-sliders"></i></button>
+                        class="bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors shadow-sm"
+                        title="Gestor Reglas"><i class="fa-solid fa-sliders"></i></button>
                     <button type="button" onclick="limpiarEtapa2()"
                         class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors shadow-sm flex items-center gap-2"
-                        title="Limpiar resultados de Etapa 2 (no afecta lo cargado en Etapa 1)"><i class="fa-solid fa-trash-can"></i> Limpiar Etapa 2</button>
+                        title="Limpiar resultados de Etapa 2 (no afecta lo cargado en Etapa 1)"><i
+                            class="fa-solid fa-trash-can"></i> Limpiar Etapa 2</button>
                 </div>
             </div>
         </div>
@@ -252,8 +484,9 @@
         <!-- Modal Resumen Interactivo -->
         <div id="summaryModal" class="hidden fixed inset-0 z-50 flex items-center justify-center">
             <!-- Overlay Oscuro -->
-            <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onclick="closeSummaryModal()"></div>
-            
+            <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"
+                onclick="closeSummaryModal()"></div>
+
             <!-- Contenedor Central -->
             <div class="bg-white rounded-xl shadow-2xl relative w-full max-w-2xl flex flex-col mx-4 animate-fade-in-up">
                 <!-- Header -->
@@ -261,11 +494,12 @@
                     <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
                         <i class="fa-solid fa-chart-pie text-indigo-600"></i> Resumen Interactivo
                     </h3>
-                    <button type="button" onclick="closeSummaryModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <button type="button" onclick="closeSummaryModal()"
+                        class="text-slate-400 hover:text-slate-600 transition-colors">
                         <i class="fa-solid fa-xmark text-lg"></i>
                     </button>
                 </div>
-                
+
                 <!-- Tabla -->
                 <div class="p-4 overflow-auto custom-scrollbar bg-slate-50 max-h-[70vh]">
                     <div class="overflow-hidden rounded-md border border-slate-200 shadow-sm w-full bg-white">
@@ -281,10 +515,11 @@
                         </table>
                     </div>
                 </div>
-                
+
                 <!-- Footer -->
                 <div class="p-3 border-t border-slate-200 bg-slate-50 flex justify-end rounded-b-xl">
-                    <button type="button" onclick="closeSummaryModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-1.5 rounded-md text-xs transition-colors">Cerrar</button>
+                    <button type="button" onclick="closeSummaryModal()"
+                        class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold px-4 py-1.5 rounded-md text-xs transition-colors">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -294,16 +529,35 @@
             <table class="w-full text-left text-sm border-collapse data-table whitespace-nowrap">
                 <thead class="sticky top-0 z-20 shadow-md">
                     <tr class="text-slate-600 border-b border-slate-300 bg-slate-50 shadow-sm">
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-slate-50">Nodo</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-indigo-700 bg-indigo-50">Obra BF</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-slate-50">Mod.</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-slate-100">Estado Original</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-indigo-50 text-indigo-800">Param. Auditoría</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-emerald-50 text-emerald-800">Est. Calculado</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-amber-50 text-amber-800">Estado de Entregas</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-blue-50 text-blue-800 font-semibold">Obra a considerar</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-slate-100 text-slate-800 w-1/4">Observación Sistémica</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider text-center w-16 bg-slate-50">
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-slate-50">
+                            Nodo</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-indigo-700 bg-indigo-50">
+                            Obra BF</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-slate-50">
+                            Mod.</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-slate-100">
+                            Estado Original</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-indigo-50 text-indigo-800">
+                            Param. Auditoría</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-emerald-50 text-emerald-800">
+                            Est. Calculado</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-amber-50 text-amber-800">
+                            Estado de Entregas</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-blue-50 text-blue-800 font-semibold">
+                            Obra a considerar</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-slate-100 text-slate-800 w-1/4">
+                            Observación Sistémica</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider text-center w-16 bg-slate-50">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </th>
                     </tr>
@@ -316,11 +570,15 @@
 
     <!-- CONTENIDO PESTAÑA 2: AUDITORÍA -->
     <div id="tabAuditContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
-        <div class="max-w-7xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div
+            class="max-w-7xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div class="p-4 border-b border-slate-200 bg-slate-100 flex justify-between items-center">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-list-check text-indigo-600 mr-2"></i>Historial de Cambios Manuales (Inmutable)</h2>
-                    <p class="text-xs text-slate-500 mt-1">Estos registros fuerzan el estado original del Excel. Los registros revertidos se conservan como evidencia.</p>
+                    <h2 class="text-lg font-bold text-slate-800"><i
+                            class="fa-solid fa-list-check text-indigo-600 mr-2"></i>Historial de Cambios Manuales
+                        (Inmutable)</h2>
+                    <p class="text-xs text-slate-500 mt-1">Estos registros fuerzan el estado original del Excel. Los
+                        registros revertidos se conservan como evidencia.</p>
                 </div>
             </div>
             <div class="flex-1 overflow-auto custom-scrollbar p-0">
@@ -329,9 +587,12 @@
                         <tr>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Status</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Nodo Original</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Modificaciones (Forzado a)</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">Fechas Operativas</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Respaldo (Mail / Autorizador)</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Modificaciones (Forzado a)
+                            </th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">Fechas Operativas
+                            </th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Respaldo (Mail / Autorizador)
+                            </th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Auditor</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">F. Sistema</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 text-center">Acción</th>
@@ -349,16 +610,23 @@
 
     <!-- CONTENIDO PESTAÑA 3: SIN REGISTRO -->
     <div id="tabOrphansContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
-        <div class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div
+            class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div class="p-4 border-b border-rose-200 bg-rose-50 flex flex-col gap-3">
-                <div class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
+                <div
+                    class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
                     <i class="fa-solid fa-circle-info mt-0.5 text-amber-500"></i>
-                    <p><b>Atención:</b> Hay obras que no tienen error en el nombre del nodo, sino que no tuvieron entregas porque los PMs se cancelaron y el reporte subido no cuenta con estos registros. <b>Verificar en el sistema origen antes de realizar cambios en el nombre.</b></p>
+                    <p><b>Atención:</b> Hay obras que no tienen error en el nombre del nodo, sino que no tuvieron
+                        entregas porque los PMs se cancelaron y el reporte subido no cuenta con estos registros.
+                        <b>Verificar en el sistema origen antes de realizar cambios en el nombre.</b></p>
                 </div>
                 <div class="flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg font-bold text-rose-800"><i class="fa-solid fa-triangle-exclamation mr-2"></i>Nodos Sin Registro en Sistemas Base</h2>
-                        <p class="text-xs text-rose-600 mt-1">Obras informadas en los archivos de avance pero que <b>NO existen</b> en BCMO, Sistema TAREA ni PMOVXF.</p>
+                        <h2 class="text-lg font-bold text-rose-800"><i
+                                class="fa-solid fa-triangle-exclamation mr-2"></i>Nodos Sin Registro en Sistemas Base
+                        </h2>
+                        <p class="text-xs text-rose-600 mt-1">Obras informadas en los archivos de avance pero que <b>NO
+                                existen</b> en BCMO, Sistema TAREA ni PMOVXF.</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <button type="button" onclick="toggleOrphansConfig()"
@@ -366,25 +634,36 @@
                             title="Configuración de Nodos Huérfanos">
                             <i class="fa-solid fa-gear"></i>
                         </button>
-                        <label class="flex items-center gap-2 text-xs font-bold text-slate-600 bg-white px-3 py-1.5 rounded border border-slate-300 cursor-pointer hover:bg-slate-50 transition-colors shadow-sm">
-                            <input type="checkbox" id="configHideCancelados" onchange="renderOrphansTable()" checked class="accent-rose-600 w-4 h-4">
+                        <label
+                            class="flex items-center gap-2 text-xs font-bold text-slate-600 bg-white px-3 py-1.5 rounded border border-slate-300 cursor-pointer hover:bg-slate-50 transition-colors shadow-sm">
+                            <input type="checkbox" id="configHideCancelados" onchange="renderOrphansTable()" checked
+                                class="accent-rose-600 w-4 h-4">
                             Ocultar CANCELADOS
                         </label>
-                        <div class="text-sm text-rose-700 font-bold bg-white px-3 py-1.5 rounded border border-rose-200 shadow-sm" id="orphansCountText">0 Nodos</div>
+                        <div class="text-sm text-rose-700 font-bold bg-white px-3 py-1.5 rounded border border-rose-200 shadow-sm"
+                            id="orphansCountText">0 Nodos</div>
                     </div>
                 </div>
 
                 <!-- Panel de Configuración Local (Nodos sin Registro) -->
-                <div id="orphansConfigPanel" class="hidden bg-slate-50 border border-slate-200 rounded-lg p-4 mt-3 grid grid-cols-1 md:grid-cols-2 gap-6 shadow-inner">
+                <div id="orphansConfigPanel"
+                    class="hidden bg-slate-50 border border-slate-200 rounded-lg p-4 mt-3 grid grid-cols-1 md:grid-cols-2 gap-6 shadow-inner">
                     <div class="flex flex-col gap-2">
                         <label class="font-bold text-slate-700 text-xs">Ocultar Nodos sin registro anterior a:</label>
-                        <input type="date" id="configOrphansDateLimit" value="2022-11-01" onchange="renderOrphansTable()" class="w-40 p-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none text-xs bg-white shadow-sm">
-                        <p class="text-[10px] text-slate-500">Se ocultarán los nodos cuya fecha de inicio/cierre sea más antigua.</p>
+                        <input type="date" id="configOrphansDateLimit" value="2022-11-01"
+                            onchange="renderOrphansTable()"
+                            class="w-40 p-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none text-xs bg-white shadow-sm">
+                        <p class="text-[10px] text-slate-500">Se ocultarán los nodos cuya fecha de inicio/cierre sea más
+                            antigua.</p>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <label class="font-bold text-slate-700 text-xs">Motivos de Descarte Personalizados (Un motivo por renglón):</label>
-                        <textarea id="configCustomJustifications" rows="3" class="w-full p-2 border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none text-xs bg-white shadow-sm custom-scrollbar" placeholder="Añada sus motivos aquí...">Obra unificada por sistema&#10;Error de carga base</textarea>
-                        <p class="text-[10px] text-slate-500">Se añadirán dinámicamente como opciones al corregir un nodo huérfano.</p>
+                        <label class="font-bold text-slate-700 text-xs">Motivos de Descarte Personalizados (Un motivo
+                            por renglón):</label>
+                        <textarea id="configCustomJustifications" rows="3"
+                            class="w-full p-2 border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none text-xs bg-white shadow-sm custom-scrollbar"
+                            placeholder="Añada sus motivos aquí...">Obra unificada por sistema&#10;Error de carga base</textarea>
+                        <p class="text-[10px] text-slate-500">Se añadirán dinámicamente como opciones al corregir un
+                            nodo huérfano.</p>
                     </div>
                 </div>
 
@@ -400,7 +679,9 @@
                         </div>
                     </div>
                     <div class="w-72">
-                        <input type="text" id="hFilterOrphans" oninput="renderOrphansTable()" class="w-full px-3 py-1.5 text-xs border border-rose-200 rounded focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none shadow-sm bg-white" placeholder="Buscar nodo, obra, estado...">
+                        <input type="text" id="hFilterOrphans" oninput="renderOrphansTable()"
+                            class="w-full px-3 py-1.5 text-xs border border-rose-200 rounded focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none shadow-sm bg-white"
+                            placeholder="Buscar nodo, obra, estado...">
                     </div>
                 </div>
             </div>
@@ -413,7 +694,8 @@
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Obra BF (Calculada)</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado Informado</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Mod. Liquidación</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">Fecha de Inicio</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">Fecha de Inicio
+                            </th>
                             <th class="p-3 font-semibold text-xs text-slate-600 text-center">Acción (Corregir)</th>
                         </tr>
                     </thead>
@@ -421,7 +703,8 @@
                 </table>
                 <div id="emptyOrphansState" class="hidden p-8 text-center text-slate-400">
                     <i class="fa-solid fa-check-double text-4xl mb-3 opacity-30 text-emerald-500"></i>
-                    <p class="text-sm font-semibold text-slate-600">¡Excelente! La vista actual no tiene nodos sin registro.</p>
+                    <p class="text-sm font-semibold text-slate-600">¡Excelente! La vista actual no tiene nodos sin
+                        registro.</p>
                     <p class="text-xs">Esto puede deberse a que cruzaron bien o a los filtros aplicados.</p>
                 </div>
             </div>
@@ -430,12 +713,15 @@
 
     <!-- CONTENIDO PESTAÑA 4: RECLASIFICADOS CT -->
     <div id="tabRecatContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
-        <div class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div
+            class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div class="p-4 border-b border-purple-200 bg-purple-50 flex flex-col gap-3">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg font-bold text-purple-800"><i class="fa-solid fa-code-compare mr-2"></i>Reporte de Conversión (Reglas por Fecha)</h2>
-                        <p class="text-xs text-purple-600 mt-1">Obras cuyo estado original ha sido procesado mediante una regla condicional basada en las fechas configuradas.</p>
+                        <h2 class="text-lg font-bold text-purple-800"><i
+                                class="fa-solid fa-code-compare mr-2"></i>Reporte de Conversión (Reglas por Fecha)</h2>
+                        <p class="text-xs text-purple-600 mt-1">Obras cuyo estado original ha sido procesado mediante
+                            una regla condicional basada en las fechas configuradas.</p>
                     </div>
                 </div>
             </div>
@@ -446,17 +732,23 @@
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Origen</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Nodo Original</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Obra BF</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">F. Inicio Evaluada</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">F. Inicio Evaluada
+                            </th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">Fecha Corte</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center text-purple-700 bg-purple-50">Estado Original</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 text-center text-emerald-700 bg-emerald-50">Nuevo Estado</th>
+                            <th
+                                class="p-3 font-semibold text-xs text-slate-600 border-r text-center text-purple-700 bg-purple-50">
+                                Estado Original</th>
+                            <th
+                                class="p-3 font-semibold text-xs text-slate-600 text-center text-emerald-700 bg-emerald-50">
+                                Nuevo Estado</th>
                         </tr>
                     </thead>
                     <tbody id="recatTableBody" class="divide-y divide-slate-100"></tbody>
                 </table>
                 <div id="emptyRecatState" class="hidden p-8 text-center text-slate-400">
                     <i class="fa-solid fa-check-double text-4xl mb-3 opacity-30 text-emerald-500"></i>
-                    <p class="text-sm font-semibold text-slate-600">No hay obras reclasificadas por la regla condicional de CT Parcial.</p>
+                    <p class="text-sm font-semibold text-slate-600">No hay obras reclasificadas por la regla condicional
+                        de CT Parcial.</p>
                 </div>
             </div>
         </div>
@@ -471,52 +763,47 @@
                     <i class="fa-solid fa-boxes-stacked text-teal-600 text-lg"></i>
                     <div>
                         <h2 class="text-base font-bold text-slate-800">Detalle de Obras desde PM</h2>
-                        <p class="text-[10px] text-slate-500">Origen: archivo PMOVXF. Estado de Entrega vinculado desde Resultados Consolidados.</p>
+                        <p class="text-[10px] text-slate-500">Origen: archivo PMOVXF. Estado de Entrega vinculado desde
+                            Resultados Consolidados.</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
-                    <div class="text-sm text-teal-700 font-bold bg-teal-50 px-3 py-1 rounded border border-teal-200" id="detallePMCountText">0 registros</div>
-                    <button type="button" onclick="limpiarFiltrosPM()" class="text-slate-500 hover:text-rose-600 bg-white hover:bg-rose-50 border border-slate-300 hover:border-rose-300 px-3 py-1.5 rounded text-xs font-bold transition-colors flex items-center gap-1 shadow-sm">
+                    <div class="text-sm text-teal-700 font-bold bg-teal-50 px-3 py-1 rounded border border-teal-200"
+                        id="detallePMCountText">0 registros</div>
+                    <button type="button" onclick="limpiarFiltrosPM()"
+                        class="text-slate-500 hover:text-rose-600 bg-white hover:bg-rose-50 border border-slate-300 hover:border-rose-300 px-3 py-1.5 rounded text-xs font-bold transition-colors flex items-center gap-1 shadow-sm">
                         <i class="fa-solid fa-filter-circle-xmark"></i> Limpiar Filtros
                     </button>
                 </div>
             </div>
 
-            <!-- Fila de Filtros -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <!-- Filtro 1: Motivo -->
-                <div class="flex flex-col gap-1">
-                    <label class="text-[10px] font-bold text-slate-600 uppercase tracking-wider"><i class="fa-solid fa-tag mr-1 text-teal-600"></i>Filtro Motivo de Obra (Dropdown)</label>
-                    <select id="pmFilterMotivoSelect" onchange="renderDetallePMTable()" class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none bg-white font-semibold text-slate-700 shadow-sm">
-                        <option value="">-- Todos los Motivos --</option>
-                    </select>
-                </div>
-
-                <!-- Filtro 2: Búsqueda Masiva -->
-                <div class="flex flex-col gap-1">
-                    <label class="text-[10px] font-bold text-slate-600 uppercase tracking-wider"><i class="fa-solid fa-paste mr-1 text-teal-600"></i>Búsqueda Masiva (Pegar Códigos)</label>
-                    <textarea id="pmFilterMasivo" rows="2" oninput="renderDetallePMTable()" class="w-full px-2 py-1 text-xs border border-slate-300 rounded focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none bg-white resize-none shadow-sm" placeholder="Pegue códigos de obras (uno por línea o espacio)"></textarea>
-                    <p class="text-[9px] text-slate-400 italic">Un código por línea o separados por espacio. Tiene precedencia sobre el dropdown.</p>
-                </div>
-
-                <!-- Filtro 3: Búsqueda de texto general -->
-                <div class="flex flex-col gap-1">
-                    <label class="text-[10px] font-bold text-slate-600 uppercase tracking-wider"><i class="fa-solid fa-magnifying-glass mr-1 text-teal-600"></i>Búsqueda General</label>
-                    <input type="text" id="pmFilterTexto" oninput="renderDetallePMTable()" class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded focus:border-teal-500 focus:ring-1 focus:ring-teal-500 outline-none bg-white shadow-sm" placeholder="Buscar por proveedor, artículo, estado...">
-                    <div class="flex gap-2 mt-1">
-                        <div class="flex flex-col gap-0.5 flex-1">
-                            <label class="text-[9px] font-bold text-slate-500 uppercase">Estado Línea</label>
-                            <select id="pmFilterEstadoLinea" onchange="renderDetallePMTable()" class="w-full px-1.5 py-1 text-[10px] border border-slate-300 rounded focus:border-teal-500 outline-none bg-white">
-                                <option value="">Todos</option>
-                            </select>
-                        </div>
-                        <div class="flex flex-col gap-0.5 flex-1">
-                            <label class="text-[9px] font-bold text-slate-500 uppercase">Est. Entrega (Consol.)</label>
-                            <select id="pmFilterEstadoEntrega" onchange="renderDetallePMTable()" class="w-full px-1.5 py-1 text-[10px] border border-slate-300 rounded focus:border-teal-500 outline-none bg-white">
-                                <option value="">Todos</option>
-                            </select>
-                        </div>
+            <!-- Fila de Filtro Unificado de Obras + Estado Entrega -->
+            <div class="flex flex-col md:flex-row gap-3 items-stretch bg-teal-50/40 p-3 rounded-lg border border-teal-100">
+                <!-- Buscador de Obra(s) -->
+                <div class="flex-1 flex flex-col gap-1">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <label for="pmFilterObraInput" class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-magnifying-glass text-teal-600"></i> Buscar / Pegar Obra(s)
+                        </label>
+                        <span class="text-[10px] text-slate-500">Tipee para autocompletar o pegue múltiples códigos desde Excel</span>
                     </div>
+                    <div class="relative flex items-center">
+                        <input type="text" id="pmFilterObraInput" list="pmObrasDatalist" oninput="renderDetallePMTable()"
+                            class="w-full px-3 py-2 text-xs font-mono font-semibold border border-slate-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none bg-white shadow-sm transition-all text-slate-800 placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal"
+                            placeholder="Escriba el código de la obra o pegue una o varias obras (separadas por espacio, coma o enter)..." autocomplete="off">
+                        <datalist id="pmObrasDatalist"></datalist>
+                    </div>
+                </div>
+
+                <!-- Filtro Estado de Entrega (Consol.) -->
+                <div class="w-full md:w-64 flex flex-col gap-1">
+                    <label for="pmFilterEstadoEntrega" class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                        <i class="fa-solid fa-truck-ramp-box text-teal-600"></i> Est. Entrega (Consol.)
+                    </label>
+                    <select id="pmFilterEstadoEntrega" onchange="renderDetallePMTable()"
+                        class="w-full px-3 py-2 text-xs font-semibold border border-slate-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-100 outline-none bg-white shadow-sm transition-all text-slate-700">
+                        <option value="">Todos</option>
+                    </select>
                 </div>
             </div>
         </div>
@@ -526,57 +813,85 @@
             <table class="w-full text-left text-sm border-collapse data-table whitespace-nowrap">
                 <thead class="sticky top-0 z-20 shadow-md">
                     <tr class="text-slate-600 border-b border-slate-300 bg-slate-50">
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">#</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-teal-50 text-teal-800">Motivo (Nodo)</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">Estado Línea</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">Proveedor</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">Localizador Destino</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-indigo-50 text-indigo-700">Artículo</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">UDM</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-right">CTD Pend.</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-right">Cant. Solic.</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-right">Cant. Entregada</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">Fecha TRX</th>
-                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider bg-amber-50 text-amber-800">Est. Entrega (Consol.)</th>
+                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">#
+                        </th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-teal-50 text-teal-800">
+                            Motivo (Nodo)</th>
+                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">
+                            Estado Línea</th>
+                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">
+                            Proveedor</th>
+                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">
+                            Localizador Destino</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-indigo-50 text-indigo-700">
+                            Artículo</th>
+                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">
+                            UDM</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-right">
+                            CTD Pend.</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-right">
+                            Cant. Solic.</th>
+                        <th
+                            class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-right">
+                            Cant. Entregada</th>
+                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">
+                            Fecha TRX</th>
+                        <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider bg-amber-50 text-amber-800">
+                            Est. Entrega (Consol.)</th>
                     </tr>
                 </thead>
                 <tbody id="detallePMTableBody" class="text-slate-700 border-b border-slate-200"></tbody>
             </table>
             <div id="emptyDetallePMState" class="hidden p-8 text-center text-slate-400">
                 <i class="fa-solid fa-boxes-stacked text-4xl mb-3 opacity-20"></i>
-                <p class="text-sm font-semibold text-slate-600">No hay registros del PM que coincidan con los filtros aplicados.</p>
-                <p class="text-xs mt-1">Verifique que el archivo PMOVXF esté cargado y que los filtros sean correctos.</p>
+                <p class="text-sm font-semibold text-slate-600">No hay registros del PM que coincidan con los filtros
+                    aplicados.</p>
+                <p class="text-xs mt-1">Verifique que el archivo PMOVXF esté cargado y que los filtros sean correctos.
+                </p>
             </div>
         </div>
     </div>
 
     <!-- CONTENIDO PESTAÑA: BCMO SIN CRUCE -->
     <div id="tabBcmoSinCruceContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
-        <div class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div
+            class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <!-- Cabecera -->
             <div class="p-4 border-b border-amber-200 bg-amber-50 flex flex-col gap-3">
                 <!-- Información contextual -->
-                <div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
+                <div
+                    class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
                     <i class="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
-                    <p><b>¿Qué muestra esta vista?</b> Obras del BCMO (Etapa 1) que <b>no cruzan</b> con el Avance de Obras, están en estado <b>SIN CONSUMO</b> y tienen <b>materiales entregados</b>. Son candidatas a error tipográfico en el nodo o a obras omitidas en el reporte.</p>
+                    <p><b>¿Qué muestra esta vista?</b> Obras del BCMO (Etapa 1) que <b>no cruzan</b> con el Avance de
+                        Obras, están en estado <b>SIN CONSUMO</b> y tienen <b>materiales entregados</b>. Son candidatas
+                        a error tipográfico en el nodo o a obras omitidas en el reporte.</p>
                 </div>
 
                 <!-- Título + contador -->
                 <div class="flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg font-bold text-amber-800"><i class="fa-solid fa-link-slash mr-2"></i>BCMO Sin Cruce · Sin Consumo · Con Entregas</h2>
-                        <p class="text-xs text-amber-700 mt-1">Obras de <b>BCMO (Etapa 1)</b> sin nodo en Avance · estado <b>SIN CONSUMO</b> · <b>Entregado &gt; 0</b></p>
+                        <h2 class="text-lg font-bold text-amber-800"><i class="fa-solid fa-link-slash mr-2"></i>BCMO Sin
+                            Cruce · Sin Consumo · Con Entregas</h2>
+                        <p class="text-xs text-amber-700 mt-1">Obras de <b>BCMO (Etapa 1)</b> sin nodo en Avance ·
+                            estado <b>SIN CONSUMO</b> · <b>Entregado &gt; 0</b></p>
                     </div>
-                    <div class="text-sm text-amber-700 font-bold bg-white px-3 py-1.5 rounded border border-amber-200 shadow-sm" id="bcmoSinCruceCountText">0 obras</div>
+                    <div class="text-sm text-amber-700 font-bold bg-white px-3 py-1.5 rounded border border-amber-200 shadow-sm"
+                        id="bcmoSinCruceCountText">0 obras</div>
                 </div>
 
                 <!-- Filtros fijos (chips informativos) + filtro opcional + buscador -->
                 <div class="flex flex-wrap items-center gap-3">
                     <!-- Chips de filtros fijos -->
-                    <span class="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 text-slate-600 border border-slate-300">
+                    <span
+                        class="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-slate-200 text-slate-600 border border-slate-300">
                         <i class="fa-solid fa-lock text-[9px]"></i> SIN CONSUMO
                     </span>
-                    <span class="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">
+                    <span
+                        class="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-300">
                         <i class="fa-solid fa-lock text-[9px]"></i> Entregado &gt; 0
                     </span>
 
@@ -584,8 +899,10 @@
                     <span class="text-slate-300 text-sm">|</span>
 
                     <!-- Filtro opcional: solo con similitud -->
-                    <label class="flex items-center gap-2 text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded border border-indigo-200 cursor-pointer hover:bg-indigo-100 transition-colors shadow-sm">
-                        <input type="checkbox" id="bcmoSinCruceSoloSugerencia" onchange="renderBcmoSinCruceTable()" class="accent-indigo-600 w-4 h-4">
+                    <label
+                        class="flex items-center gap-2 text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1.5 rounded border border-indigo-200 cursor-pointer hover:bg-indigo-100 transition-colors shadow-sm">
+                        <input type="checkbox" id="bcmoSinCruceSoloSugerencia" onchange="renderBcmoSinCruceTable()"
+                            class="accent-indigo-600 w-4 h-4">
                         <i class="fa-solid fa-link text-[10px]"></i> Solo con Posible Coincidencia
                     </label>
 
@@ -609,9 +926,11 @@
                             <th class="p-3 font-semibold text-xs text-slate-500 border-r w-10">#</th>
                             <th class="p-3 font-semibold text-xs text-amber-800 border-r bg-amber-50">Nodo BCMO</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Contratista</th>
-                            <th class="p-3 font-semibold text-xs text-emerald-700 border-r text-center bg-emerald-50">Entregado</th>
+                            <th class="p-3 font-semibold text-xs text-emerald-700 border-r text-center bg-emerald-50">
+                                Entregado</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r text-right">% Consumo</th>
-                            <th class="p-3 font-semibold text-xs text-indigo-700 text-left">Posible Coincidencia (Avance)</th>
+                            <th class="p-3 font-semibold text-xs text-indigo-700 text-left">Posible Coincidencia
+                                (Avance)</th>
                         </tr>
                     </thead>
                     <tbody id="bcmoSinCruceTableBody" class="divide-y divide-slate-100"></tbody>
@@ -619,7 +938,8 @@
                 <div id="emptyBcmoSinCruceState" class="hidden p-10 text-center text-slate-400">
                     <i class="fa-solid fa-check-double text-5xl mb-4 opacity-20 text-emerald-500"></i>
                     <p class="text-sm font-semibold text-slate-600">No hay obras que cumplan los criterios.</p>
-                    <p class="text-xs mt-1 text-slate-400">Sin consumo + materiales entregados + sin cruce en Avance.</p>
+                    <p class="text-xs mt-1 text-slate-400">Sin consumo + materiales entregados + sin cruce en Avance.
+                    </p>
                 </div>
             </div>
         </div>
@@ -627,75 +947,115 @@
 
     <!-- CONTENIDO PESTAÑA: OBRAS SIN MODALIDAD -->
     <div id="tabSinModalidadContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
-        <div class="max-w-7xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div
+            class="max-w-7xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <!-- Cabecera -->
-            <div class="p-4 border-b border-rose-200 bg-rose-50 flex flex-col gap-3">
-                <!-- Información contextual -->
-                <div class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
-                    <i class="fa-solid fa-circle-exclamation mt-0.5 text-amber-500"></i>
-                    <p><b>Reclamo por Sector:</b> Esta vista aísla todas las obras que <b>no cuentan con modalidad de liquidación informada</b>. Utilice las métricas por sector para realizar los reclamos correspondientes a <b>Obras</b> o al área de <b>Corporativo</b>.</p>
-                </div>
-
-                <!-- Título + contador -->
-                <div class="flex justify-between items-center">
+            <div class="p-4 border-b border-rose-200 bg-rose-50 flex flex-col gap-3 transition-all duration-200">
+                <!-- Título + Controles de Acción + Contador + Toggle Button -->
+                <div class="flex flex-wrap justify-between items-center gap-3">
                     <div>
                         <h2 class="text-lg font-bold text-rose-800 flex items-center gap-2">
                             <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Obras sin Modalidad Informada
                         </h2>
-                        <p class="text-xs text-rose-700 mt-0.5">Listado consolidado para reclamo y asignación directa de modalidad de liquidación</p>
+                        <p class="text-xs text-rose-700 mt-0.5">Listado consolidado para reclamo y asignación directa de
+                            modalidad de liquidación</p>
                     </div>
-                    <div class="text-sm text-rose-700 font-bold bg-white px-3 py-1.5 rounded border border-rose-200 shadow-sm" id="sinModCountText">0 obras sin modalidad</div>
-                </div>
-
-                <!-- Tarjetas KPI por Sector -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
-                        <div>
-                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Sin Modalidad</span>
-                            <span class="text-lg font-extrabold text-slate-800" id="sinModTotalCount">0</span>
-                        </div>
-                        <div class="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
-                            <i class="fa-solid fa-folder-minus"></i>
-                        </div>
-                    </div>
-                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-300 transition-colors" onclick="filterSinModBySector('OBRAS')">
-                        <div>
-                            <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Reclamar a Sector Obras</span>
-                            <span class="text-lg font-extrabold text-indigo-700" id="sinModObrasCount">0</span>
-                        </div>
-                        <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                            <i class="fa-solid fa-hard-hat"></i>
-                        </div>
-                    </div>
-                    <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-purple-300 transition-colors" onclick="filterSinModBySector('CORPORATIVO')">
-                        <div>
-                            <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block">Reclamar a Corporativo</span>
-                            <span class="text-lg font-extrabold text-purple-700" id="sinModCorpCount">0</span>
-                        </div>
-                        <div class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                            <i class="fa-solid fa-building"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Buscador + Filtros por Sector -->
-                <div class="flex flex-wrap items-center gap-3 mt-1">
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs font-bold text-slate-600">Sector:</span>
-                        <select id="sinModSectorFilter" onchange="renderSinModalidadTable()" class="px-2.5 py-1.5 text-xs border border-slate-300 rounded focus:border-rose-500 outline-none bg-white font-semibold text-slate-700 shadow-sm">
-                            <option value="TODOS">-- Todos los Sectores --</option>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Selector rápido de sector -->
+                        <select id="sinModQuickSectorFilter" onchange="syncSinModSector(this.value)"
+                            class="px-2.5 py-1.5 text-xs border border-rose-300 rounded focus:border-rose-500 outline-none bg-white font-semibold text-slate-700 shadow-sm">
+                            <option value="TODOS">Todos los Sectores</option>
                             <option value="OBRAS">Sector Obras</option>
                             <option value="CORPORATIVO">Sector Corporativo</option>
                         </select>
+
+                        <!-- Botón Exportar Excel -->
+                        <button type="button" onclick="exportSinModalidadToExcel()"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5"
+                            title="Descargar listado filtrado en Excel">
+                            <i class="fa-solid fa-file-excel"></i> Exportar
+                        </button>
+
+                        <!-- Botón Enviar Correo de Reclamo -->
+                        <button type="button" onclick="enviarMailReclamoSinModalidad()"
+                            class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5"
+                            title="Generar correo de reclamo por sector">
+                            <i class="fa-solid fa-envelope"></i> Reclamar por Mail
+                        </button>
+
+                        <!-- Badge de Conteo -->
+                        <div class="text-sm text-rose-700 font-bold bg-white px-3 py-1.5 rounded border border-rose-200 shadow-sm"
+                            id="sinModCountText">0 obras sin modalidad</div>
+
+                        <!-- Botón de Colapso -->
+                        <button type="button" onclick="toggleSinModHeader()" id="btnToggleSinModHeader"
+                            class="text-rose-700 bg-white hover:bg-rose-100 border border-rose-200 w-8 h-8 rounded-lg flex items-center justify-center transition-colors shadow-sm"
+                            title="Ocultar/Mostrar filtros y métricas">
+                            <i class="fa-solid fa-chevron-up text-xs transition-transform duration-200" id="iconToggleSinModHeader"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Cuerpo Colapsable: Información contextual + KPIs + Buscador/Filtros -->
+                <div id="sinModCollapsibleBody" class="flex flex-col gap-3">
+                    <!-- Información contextual -->
+                    <div
+                        class="bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
+                        <i class="fa-solid fa-circle-exclamation mt-0.5 text-amber-500"></i>
+                        <p><b>Reclamo por Sector:</b> Esta vista aísla todas las obras que <b>no cuentan con modalidad de
+                                liquidación informada</b>. Utilice las métricas por sector para realizar los reclamos
+                            correspondientes a <b>Obras</b> o al área de <b>Corporativo</b>.</p>
                     </div>
 
-                    <div class="ml-auto w-72 relative">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <i class="fa-solid fa-search text-slate-400 text-xs"></i>
+                    <!-- Tarjetas KPI por Sector -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div
+                            class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Total Sin
+                                    Modalidad</span>
+                                <span class="text-lg font-extrabold text-slate-800" id="sinModTotalCount">0</span>
+                            </div>
+                            <div class="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+                                <i class="fa-solid fa-folder-minus"></i>
+                            </div>
                         </div>
-                        <input type="text" id="sinModalidadSearch" oninput="renderSinModalidadTable()"
-                            class="w-full pl-8 pr-3 py-1.5 text-xs border border-rose-200 rounded focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none shadow-sm bg-white"
-                            placeholder="Buscar nodo, obra, estado...">
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-indigo-300 transition-colors"
+                            onclick="filterSinModBySector('OBRAS')">
+                            <div>
+                                <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider block">Reclamar
+                                    a Sector Obras</span>
+                                <span class="text-lg font-extrabold text-indigo-700" id="sinModObrasCount">0</span>
+                            </div>
+                            <div
+                                class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                <i class="fa-solid fa-hard-hat"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex items-center justify-between cursor-pointer hover:border-purple-300 transition-colors"
+                            onclick="filterSinModBySector('CORPORATIVO')">
+                            <div>
+                                <span class="text-[10px] font-bold text-purple-600 uppercase tracking-wider block">Reclamar
+                                    a Corporativo</span>
+                                <span class="text-lg font-extrabold text-purple-700" id="sinModCorpCount">0</span>
+                            </div>
+                            <div
+                                class="w-9 h-9 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+                                <i class="fa-solid fa-building"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Buscador -->
+                    <div class="flex items-center justify-end mt-1">
+                        <div class="w-72 relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <i class="fa-solid fa-search text-slate-400 text-xs"></i>
+                            </div>
+                            <input type="text" id="sinModalidadSearch" oninput="renderSinModalidadTable()"
+                                class="w-full pl-8 pr-3 py-1.5 text-xs border border-rose-200 rounded focus:border-rose-500 focus:ring-1 focus:ring-rose-500 outline-none shadow-sm bg-white"
+                                placeholder="Buscar nodo, obra, estado...">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -705,22 +1065,23 @@
                 <table class="w-full text-left text-sm whitespace-nowrap">
                     <thead class="bg-slate-50 sticky top-0 border-b border-slate-200">
                         <tr>
-                            <th class="p-3 font-semibold text-xs text-slate-500 border-r w-10">#</th>
-                            <th class="p-3 font-semibold text-xs text-slate-700 border-r">Sector Informante / Origen</th>
-                            <th class="p-3 font-semibold text-xs text-slate-700 border-r">Nodo</th>
-                            <th class="p-3 font-semibold text-xs text-indigo-700 border-r bg-indigo-50/50">Obra BF</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado Original</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado Calculado</th>
-                            <th class="p-3 font-semibold text-xs text-rose-700 border-r text-center bg-rose-50/50">Modalidad</th>
-                            <th class="p-3 font-semibold text-xs text-slate-700 text-center w-28">Acción</th>
+                            <th class="p-3 font-semibold w-12 text-center border-r border-slate-200">#</th>
+                            <th class="p-3 font-semibold text-left border-r border-slate-200">Sector Informante / Origen
+                            </th>
+                            <th class="p-3 font-semibold text-left border-r border-slate-200">Nodo</th>
+                            <th class="p-3 font-semibold text-left border-r border-slate-200">Estado Original</th>
+                            <th class="p-3 font-semibold text-center border-r border-slate-200">Modalidad</th>
+                            <th class="p-3 font-semibold text-center">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="sinModalidadTableBody" class="divide-y divide-slate-100"></tbody>
                 </table>
                 <div id="emptySinModalidadState" class="hidden p-10 text-center text-slate-400">
                     <i class="fa-solid fa-circle-check text-5xl mb-4 opacity-20 text-emerald-500"></i>
-                    <p class="text-sm font-semibold text-slate-600">¡Excelente! No hay obras sin modalidad en la vista seleccionada.</p>
-                    <p class="text-xs mt-1 text-slate-400">Todas las obras cuentan con su modalidad asignada o forzada correctamente.</p>
+                    <p class="text-sm font-semibold text-slate-600">¡Excelente! No hay obras sin modalidad en la vista
+                        seleccionada.</p>
+                    <p class="text-xs mt-1 text-slate-400">Todas las obras cuentan con su modalidad asignada o forzada
+                        correctamente.</p>
                 </div>
             </div>
         </div>
@@ -728,18 +1089,24 @@
 
     <!-- CONTENIDO PESTAÑA: GESTOR DE CADUCIDAD -->
     <div id="tabCaducidadContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
-        <div class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div
+            class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div class="p-4 border-b border-rose-200 bg-rose-50 flex flex-col gap-3">
-                <div class="bg-rose-100 border border-rose-300 text-rose-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
+                <div
+                    class="bg-rose-100 border border-rose-300 text-rose-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
                     <i class="fa-solid fa-circle-exclamation mt-0.5 text-rose-600"></i>
-                    <p><b>Gestión de Caducidad:</b> Lista de obras con más de 4 años desde su Fecha de Cierre Técnico que aún tienen pendiente la presentación de legajo. Permite forzar el estado a <b>FINALIZADO</b> para bloquear el reconocimiento de materiales.</p>
+                    <p><b>Gestión de Caducidad:</b> Lista de obras con más de 4 años desde su Fecha de Cierre Técnico
+                        que aún tienen pendiente la presentación de legajo. Permite forzar el estado a <b>FINALIZADO</b>
+                        para bloquear el reconocimiento de materiales.</p>
                 </div>
                 <div class="flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg font-bold text-rose-800"><i class="fa-solid fa-hourglass-end mr-2"></i>Gestor de Caducidad (>4 Años)</h2>
+                        <h2 class="text-lg font-bold text-rose-800"><i class="fa-solid fa-hourglass-end mr-2"></i>Gestor
+                            de Caducidad (>4 Años)</h2>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="text-sm text-rose-800 font-bold bg-white px-3 py-1.5 rounded border border-rose-300 shadow-sm" id="caducidadCountText">0 obras</div>
+                        <div class="text-sm text-rose-800 font-bold bg-white px-3 py-1.5 rounded border border-rose-300 shadow-sm"
+                            id="caducidadCountText">0 obras</div>
                     </div>
                 </div>
             </div>
@@ -748,9 +1115,11 @@
                     <thead class="bg-slate-50 sticky top-0 border-b border-slate-200">
                         <tr>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">#</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r bg-rose-50 text-rose-800">Nodo</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r bg-rose-50 text-rose-800">Nodo
+                            </th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Obra BF</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">F. Cierre Técnico</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">F. Cierre Técnico
+                            </th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">Antigüedad</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado Actual</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Contratista (BCMO)</th>
@@ -761,7 +1130,8 @@
                 </table>
                 <div id="emptyCaducidadState" class="hidden p-8 text-center text-slate-400">
                     <i class="fa-solid fa-check-double text-4xl mb-3 opacity-30 text-emerald-500"></i>
-                    <p class="text-sm font-semibold text-slate-600">No hay obras que cumplan los criterios de caducidad.</p>
+                    <p class="text-sm font-semibold text-slate-600">No hay obras que cumplan los criterios de caducidad.
+                    </p>
                 </div>
             </div>
         </div>
@@ -769,18 +1139,25 @@
 
     <!-- CONTENIDO PESTAÑA: VALIDACIÓN CONTRATISTA -->
     <div id="tabValidacionContratistaContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
-        <div class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div
+            class="max-w-6xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div class="p-4 border-b border-indigo-200 bg-indigo-50 flex flex-col gap-3">
-                <div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
+                <div
+                    class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
                     <i class="fa-solid fa-circle-info mt-0.5 text-blue-500"></i>
-                    <p><b>¿Qué muestra esta vista?</b> Une las obras de Avance en estado <b>"A EJECUTAR"</b> con las obras de <b>BCMO Sin Cruce</b> que tengan materiales entregados sin consumo registrado, para enviarle al contratista un listado de inconsistencias a validar.</p>
+                    <p><b>¿Qué muestra esta vista?</b> Une las obras de Avance en estado <b>"A EJECUTAR"</b> con las
+                        obras de <b>BCMO Sin Cruce</b> que tengan materiales entregados sin consumo registrado, para
+                        enviarle al contratista un listado de inconsistencias a validar.</p>
                 </div>
                 <div class="flex justify-between items-center">
                     <div>
-                        <h2 class="text-lg font-bold text-indigo-800"><i class="fa-solid fa-envelope-circle-check mr-2"></i>Validación Contratista</h2>
-                        <p class="text-xs text-indigo-700 mt-1">Obras a validar contra el contratista: sin consumo pero con estado activo o materiales entregados.</p>
+                        <h2 class="text-lg font-bold text-indigo-800"><i
+                                class="fa-solid fa-envelope-circle-check mr-2"></i>Validación Contratista</h2>
+                        <p class="text-xs text-indigo-700 mt-1">Obras a validar contra el contratista: sin consumo pero
+                            con estado activo o materiales entregados.</p>
                     </div>
-                    <div class="text-sm text-indigo-700 font-bold bg-white px-3 py-1.5 rounded border border-indigo-200 shadow-sm" id="validacionContratistaCountText">0 obras</div>
+                    <div class="text-sm text-indigo-700 font-bold bg-white px-3 py-1.5 rounded border border-indigo-200 shadow-sm"
+                        id="validacionContratistaCountText">0 obras</div>
                 </div>
             </div>
 
@@ -788,31 +1165,43 @@
             <div class="p-4 border-b border-slate-200 bg-white grid grid-cols-1 md:grid-cols-7 gap-3 items-end">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Contratista</label>
-                    <input type="text" id="vcContratista" readonly class="w-full p-2 border border-slate-200 rounded bg-slate-100 text-sm text-slate-700 font-semibold cursor-not-allowed" placeholder="Automático">
+                    <input type="text" id="vcContratista" readonly
+                        class="w-full p-2 border border-slate-200 rounded bg-slate-100 text-sm text-slate-700 font-semibold cursor-not-allowed"
+                        placeholder="Automático">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Fecha de Inventario</label>
-                    <input type="date" id="vcFechaInventario" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                    <input type="date" id="vcFechaInventario"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Fecha Balance (ORACLE)</label>
-                    <input type="date" id="vcFechaBalanceObras" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                    <input type="date" id="vcFechaBalanceObras"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Fecha Avance (OPERACIONES)</label>
-                    <input type="date" id="vcFechaAvanceOperaciones" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                    <input type="date" id="vcFechaAvanceOperaciones"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Cantidad de Obras</label>
-                    <input type="number" id="vcCantidadObras" readonly class="w-full p-2 border border-slate-200 rounded bg-slate-100 text-sm text-slate-700 font-semibold cursor-not-allowed" placeholder="0">
+                    <input type="number" id="vcCantidadObras" readonly
+                        class="w-full p-2 border border-slate-200 rounded bg-slate-100 text-sm text-slate-700 font-semibold cursor-not-allowed"
+                        placeholder="0">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1"><i class="fa-solid fa-magnifying-glass"></i> Filtrar por Nodo</label>
-                    <input type="text" id="vcFilterNodo" oninput="filterValidacionContratistaTable()" class="w-full p-2 border border-indigo-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-indigo-50/10 placeholder-indigo-300" placeholder="Buscar nodo...">
+                    <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1"><i
+                            class="fa-solid fa-magnifying-glass"></i> Filtrar por Nodo</label>
+                    <input type="text" id="vcFilterNodo" oninput="filterValidacionContratistaTable()"
+                        class="w-full p-2 border border-indigo-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-indigo-50/10 placeholder-indigo-300"
+                        placeholder="Buscar nodo...">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1"><i class="fa-solid fa-filter"></i> Filtrar por Origen</label>
-                    <select id="vcFilterOrigen" onchange="filterValidacionContratistaTable()" class="w-full p-2 border border-indigo-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-indigo-50/10 font-semibold text-slate-700">
+                    <label class="block text-xs font-bold text-indigo-700 mb-1 flex items-center gap-1"><i
+                            class="fa-solid fa-filter"></i> Filtrar por Origen</label>
+                    <select id="vcFilterOrigen" onchange="filterValidacionContratistaTable()"
+                        class="w-full p-2 border border-indigo-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-indigo-50/10 font-semibold text-slate-700">
                         <option value="AVANCE" selected>Solo Avance</option>
                         <option value="BCMO">Solo BCMO</option>
                         <option value="AMBOS">Ambos</option>
@@ -826,9 +1215,11 @@
                     <thead class="bg-slate-50 border-b border-slate-200" style="position: sticky; top: 0; z-index: 1;">
                         <tr>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">#</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r bg-indigo-50 text-indigo-800">Nodo</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r bg-indigo-50 text-indigo-800">
+                                Nodo</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Obra BF</th>
-                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado de Avance (Calculado)</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado de Avance (Calculado)
+                            </th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Fecha Inicio</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Fecha Cierre Técnico</th>
                             <th class="p-3 font-semibold text-xs text-slate-600 border-r">Modalidad de Liquidación</th>
@@ -842,16 +1233,19 @@
                 </table>
                 <div id="emptyValidacionContratistaState" class="hidden p-8 text-center text-slate-400">
                     <i class="fa-solid fa-check-double text-4xl mb-3 opacity-30 text-emerald-500"></i>
-                    <p class="text-sm font-semibold text-slate-600">No hay obras que requieran validación con el contratista.</p>
+                    <p class="text-sm font-semibold text-slate-600">No hay obras que requieran validación con el
+                        contratista.</p>
                 </div>
             </div>
 
             <!-- Botones de Acción -->
             <div class="p-4 border-t border-slate-200 bg-slate-50 flex justify-end gap-2">
-                <button type="button" onclick="descargarTablaValidacionContratista()" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded text-sm font-semibold transition-colors shadow-sm flex items-center gap-2">
+                <button type="button" onclick="descargarTablaValidacionContratista()"
+                    class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded text-sm font-semibold transition-colors shadow-sm flex items-center gap-2">
                     <i class="fa-solid fa-file-excel"></i> Descargar Tabla
                 </button>
-                <button type="button" onclick="enviarPorMailValidacionContratista()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded text-sm font-semibold shadow-sm transition-colors flex items-center gap-2">
+                <button type="button" onclick="enviarPorMailValidacionContratista()"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded text-sm font-semibold shadow-sm transition-colors flex items-center gap-2">
                     <i class="fa-solid fa-paper-plane"></i> Enviar por Mail
                 </button>
             </div>
@@ -863,37 +1257,72 @@
         <style>
             /* Estilos migrados del Analizador Estado de Obra BF v9.3 */
             #tabDetalleTareasContent .pill {
-                display: inline-flex; align-items: center; gap: 4px;
-                padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 600;
-                background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; white-space: nowrap;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 2px 8px;
+                border-radius: 999px;
+                font-size: 10.5px;
+                font-weight: 600;
+                background: #f1f5f9;
+                color: #475569;
+                border: 1px solid #e2e8f0;
+                white-space: nowrap;
             }
+
             #tabDetalleTareasContent .pill-count {
-                background: #ffffff; color: #334155; border-radius: 999px;
-                padding: 0 6px; font-size: 10px; font-weight: 700; border: 1px solid #cbd5e1;
+                background: #ffffff;
+                color: #334155;
+                border-radius: 999px;
+                padding: 0 6px;
+                font-size: 10px;
+                font-weight: 700;
+                border: 1px solid #cbd5e1;
             }
+
             #tabDetalleTareasContent .status-finalizado-total {
-                background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;
+                background: #ecfdf5;
+                color: #047857;
+                border: 1px solid #a7f3d0;
             }
+
             #tabDetalleTareasContent .status-finalizado-parcial {
-                background: #fffbeb; color: #b45309; border: 1px solid #fde68a;
+                background: #fffbeb;
+                color: #b45309;
+                border: 1px solid #fde68a;
             }
+
             #tabDetalleTareasContent .status-encurso {
-                background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;
+                background: #eff6ff;
+                color: #1d4ed8;
+                border: 1px solid #bfdbfe;
             }
+
             #tabDetalleTareasContent .status-sinconsumo {
-                background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;
+                background: #fef2f2;
+                color: #b91c1c;
+                border: 1px solid #fecaca;
             }
+
             #tabDetalleTareasContent .status-otro {
-                background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;
+                background: #f8fafc;
+                color: #475569;
+                border: 1px solid #e2e8f0;
             }
-            #tabDetalleTareasContent tbody tr { cursor: pointer; }
+
+            #tabDetalleTareasContent tbody tr {
+                cursor: pointer;
+            }
         </style>
 
-        <div class="max-w-7xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+        <div
+            class="max-w-7xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
             <div class="p-4 border-b border-indigo-200 bg-indigo-50 flex items-center justify-between">
                 <div>
-                    <h2 class="text-lg font-bold text-indigo-800"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard BF — Análisis de Tickets (Tareas)</h2>
-                    <p class="text-xs text-indigo-600 mt-1">Resultado del procesamiento del archivo de Tareas. Una fila por Obra BF.</p>
+                    <h2 class="text-lg font-bold text-indigo-800"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard
+                        BF — Análisis de Tickets (Tareas)</h2>
+                    <p class="text-xs text-indigo-600 mt-1">Resultado del procesamiento del archivo de Tareas. Una fila
+                        por Obra BF.</p>
                 </div>
                 <button type="button" onclick="exportarDetalleTareas()"
                     class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded text-sm font-semibold shadow-sm transition-colors flex items-center gap-2">
@@ -905,21 +1334,26 @@
             <div class="p-4 border-b border-slate-200 bg-white grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Búsqueda por ID Obra</label>
-                    <input type="text" id="dtFiltroObra" oninput="renderDetalleTareasTable()" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm" placeholder="Ej: ST345...">
+                    <input type="text" id="dtFiltroObra" oninput="renderDetalleTareasTable()"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                        placeholder="Ej: ST345...">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Estado</label>
-                    <select id="dtFiltroEstado" onchange="renderDetalleTareasTable()" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+                    <select id="dtFiltroEstado" onchange="renderDetalleTareasTable()"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
                         <option value="">-- Todos --</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-700 mb-1">Contratista</label>
-                    <select id="dtFiltroContratista" onchange="renderDetalleTareasTable()" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
+                    <select id="dtFiltroContratista" onchange="renderDetalleTareasTable()"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm bg-white">
                         <option value="">-- Todos --</option>
                     </select>
                 </div>
-                <button type="button" onclick="limpiarFiltrosDetalleTareas()" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded text-sm font-semibold transition-colors shadow-sm flex items-center justify-center gap-2">
+                <button type="button" onclick="limpiarFiltrosDetalleTareas()"
+                    class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded text-sm font-semibold transition-colors shadow-sm flex items-center justify-center gap-2">
                     <i class="fa-solid fa-filter-circle-xmark"></i> Limpiar Filtros
                 </button>
             </div>
@@ -928,12 +1362,18 @@
             <div class="px-4 pt-3 pb-1 bg-white">
                 <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex flex-wrap gap-2 items-center">
                     <span class="text-xs font-bold text-slate-500 uppercase mr-1">Resumen Consumo (Filtrado):</span>
-                    <span class="pill"><i class="fa-solid fa-list"></i> Obras <span id="dtResumenTotal" class="pill-count">0</span></span>
-                    <span class="pill status-finalizado-total"><i class="fa-solid fa-check-double"></i> Finalizada Consumo Total <span id="dtResumenTotalConsumo" class="pill-count">0</span></span>
-                    <span class="pill status-finalizado-parcial"><i class="fa-solid fa-check"></i> Finalizada Consumo Parcial <span id="dtResumenParcialConsumo" class="pill-count">0</span></span>
-                    <span class="pill status-encurso"><i class="fa-solid fa-spinner"></i> En Curso / Otros <span id="dtResumenOtros" class="pill-count">0</span></span>
-                    <span class="pill"><i class="fa-solid fa-ticket"></i> Tkt Material <span id="dtResumenTickets" class="pill-count">0</span></span>
-                    <span class="pill"><i class="fa-solid fa-check-double"></i> Cerrados <span id="dtResumenCerrados" class="pill-count">0</span></span>
+                    <span class="pill"><i class="fa-solid fa-list"></i> Obras <span id="dtResumenTotal"
+                            class="pill-count">0</span></span>
+                    <span class="pill status-finalizado-total"><i class="fa-solid fa-check-double"></i> Finalizada
+                        Consumo Total <span id="dtResumenTotalConsumo" class="pill-count">0</span></span>
+                    <span class="pill status-finalizado-parcial"><i class="fa-solid fa-check"></i> Finalizada Consumo
+                        Parcial <span id="dtResumenParcialConsumo" class="pill-count">0</span></span>
+                    <span class="pill status-encurso"><i class="fa-solid fa-spinner"></i> En Curso / Otros <span
+                            id="dtResumenOtros" class="pill-count">0</span></span>
+                    <span class="pill"><i class="fa-solid fa-ticket"></i> Tkt Material <span id="dtResumenTickets"
+                            class="pill-count">0</span></span>
+                    <span class="pill"><i class="fa-solid fa-check-double"></i> Cerrados <span id="dtResumenCerrados"
+                            class="pill-count">0</span></span>
                 </div>
             </div>
 
@@ -941,34 +1381,53 @@
                 <table class="w-full text-left text-sm border-collapse data-table whitespace-nowrap">
                     <thead class="sticky top-0 z-20 shadow-md">
                         <tr class="text-slate-600 border-b border-slate-300 bg-slate-50">
-                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-indigo-50 text-indigo-800">Obra BF</th>
-                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">Contratista</th>
-                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-teal-50 text-teal-800">Detalle Tkt (Con Consumo)</th>
-                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">Detalle Obra BF</th>
-                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-center">Tkt Material</th>
-                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-emerald-50 text-emerald-800 text-center">Cerrados</th>
-                            <th class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider bg-amber-50 text-amber-800 text-center">Resultado Final</th>
+                            <th
+                                class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-indigo-50 text-indigo-800">
+                                Obra BF</th>
+                            <th
+                                class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">
+                                Contratista</th>
+                            <th
+                                class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-teal-50 text-teal-800">
+                                Detalle Tkt (Con Consumo)</th>
+                            <th
+                                class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200">
+                                Detalle Obra BF</th>
+                            <th
+                                class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 text-center">
+                                Tkt Material</th>
+                            <th
+                                class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider border-r border-slate-200 bg-emerald-50 text-emerald-800 text-center">
+                                Cerrados</th>
+                            <th
+                                class="py-2 px-3 font-bold text-[11px] uppercase tracking-wider bg-amber-50 text-amber-800 text-center">
+                                Resultado Final</th>
                         </tr>
                     </thead>
                     <tbody id="detalleTareasTableBody" class="text-slate-700 border-b border-slate-200"></tbody>
                 </table>
                 <div id="emptyDetalleTareasState" class="hidden p-8 text-center text-slate-400">
                     <i class="fa-solid fa-ticket-simple text-4xl mb-3 opacity-20"></i>
-                    <p class="text-sm font-semibold text-slate-600">No hay obras que coincidan con los filtros aplicados.</p>
+                    <p class="text-sm font-semibold text-slate-600">No hay obras que coincidan con los filtros
+                        aplicados.</p>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- MODAL DE DETALLE DASHBOARD BF (Tickets asociados a la Obra) -->
-    <div id="detailModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+    <div id="detailModal"
+        class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh]">
             <div class="p-4 border-b border-slate-200 flex items-center justify-between shrink-0">
                 <div>
-                    <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-ticket-simple text-indigo-600 mr-2"></i>Detalle de Tickets</h3>
-                    <p class="text-xs text-slate-500 mt-0.5">Obra BF: <span id="detailModalObraBF" class="font-mono font-bold text-indigo-700"></span></p>
+                    <h3 class="text-base font-bold text-slate-800"><i
+                            class="fa-solid fa-ticket-simple text-indigo-600 mr-2"></i>Detalle de Tickets</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Obra BF: <span id="detailModalObraBF"
+                            class="font-mono font-bold text-indigo-700"></span></p>
                 </div>
-                <button type="button" onclick="closeDetalleTareaModal()" class="text-slate-400 hover:text-slate-700 text-xl leading-none">&times;</button>
+                <button type="button" onclick="closeDetalleTareaModal()"
+                    class="text-slate-400 hover:text-slate-700 text-xl leading-none">&times;</button>
             </div>
             <div class="p-4 overflow-y-auto custom-scrollbar space-y-4">
                 <div>
@@ -1006,8 +1465,10 @@
 <div id="modalEstandarizacion"
     class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
     <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl flex flex-col max-h-[90vh]">
-        <h3 class="text-lg font-bold text-slate-800 mb-2"><i class="fa-solid fa-list-ol text-indigo-600 mr-2"></i>Gestor de Estandarización</h3>
-        <p class="text-sm text-slate-500 mb-4">La estandarización se ejecuta en memoria apenas se carga el Avance Principal.</p>
+        <h3 class="text-lg font-bold text-slate-800 mb-2"><i class="fa-solid fa-list-ol text-indigo-600 mr-2"></i>Gestor
+            de Estandarización</h3>
+        <p class="text-sm text-slate-500 mb-4">La estandarización se ejecuta en memoria apenas se carga el Avance
+            Principal.</p>
 
         <div class="flex-1 overflow-y-auto custom-scrollbar p-1 space-y-4">
             <!-- Reglas Condicionales -->
@@ -1016,11 +1477,13 @@
                     <h4 class="font-bold text-sm text-purple-800">Reglas Condicionales (Basadas en Fecha de Corte)</h4>
                     <div class="flex items-center gap-2">
                         <label class="text-xs font-semibold text-purple-700">Ref. Global (Fecha de Corte):</label>
-                        <input type="date" id="configCTDate" onblur="actualizarCorteCT(event)" class="px-2 py-1 bg-white border border-purple-300 rounded focus:border-purple-500 outline-none text-xs text-purple-800">
+                        <input type="date" id="configCTDate" onblur="actualizarCorteCT(event)"
+                            class="px-2 py-1 bg-white border border-purple-300 rounded focus:border-purple-500 outline-none text-xs text-purple-800">
                     </div>
                 </div>
 
-                <table class="w-full text-left text-sm whitespace-nowrap bg-white rounded border border-purple-200 shadow-sm mt-2">
+                <table
+                    class="w-full text-left text-sm whitespace-nowrap bg-white rounded border border-purple-200 shadow-sm mt-2">
                     <thead class="bg-purple-100 text-purple-800 border-b border-purple-200">
                         <tr>
                             <th class="py-1 px-3 text-xs font-bold w-1/3">Estado Original</th>
@@ -1032,10 +1495,21 @@
                     <tbody id="condRulesTableBody" class="divide-y divide-purple-100/50"></tbody>
                     <tfoot class="bg-purple-50/50">
                         <tr>
-                            <td class="p-1.5 border-r border-purple-100"><input type="text" id="newCondOrg" placeholder="Ej. CT PARCIAL" class="w-full text-[10px] p-1 border rounded outline-none uppercase font-bold text-slate-700"></td>
-                            <td class="p-1.5 border-r border-purple-100"><input type="text" id="newCondLt" placeholder="Ej. FINALIZADO" class="w-full text-[10px] p-1 border rounded outline-none uppercase text-emerald-700 font-bold"></td>
-                            <td class="p-1.5 border-r border-purple-100"><input type="text" id="newCondGte" placeholder="Ej. CIERRE TÉCNICO" class="w-full text-[10px] p-1 border rounded outline-none uppercase text-amber-700 font-bold"></td>
-                            <td class="p-1 text-center"><button onclick="addCondRule()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 w-5 h-5 rounded flex items-center justify-center font-bold text-[10px]"><i class="fa-solid fa-plus"></i></button></td>
+                            <td class="p-1.5 border-r border-purple-100"><input type="text" id="newCondOrg"
+                                    placeholder="Ej. CT PARCIAL"
+                                    class="w-full text-[10px] p-1 border rounded outline-none uppercase font-bold text-slate-700">
+                            </td>
+                            <td class="p-1.5 border-r border-purple-100"><input type="text" id="newCondLt"
+                                    placeholder="Ej. FINALIZADO"
+                                    class="w-full text-[10px] p-1 border rounded outline-none uppercase text-emerald-700 font-bold">
+                            </td>
+                            <td class="p-1.5 border-r border-purple-100"><input type="text" id="newCondGte"
+                                    placeholder="Ej. CIERRE TÉCNICO"
+                                    class="w-full text-[10px] p-1 border rounded outline-none uppercase text-amber-700 font-bold">
+                            </td>
+                            <td class="p-1 text-center"><button onclick="addCondRule()"
+                                    class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 w-5 h-5 rounded flex items-center justify-center font-bold text-[10px]"><i
+                                        class="fa-solid fa-plus"></i></button></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -1054,9 +1528,15 @@
                     <tbody id="rulesTableBody" class="divide-y divide-slate-100"></tbody>
                     <tfoot class="bg-slate-50">
                         <tr>
-                            <td class="p-2 border-r border-slate-200"><input type="text" id="newRuleIn" placeholder="A EJECUTAR" class="w-full text-xs p-1.5 border rounded outline-none uppercase bg-white"></td>
-                            <td class="p-2 border-r border-slate-200"><input type="text" id="newRuleOut" placeholder="PROYECTADA" class="w-full text-xs p-1.5 border rounded outline-none uppercase bg-white"></td>
-                            <td class="p-2 text-center"><button onclick="addStandardizationRule()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 w-6 h-6 rounded flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-plus"></i></button></td>
+                            <td class="p-2 border-r border-slate-200"><input type="text" id="newRuleIn"
+                                    placeholder="A EJECUTAR"
+                                    class="w-full text-xs p-1.5 border rounded outline-none uppercase bg-white"></td>
+                            <td class="p-2 border-r border-slate-200"><input type="text" id="newRuleOut"
+                                    placeholder="PROYECTADA"
+                                    class="w-full text-xs p-1.5 border rounded outline-none uppercase bg-white"></td>
+                            <td class="p-2 text-center"><button onclick="addStandardizationRule()"
+                                    class="bg-emerald-100 hover:bg-emerald-200 text-emerald-700 w-6 h-6 rounded flex items-center justify-center font-bold text-xs"><i
+                                        class="fa-solid fa-plus"></i></button></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -1064,8 +1544,10 @@
         </div>
 
         <div class="flex justify-between items-center mt-6 pt-4 border-t border-slate-200">
-            <button onclick="document.getElementById('modalEstandarizacion').classList.add('hidden')" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Volver</button>
-            <button onclick="reEstandarizarTodaLaBase()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+            <button onclick="document.getElementById('modalEstandarizacion').classList.add('hidden')"
+                class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Volver</button>
+            <button onclick="reEstandarizarTodaLaBase()"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                 <i class="fa-solid fa-rotate-right"></i> Ejecutar Reglas sobre Memoria
             </button>
         </div>
@@ -1076,12 +1558,17 @@
 <div id="modalFiltroContratista"
     class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
     <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
-        <h3 class="text-lg font-bold text-slate-800 mb-2"><i class="fa-solid fa-building-user text-indigo-600 mr-2"></i>Avance Corporativo</h3>
+        <h3 class="text-lg font-bold text-slate-800 mb-2"><i
+                class="fa-solid fa-building-user text-indigo-600 mr-2"></i>Avance Corporativo</h3>
         <p class="text-sm text-slate-500 mb-4">Seleccione una o varias contratistas:</p>
-        <select id="selectContratistaCorp" multiple size="8" class="w-full p-2.5 text-sm font-semibold text-slate-700 border border-slate-300 rounded-lg mb-6 outline-none focus:ring-2 focus:ring-indigo-500 custom-scrollbar"></select>
+        <select id="selectContratistaCorp" multiple size="8"
+            class="w-full p-2.5 text-sm font-semibold text-slate-700 border border-slate-300 rounded-lg mb-6 outline-none focus:ring-2 focus:ring-indigo-500 custom-scrollbar"></select>
         <div class="flex justify-end gap-2">
-            <button onclick="cancelarCargaCorp()" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Cancelar</button>
-            <button onclick="confirmarCargaCorp()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors">Importar Datos</button>
+            <button onclick="cancelarCargaCorp()"
+                class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Cancelar</button>
+            <button onclick="confirmarCargaCorp()"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors">Importar
+                Datos</button>
         </div>
     </div>
 </div>
@@ -1090,28 +1577,35 @@
 <div id="modalFiltroContratistaAvance"
     class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
     <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm">
-        <h3 class="text-lg font-bold text-slate-800 mb-2"><i class="fa-solid fa-truck-fast text-emerald-600 mr-2"></i>Avance de Obras</h3>
+        <h3 class="text-lg font-bold text-slate-800 mb-2"><i
+                class="fa-solid fa-truck-fast text-emerald-600 mr-2"></i>Avance de Obras</h3>
         <p class="text-sm text-slate-500 mb-4">Seleccione una o varias contratistas:</p>
-        <select id="selectContratistaAvance" multiple size="8" class="w-full p-2.5 text-sm font-semibold text-slate-700 border border-slate-300 rounded-lg mb-6 outline-none focus:ring-2 focus:ring-emerald-500 custom-scrollbar"></select>
+        <select id="selectContratistaAvance" multiple size="8"
+            class="w-full p-2.5 text-sm font-semibold text-slate-700 border border-slate-300 rounded-lg mb-6 outline-none focus:ring-2 focus:ring-emerald-500 custom-scrollbar"></select>
         <div class="flex justify-end gap-2">
-            <button onclick="cancelarCargaAvance()" class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Cancelar</button>
-            <button onclick="confirmarCargaAvance()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors">Importar Datos</button>
+            <button onclick="cancelarCargaAvance()"
+                class="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">Cancelar</button>
+            <button onclick="confirmarCargaAvance()"
+                class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2 rounded-lg text-sm font-bold shadow-sm transition-colors">Importar
+                Datos</button>
         </div>
     </div>
 </div>
 
 <!-- MODAL DE PREGUNTAS FRECUENTES (FAQ) -->
-<div id="faqModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+<div id="faqModal"
+    class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
     <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl flex flex-col max-h-[90vh]">
         <div class="flex justify-between items-center mb-4 border-b pb-3">
             <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                 <i class="fa-solid fa-circle-question text-amber-500"></i> Preguntas Frecuentes: Obra a considerar
             </h3>
-            <button onclick="closeFaqModal()" class="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200">
+            <button onclick="closeFaqModal()"
+                class="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-100 w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200">
                 <i class="fa-solid fa-times"></i>
             </button>
         </div>
-        
+
         <div class="flex-grow overflow-y-auto custom-scrollbar p-1 space-y-4">
             <p class="text-sm text-slate-600">Aquí se detalla la lógica para "Obra a considerar" en la Etapa 2:</p>
             <div class="border border-slate-200 rounded-lg overflow-hidden shadow-sm">
@@ -1124,24 +1618,30 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs">
                         <tr>
-                            <td class="p-3 font-semibold text-indigo-700 border-r bg-indigo-50/10">Considerar en hoja TERMINADO/CT</td>
-                            <td class="p-3 text-slate-600">Con entregas/pendientes Y TERMINADO Y SIN CONSUMO Y LEGAJO.</td>
+                            <td class="p-3 font-semibold text-indigo-700 border-r bg-indigo-50/10">Considerar en hoja
+                                TERMINADO/CT</td>
+                            <td class="p-3 text-slate-600">Con entregas/pendientes Y TERMINADO Y SIN CONSUMO Y LEGAJO.
+                            </td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-emerald-700 border-r bg-emerald-50/10">Considerar en hoja A EJECUTAR</td>
+                            <td class="p-3 font-semibold text-emerald-700 border-r bg-emerald-50/10">Considerar en hoja
+                                A EJECUTAR</td>
                             <td class="p-3 text-slate-600">TAREA o LEGAJO Y A EJECUTAR Y Con entregas y pendientes.</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-semibold text-blue-700 border-r bg-blue-50/10">Considerar en hoja En ejecución</td>
-                            <td class="p-3 text-slate-600">Con entregas/pendientes Y EN EJECUCIÓN Y SIN CONSUMO Y LEGAJO.</td>
+                            <td class="p-3 font-semibold text-blue-700 border-r bg-blue-50/10">Considerar en hoja En
+                                ejecución</td>
+                            <td class="p-3 text-slate-600">Con entregas/pendientes Y EN EJECUCIÓN Y SIN CONSUMO Y
+                                LEGAJO.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-        
+
         <div class="flex justify-end mt-4 pt-3 border-t border-slate-200">
-            <button onclick="closeFaqModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg text-sm transition-colors shadow-sm">Entendido</button>
+            <button onclick="closeFaqModal()"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg text-sm transition-colors shadow-sm">Entendido</button>
         </div>
     </div>
 </div>
@@ -1151,42 +1651,57 @@
     <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeEditModal()"></div>
     <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg relative z-10 flex flex-col transform">
         <div class="p-4 border-b border-slate-200 bg-slate-50 rounded-t-xl flex justify-between items-center">
-            <h3 class="text-base font-bold text-slate-800"><i class="fa-solid fa-pen-to-square text-indigo-600 mr-2"></i>Modificar Obra / Estado</h3>
-            <button type="button" onclick="closeEditModal()" class="text-slate-400 hover:text-slate-700 w-8 h-8 rounded border border-transparent hover:border-slate-300 hover:bg-slate-200 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            <h3 class="text-base font-bold text-slate-800"><i
+                    class="fa-solid fa-pen-to-square text-indigo-600 mr-2"></i>Modificar Obra / Estado</h3>
+            <button type="button" onclick="closeEditModal()"
+                class="text-slate-400 hover:text-slate-700 w-8 h-8 rounded border border-transparent hover:border-slate-300 hover:bg-slate-200 flex items-center justify-center"><i
+                    class="fa-solid fa-times"></i></button>
         </div>
 
         <div class="p-6 space-y-4">
             <div class="bg-slate-100 p-3 rounded border border-slate-200 mb-2">
                 <p class="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">Obra Seleccionada</p>
                 <p class="text-sm font-bold text-slate-800" id="editModalNodo"></p>
-                <p class="text-xs text-slate-600 mt-1">Reportó Excel: <span class="font-bold text-rose-600" id="editModalEstadoOrig"></span></p>
+                <p class="text-xs text-slate-600 mt-1">Reportó Excel: <span class="font-bold text-rose-600"
+                        id="editModalEstadoOrig"></span></p>
             </div>
 
             <!-- CORRECCION DE NODO -->
             <div class="bg-indigo-50/50 p-3 rounded border border-indigo-100">
-                <label class="block text-xs font-bold text-indigo-800 mb-1"><i class="fa-solid fa-spell-check mr-1"></i>Corregir Nombre del Nodo (Opcional)</label>
-                <input type="text" id="editModalCorrectedNodo" placeholder="Ej. LJ631AF FT-FT_E-M0" class="w-full p-2 border border-indigo-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold text-slate-700 bg-white">
-                <div id="editModalOrphanSuggestion" class="hidden bg-amber-50 border border-amber-200 p-2 rounded mt-2 text-xs text-amber-800">
-                    <i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i> Sugerencia: <span id="orphanSuggestionText" class="font-bold cursor-pointer underline text-amber-900" onclick="document.getElementById('editModalCorrectedNodo').value = this.innerText"></span>
+                <label class="block text-xs font-bold text-indigo-800 mb-1"><i
+                        class="fa-solid fa-spell-check mr-1"></i>Corregir Nombre del Nodo (Opcional)</label>
+                <input type="text" id="editModalCorrectedNodo" placeholder="Ej. LJ631AF FT-FT_E-M0"
+                    class="w-full p-2 border border-indigo-200 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold text-slate-700 bg-white">
+                <div id="editModalOrphanSuggestion"
+                    class="hidden bg-amber-50 border border-amber-200 p-2 rounded mt-2 text-xs text-amber-800">
+                    <i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i> Sugerencia: <span
+                        id="orphanSuggestionText" class="font-bold cursor-pointer underline text-amber-900"
+                        onclick="document.getElementById('editModalCorrectedNodo').value = this.innerText"></span>
                 </div>
             </div>
 
             <!-- JUSTIFICACION NODOS NO ENCONTRADOS -->
             <div id="editModalJustifySection" class="hidden bg-slate-50 p-3 rounded border border-slate-200 mt-3">
-                <label class="block text-xs font-bold text-slate-700 mb-1"><i class="fa-solid fa-shield-halved mr-1 text-slate-500"></i>Justificar / Descartar Nodo</label>
-                <select id="editModalOrphanJustification" onchange="togglePMRequisito()" class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
+                <label class="block text-xs font-bold text-slate-700 mb-1"><i
+                        class="fa-solid fa-shield-halved mr-1 text-slate-500"></i>Justificar / Descartar Nodo</label>
+                <select id="editModalOrphanJustification" onchange="togglePMRequisito()"
+                    class="w-full p-2 border border-slate-300 rounded text-sm focus:ring-2 focus:ring-indigo-500 outline-none bg-white">
                     <option value="">-- No justificar (Mantener como no encontrado) --</option>
                 </select>
                 <div id="pmInputContainer" class="hidden mt-3 p-2 bg-rose-50 border border-rose-200 rounded">
-                    <label class="block text-xs font-bold text-rose-800 mb-1">Número de PM <span class="text-red-500">*</span></label>
-                    <input type="text" id="editModalPMNumber" class="w-full p-2 border border-rose-300 rounded focus:ring-2 focus:ring-rose-500 outline-none text-sm font-semibold text-slate-700 bg-white" placeholder="Ej. PM123456">
+                    <label class="block text-xs font-bold text-rose-800 mb-1">Número de PM <span
+                            class="text-red-500">*</span></label>
+                    <input type="text" id="editModalPMNumber"
+                        class="w-full p-2 border border-rose-300 rounded focus:ring-2 focus:ring-rose-500 outline-none text-sm font-semibold text-slate-700 bg-white"
+                        placeholder="Ej. PM123456">
                 </div>
             </div>
 
             <div id="editModalStateSection">
                 <div class="border-t border-slate-200 pt-4">
                     <label class="block text-xs font-bold text-slate-700 mb-1">Nueva Modalidad (Opcional)</label>
-                    <select id="editModalNewMod" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold text-indigo-700 bg-slate-50 mb-3">
+                    <select id="editModalNewMod"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold text-indigo-700 bg-slate-50 mb-3">
                         <option value="">-- No forzar modalidad --</option>
                         <option value="LEGAJO">LEGAJO</option>
                         <option value="TAREA">TAREA</option>
@@ -1195,7 +1710,8 @@
                     </select>
 
                     <label class="block text-xs font-bold text-slate-700 mb-1">Nuevo Estado Forzado (Opcional)</label>
-                    <select id="editModalNewState" onchange="toggleCloseDateReq()" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold text-indigo-700 bg-slate-50">
+                    <select id="editModalNewState" onchange="toggleCloseDateReq()"
+                        class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-semibold text-indigo-700 bg-slate-50">
                         <option value="">-- No forzar estado --</option>
                         <option value="EN EJECUCION">EN EJECUCION</option>
                         <option value="TERMINADO">TERMINADO</option>
@@ -1206,45 +1722,60 @@
             <div id="editModalDatesSection" class="space-y-4 pt-4 border-t border-slate-200 mt-4">
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Fecha de Inicio <span class="text-red-500" id="reqStartMarker">*</span></label>
-                        <input type="date" id="editModalStartDate" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Fecha de Inicio <span
+                                class="text-red-500" id="reqStartMarker">*</span></label>
+                        <input type="date" id="editModalStartDate"
+                            class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Cierre Técnico <span class="text-red-500 hidden" id="reqCloseDate">*</span></label>
-                        <input type="date" id="editModalCloseDate" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Cierre Técnico <span
+                                class="text-red-500 hidden" id="reqCloseDate">*</span></label>
+                        <input type="date" id="editModalCloseDate"
+                            class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">F. Mail Respaldo <span class="text-red-500" id="reqMailMarker">*</span></label>
-                        <input type="date" id="editModalMailDate" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">F. Mail Respaldo <span
+                                class="text-red-500" id="reqMailMarker">*</span></label>
+                        <input type="date" id="editModalMailDate"
+                            class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Validador <span class="text-red-500" id="reqValMarker">*</span></label>
-                        <input type="text" id="editModalValidator" placeholder="Ej. Juan Pérez" class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Validador <span class="text-red-500"
+                                id="reqValMarker">*</span></label>
+                        <input type="text" id="editModalValidator" placeholder="Ej. Juan Pérez"
+                            class="w-full p-2 border border-slate-300 rounded focus:ring-2 focus:ring-indigo-500 outline-none text-sm">
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="p-4 border-t border-slate-200 bg-slate-50 rounded-b-xl flex justify-end gap-2">
-            <button type="button" onclick="closeEditModal()" class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded text-sm font-semibold transition-colors">Cancelar</button>
-            <button type="button" onclick="saveStateChange()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded text-sm font-semibold shadow-sm transition-colors"><i class="fa-solid fa-save"></i> Guardar y Recalcular</button>
+            <button type="button" onclick="closeEditModal()"
+                class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded text-sm font-semibold transition-colors">Cancelar</button>
+            <button type="button" onclick="saveStateChange()"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded text-sm font-semibold shadow-sm transition-colors"><i
+                    class="fa-solid fa-save"></i> Guardar y Recalcular</button>
         </div>
     </div>
 </div>
 
 <!-- MODAL DE DETALLES TIPO PANEL LATERAL -->
 <div id="detailsModal" class="hidden fixed inset-0 z-50 flex justify-end">
-    <div class="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity" onclick="closeDetailsModal()"></div>
-    <div class="bg-white w-full max-w-lg h-full shadow-2xl relative z-10 flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-slate-200" id="detailsModalContent">
+    <div class="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity" onclick="closeDetailsModal()">
+    </div>
+    <div class="bg-white w-full max-w-lg h-full shadow-2xl relative z-10 flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-slate-200"
+        id="detailsModalContent">
         <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 shrink-0">
             <div>
                 <h3 class="text-lg font-bold text-slate-800" id="detModalTitle">Nodo</h3>
                 <p class="text-xs font-semibold text-slate-500 uppercase mt-0.5" id="detModalSubtitle">Estado</p>
             </div>
-            <button type="button" onclick="closeDetailsModal()" class="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-200 transition-colors w-8 h-8 rounded border border-slate-300 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            <button type="button" onclick="closeDetailsModal()"
+                class="text-slate-400 hover:text-slate-700 bg-white hover:bg-slate-200 transition-colors w-8 h-8 rounded border border-slate-300 flex items-center justify-center"><i
+                    class="fa-solid fa-times"></i></button>
         </div>
         <div class="p-0 overflow-y-auto flex-1 custom-scrollbar">
             <table class="w-full text-left text-sm border-collapse">

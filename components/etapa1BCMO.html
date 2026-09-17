@@ -132,132 +132,204 @@
                 <p class="leading-relaxed"><b>Secuencia de Carga:</b> Para realizar el análisis es necesario cargar los <b>4 archivos en orden secuencial del 1 al 4</b>. Cada paso se habilitará automáticamente al completar el anterior.</p>
             </div>
 
-            <div id="s1_uploadWrapper" class="grid grid-cols-1 md:grid-cols-2 gap-6 h-full min-h-[400px]">
-                <!-- Secuencia de carga: 1 -> 2 -> 3 -> 4 -->
-                <div class="flex flex-col gap-4">
-                    <div id="s1_dropZone" class="s1-drop-zone border-2 border-dashed border-blue-300 bg-white hover:bg-slate-50 rounded-2xl p-6 text-center cursor-pointer flex flex-col justify-between flex-1 transition-colors shadow-sm gap-4">
+            <!-- Contenedor Principal de Carga: Cuadrícula de Tarjetas Premium -->
+            <div id="s1_uploadWrapper" class="flex flex-col gap-5 w-full">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-                        <!-- Paso 1: Reporte de Localizadores -->
-                        <div class="w-full pb-3 border-b border-slate-200 text-left">
-                            <div class="flex items-center justify-between mb-1.5">
-                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-violet-600 text-white text-[10px] font-bold">1</span>
-                                    Reporte de Localizadores
-                                </span>
-                                <span class="text-[10px] bg-violet-100 text-violet-700 px-2 py-0.5 rounded font-semibold">Paso 1</span>
+                    <!-- ═══ TARJETA 1: Reporte de Localizadores ═══ -->
+                    <div id="s1_cardLocalizadores" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group">
+                        <div class="flex items-start justify-between p-5 pb-3">
+                            <div class="w-12 h-12 rounded-2xl bg-violet-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-link text-violet-600 text-xl"></i>
                             </div>
-                            <p class="text-slate-500 text-[11px] mb-2">Mapea la Razón Social y empresa auditada.</p>
-                            <input type="file" id="s1_localizadoresInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
-                            <button type="button" onclick="document.getElementById('s1_localizadoresInput').click()" class="bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-link"></i> Cargar Reporte de Localizadores
-                            </button>
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-violet-700 bg-violet-100 px-2.5 py-1 rounded-full">
+                                <span class="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
+                                Requerido
+                            </span>
                         </div>
-
-                        <!-- Paso 2: Archivo BCMO -->
-                        <div id="s1_dropZoneWrapper" class="w-full pb-3 border-b border-slate-200 text-left opacity-40 pointer-events-none transition-opacity">
-                            <div class="flex items-center justify-between mb-1.5">
-                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] font-bold">2</span>
-                                    Archivo BCMO
-                                </span>
-                                <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-semibold">Paso 2</span>
+                        <div class="px-5 pb-4 flex-grow">
+                            <h3 class="text-sm font-bold text-slate-800 mb-1.5">Reporte de Localizadores <span class="text-rose-500">*</span></h3>
+                            <p class="text-xs text-slate-500 leading-relaxed">Mapea la Razón Social y define la empresa contratista a auditar. Base analítica del cruce de legajos.</p>
+                            <div id="s1_statusLocalizadores" class="mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
+                                <i class="fa-regular fa-circle text-slate-300"></i>
+                                <span>Sin cargar</span>
                             </div>
-                            <p class="text-slate-500 text-[11px] mb-2">Reporte de liquidación y consumos base de obra.</p>
-                            <input type="file" id="s1_fileInput" accept=".xlsx, .xls, .csv, .txt" multiple class="hidden">
-                            <button type="button" onclick="document.getElementById('s1_fileInput').click()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-file-excel"></i> Cargar Archivo BCMO
-                            </button>
                         </div>
-
-                        <!-- Paso 3: Avance General -->
-                        <div id="s1_avanceGeneralWrapper" class="w-full pb-3 border-b border-slate-200 text-left opacity-40 pointer-events-none transition-opacity">
-                            <div class="flex items-center justify-between mb-1.5">
-                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white text-[10px] font-bold">3</span>
-                                    Avance General
-                                </span>
-                                <span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-semibold">Paso 3</span>
+                        <div class="border-t border-slate-100 mx-5"></div>
+                        <div class="flex items-center justify-between px-5 py-3 gap-3">
+                            <span class="text-[11px] text-slate-400 font-mono">Formato: .xlsx / .csv</span>
+                            <div class="flex items-center gap-2">
+                                <input type="file" id="s1_localizadoresInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
+                                <button type="button" onclick="document.getElementById('s1_localizadoresInput').click()"
+                                    class="bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar archivo
+                                </button>
                             </div>
-                            <p class="text-slate-500 text-[11px] mb-2">Filtra Obras Reasignadas y modalidades.</p>
-                            <input type="file" id="s1_avanceGeneralInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
-                            <button type="button" onclick="document.getElementById('s1_avanceGeneralInput').click()" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-file-arrow-up"></i> Cargar Avance General
-                            </button>
                         </div>
-
-                        <!-- Paso 4: PMOVXF -->
-                        <div id="s1_pmovxfWrapper" class="w-full text-left opacity-40 pointer-events-none transition-opacity">
-                            <div class="flex items-center justify-between mb-1.5">
-                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                                    <span class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500 text-white text-[10px] font-bold">4</span>
-                                    PMOVXF (Detalle PM)
-                                </span>
-                                <span class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-semibold">Paso 4</span>
-                            </div>
-                            <p class="text-slate-500 text-[11px] mb-2">Movimientos y entregas operativas de materiales.</p>
-                            <input type="file" id="s1_pmovxfInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
-                            <button type="button" onclick="document.getElementById('s1_pmovxfInput').click()" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm text-xs w-full flex items-center justify-center gap-2">
-                                <i class="fa-solid fa-boxes-stacked"></i> Cargar PMOVXF
-                            </button>
-                        </div>
-
                     </div>
-                    <!-- Botón Analizar -->
+
+                    <!-- ═══ TARJETA 2: Archivo BCMO ═══ -->
+                    <div id="s1_dropZoneWrapper" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group opacity-40 pointer-events-none">
+                        <div class="flex items-start justify-between p-5 pb-3">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-file-excel text-blue-600 text-xl"></i>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">
+                                <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                                Requerido
+                            </span>
+                        </div>
+                        <div class="px-5 pb-4 flex-grow">
+                            <h3 class="text-sm font-bold text-slate-800 mb-1.5">Archivo BCMO <span class="text-rose-500">*</span></h3>
+                            <p class="text-xs text-slate-500 leading-relaxed">Reporte maestro de liquidación y consumos base de obra. Fuente principal del análisis depurado.</p>
+                            <div id="s1_statusBCMO" class="mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
+                                <i class="fa-regular fa-circle text-slate-300"></i>
+                                <span>Sin cargar</span>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 mx-5"></div>
+                        <div class="flex items-center justify-between px-5 py-3 gap-3">
+                            <span class="text-[11px] text-slate-400 font-mono">Formato: .xlsx / .csv</span>
+                            <div class="flex items-center gap-2">
+                                <div id="s1_dropZone" class="hidden"></div>
+                                <input type="file" id="s1_fileInput" accept=".xlsx, .xls, .csv, .txt" multiple class="hidden">
+                                <button type="button" onclick="document.getElementById('s1_fileInput').click()"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar archivo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ TARJETA 3: Avance General ═══ -->
+                    <div id="s1_avanceGeneralWrapper" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group opacity-40 pointer-events-none">
+                        <div class="flex items-start justify-between p-5 pb-3">
+                            <div class="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-chart-line text-orange-500 text-xl"></i>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-orange-700 bg-orange-100 px-2.5 py-1 rounded-full">
+                                <span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
+                                Requerido
+                            </span>
+                        </div>
+                        <div class="px-5 pb-4 flex-grow">
+                            <h3 class="text-sm font-bold text-slate-800 mb-1.5">Avance General <span class="text-rose-500">*</span></h3>
+                            <p class="text-xs text-slate-500 leading-relaxed">Filtra Obras Reasignadas y modalidades de liquidación. Genera el dataset filtrado para auditoria.</p>
+                            <div id="s1_statusAvanceGeneral" class="mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
+                                <i class="fa-regular fa-circle text-slate-300"></i>
+                                <span>Sin cargar</span>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 mx-5"></div>
+                        <div class="flex items-center justify-between px-5 py-3 gap-3">
+                            <span class="text-[11px] text-slate-400 font-mono">Formato: .xlsx / .csv</span>
+                            <div class="flex items-center gap-2">
+                                <input type="file" id="s1_avanceGeneralInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
+                                <button type="button" onclick="document.getElementById('s1_avanceGeneralInput').click()"
+                                    class="bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar archivo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ TARJETA 4: PMOVXF ═══ -->
+                    <div id="s1_pmovxfWrapper" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group opacity-40 pointer-events-none">
+                        <div class="flex items-start justify-between p-5 pb-3">
+                            <div class="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-boxes-stacked text-amber-600 text-xl"></i>
+                            </div>
+                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                Opcional
+                            </span>
+                        </div>
+                        <div class="px-5 pb-4 flex-grow">
+                            <h3 class="text-sm font-bold text-slate-800 mb-1.5">PMOVXF (Detalle PM)</h3>
+                            <p class="text-xs text-slate-500 leading-relaxed">Detalle de consumos y movimientos PM. Habilita trazabilidad de entregas y Auditoría PM Activa.</p>
+                            <div id="s1_statusMateriales" class="mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
+                                <i class="fa-regular fa-circle text-slate-300"></i>
+                                <span>No cargado (Opcional)</span>
+                            </div>
+                        </div>
+                        <div class="border-t border-slate-100 mx-5"></div>
+                        <div class="flex items-center justify-between px-5 py-3 gap-3">
+                            <span class="text-[11px] text-slate-400 font-mono">Formato: .xlsx / .csv</span>
+                            <div class="flex items-center gap-2">
+                                <input type="file" id="s1_pmovxfInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
+                                <button type="button" onclick="document.getElementById('s1_pmovxfInput').click()"
+                                    class="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
+                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar archivo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ═══ TARJETA 5: Panel de Reglas ═══ -->
+                    <div class="bg-indigo-950 border border-indigo-800 rounded-2xl shadow-sm flex flex-col relative overflow-hidden">
+                        <div class="flex items-center justify-between px-5 pt-4 pb-2">
+                            <h4 class="text-xs font-bold text-indigo-200 uppercase tracking-widest flex items-center gap-2">
+                                <i class="fa-solid fa-shield-halved text-indigo-400"></i>
+                                Reglas de Negocio
+                            </h4>
+                            <i class="fa-solid fa-gears text-indigo-600 text-lg"></i>
+                        </div>
+                        <div class="px-5 pb-3 flex-grow">
+                            <p class="text-xs text-indigo-400 leading-relaxed mb-4">El motor auditará consistencia de tickets, códigos de ítem presupuestario y desviaciones de obra en tiempo real.</p>
+                            <div class="space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-indigo-300 flex items-center gap-2">
+                                        <i class="fa-solid fa-circle text-slate-600 text-[8px]" id="s1_ruleIconLoc"></i> Cruce BCMO / Legajo
+                                    </span>
+                                    <span class="text-[11px] font-bold text-rose-400" id="s1_ruleLabelLoc">Pendiente</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-indigo-300 flex items-center gap-2">
+                                        <i class="fa-solid fa-circle text-slate-600 text-[8px]" id="s1_ruleIconBCMO"></i> Control de Inventario PM
+                                    </span>
+                                    <span class="text-[11px] font-bold text-rose-400" id="s1_ruleLabelBCMO">Pendiente</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-indigo-300 flex items-center gap-2">
+                                        <i class="fa-solid fa-circle text-slate-600 text-[8px]" id="s1_ruleIconAvance"></i> Avance Principal
+                                    </span>
+                                    <span class="text-[11px] font-bold text-rose-400" id="s1_ruleLabelAvance">Pendiente</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-indigo-300 flex items-center gap-2">
+                                        <i class="fa-regular fa-circle text-indigo-700 text-[8px]" id="s1_ruleIconPM"></i> PMOVXF (PM)
+                                    </span>
+                                    <span class="text-[11px] font-semibold text-slate-500" id="s1_ruleLabelPM">Opcional</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border-t border-indigo-800 mx-5 mt-2"></div>
+                        <div class="px-5 py-3 text-[11px] text-indigo-500 font-medium flex items-center gap-1.5 hover:text-indigo-300 cursor-default transition-colors">
+                            <i class="fa-solid fa-arrows-rotate"></i> Mapeo automático de columnas
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Barra Inferior de Acción y Secuencia -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
+                            <i class="fa-solid fa-chart-pie text-lg"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-800">Análisis y Depuración BCMO</div>
+                            <div class="text-xs text-slate-500" id="s1_txtSecuenciaCargaInfo">Complete los 4 pasos en orden para habilitar el análisis.</div>
+                        </div>
+                    </div>
+                    
                     <button id="s1_btnAnalizar" onclick="s1_lanzarAnalisisBCMO()" disabled
-                        class="w-full bg-slate-200 text-slate-400 font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-slate-300">
+                        class="w-full sm:w-auto min-w-[240px] bg-slate-200 text-slate-400 font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-slate-300">
                         <i class="fa-solid fa-magnifying-glass-chart"></i> Analizar BCMO
                     </button>
                 </div>
-                <!-- Archivos Reconocidos -->
-                <div class="flex flex-col gap-4">
-                    <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex-1 flex flex-col justify-between">
-                        <div>
-                            <h4 class="text-base font-bold text-slate-700 border-b border-slate-200 pb-3 mb-4 flex items-center justify-between">
-                                <span><i class="fa-solid fa-list-check text-blue-600 mr-2"></i>Archivos Reconocidos</span>
-                                <span class="text-xs text-slate-400 font-normal">Estado de carga</span>
-                            </h4>
-                            <div class="space-y-3.5 text-sm">
-                                <!-- Paso 1 -->
-                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 transition-all" id="s1_statusLocalizadores">
-                                    <div class="flex items-center gap-2.5">
-                                        <i class="fa-regular fa-circle text-slate-400 text-lg align-middle"></i>
-                                        <span class="w-5 h-5 rounded-full bg-violet-100 text-violet-700 text-[10px] font-bold flex items-center justify-center">1</span>
-                                        <span class="text-slate-700 font-medium">Reporte de Localizadores</span>
-                                    </div>
-                                    <span class="text-xs text-slate-400 italic file-date">Pendiente</span>
-                                </div>
-                                <!-- Paso 2 -->
-                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 transition-all" id="s1_statusBCMO">
-                                    <div class="flex items-center gap-2.5">
-                                        <i class="fa-regular fa-circle text-slate-400 text-lg align-middle"></i>
-                                        <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center">2</span>
-                                        <span class="text-slate-700 font-medium">Archivo BCMO</span>
-                                    </div>
-                                    <span class="text-xs text-slate-400 italic file-date">Pendiente</span>
-                                </div>
-                                <!-- Paso 3 -->
-                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 transition-all" id="s1_statusAvanceGeneral">
-                                    <div class="flex items-center gap-2.5">
-                                        <i class="fa-regular fa-circle text-slate-400 text-lg align-middle"></i>
-                                        <span class="w-5 h-5 rounded-full bg-orange-100 text-orange-700 text-[10px] font-bold flex items-center justify-center">3</span>
-                                        <span class="text-slate-700 font-medium">Avance General</span>
-                                    </div>
-                                    <span class="text-xs text-slate-400 italic file-date">Pendiente</span>
-                                </div>
-                                <!-- Paso 4 -->
-                                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200 transition-all" id="s1_statusMateriales">
-                                    <div class="flex items-center gap-2.5">
-                                        <i class="fa-regular fa-circle text-slate-400 text-lg align-middle"></i>
-                                        <span class="w-5 h-5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold flex items-center justify-center">4</span>
-                                        <span class="text-slate-700 font-medium">PMOVXF (Detalle PM)</span>
-                                    </div>
-                                    <span class="text-xs text-slate-400 italic file-date">Pendiente</span>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="text-xs text-slate-400 mt-5 pt-3 border-t border-slate-100 flex items-center gap-1.5"><i class="fa-solid fa-circle-info text-blue-500"></i> Complete los 4 pasos en orden para proceder con el análisis.</p>
-                    </div>
-                </div>
+
             </div>
 
             <div id="s1_loader"
@@ -267,55 +339,50 @@
             </div>
 
             <div id="s1_resultsWorkspace" class="hidden flex-col flex-grow h-full">
-                <div
-                    class="flex flex-col sm:flex-row justify-between items-end sm:items-center border-b border-slate-300 mb-4 pb-2 gap-4 shrink-0">
-                    <ul class="flex gap-1" id="s1_tabNavigation">
-                        <li><button onclick="s1_switchTabEtapa1('dashboard')" id="s1_btnTabDashboard"
-                                class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active"><i
-                                    class="fa-solid fa-table mr-1"></i> Dashboard Principal</button></li>
-                        <li>
-                            <button onclick="s1_switchTabEtapa1('verification')" id="s1_btnTabVerification"
-                                class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive relative">
-                                <i class="fa-solid fa-clipboard-check mr-1"></i> Verificar Consumo
-                                <span id="s1_pmRequiredBadge" class="ml-2 bg-amber-400 text-amber-900 text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-amber-500">Requiere PM</span>
-                            </button>
-                        </li>
-                        <li><button onclick="s1_switchTabEtapa1('invalid')" id="s1_btnTabInvalid"
-                                class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive"><i
-                                    class="fa-solid fa-triangle-exclamation mr-1"></i> Nomenclatura Inválida<span id="s1_invalidCountBadge" class="tab-count-badge hidden"></span></button></li>
-                        <li><button onclick="s1_switchTabEtapa1('reasignadas')" id="s1_btnTabReasignadas"
-                                class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive"><i
-                                    class="fa-solid fa-arrows-turn-right mr-1"></i> Obras Reasignadas<span id="s1_reasignadasCountBadge" class="tab-count-badge hidden"></span></button></li>
-                        <li><button onclick="s1_switchTabEtapa1('otraec')" id="s1_btnTabOtraEC"
-                                class="px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive"><i
-                                    class="fa-solid fa-magnifying-glass-dollar mr-1"></i> Consumo en Otra EC<span id="s1_otraECCountBadge" class="tab-count-badge hidden"></span></button></li>
-                        <!-- Botón del tab "Excluidas por Tarea" eliminado: ahora es un proceso interno oculto.
-                             Las obras que califican se rescatan automáticamente al Dashboard Principal
-                             (ver s1_analyzeData / regla de rescate ORED). El bloque HTML de abajo
-                             (id="s1_tabExcluidas") se conserva oculto para que el JS que lo referencia no rompa. -->
-                    </ul>
-                    <div class="flex gap-2">
-                        <button onclick="showSetupSection()"
-                            class="text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 font-bold py-2 px-4 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-sm">
-                            <i class="fa-solid fa-folder-open"></i> Archivos y Etapas</button>
+                <!-- Barra de Tabs (homologada a Etapa 2) -->
+                <div class="flex items-center border-b border-slate-200 bg-slate-50 px-4 pt-2 shrink-0 relative gap-0 mb-4">
+                    <button onclick="s1_switchTabEtapa1('dashboard')" id="s1_btnTabDashboard"
+                        class="tab-btn active flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-table"></i> Dashboard Principal
+                    </button>
+                    <button onclick="s1_switchTabEtapa1('verification')" id="s1_btnTabVerification"
+                        class="tab-btn flex items-center gap-2 whitespace-nowrap relative">
+                        <i class="fa-solid fa-clipboard-check"></i> Verificar Consumo
+                        <span id="s1_verifCountBadge" class="tab-count-badge hidden"></span>
+                    </button>
+                    <button onclick="s1_switchTabEtapa1('invalid')" id="s1_btnTabInvalid"
+                        class="tab-btn flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Nomenclatura Inválida
+                        <span id="s1_invalidCountBadge" class="tab-count-badge hidden"></span>
+                    </button>
+                    <button onclick="s1_switchTabEtapa1('reasignadas')" id="s1_btnTabReasignadas"
+                        class="tab-btn flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-arrows-turn-right"></i> Obras Reasignadas
+                        <span id="s1_reasignadasCountBadge" class="tab-count-badge hidden"></span>
+                    </button>
+                    <button onclick="s1_switchTabEtapa1('otraec')" id="s1_btnTabOtraEC"
+                        class="tab-btn flex items-center gap-2 whitespace-nowrap">
+                        <i class="fa-solid fa-magnifying-glass-dollar"></i> Consumo en Otra EC
+                        <span id="s1_otraECCountBadge" class="tab-count-badge hidden"></span>
+                    </button>
+                    <!-- Botón del tab "Excluidas por Tarea" eliminado: ahora es un proceso interno oculto. -->
+
+                    <!-- Botones de Acción al lado derecho -->
+                    <div class="ml-auto flex items-center gap-2 pb-1">
                         <button onclick="s1_resetUI()"
-                            class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-sm"
-                            title="Limpiar datos BCMO"><i class="fa-solid fa-trash-can"></i> Limpiar BCMO</button>
+                            class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-1.5 px-3 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-xs"
+                            title="Limpiar datos BCMO"><i class="fa-solid fa-trash-can"></i> Limpiar</button>
                         <button onclick="s1_exportToExcel_Etapa1()"
-                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-sm"><i
-                                class="fa-solid fa-file-excel"></i> Exportar BCMO</button>
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-3 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-xs">
+                            <i class="fa-solid fa-file-excel"></i> Exportar</button>
                         <button onclick="inyectarAlConsolidador()"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-sm ml-2"><i
-                                class="fa-solid fa-share-from-square"></i> Inyectar al Consolidador</button>
-                    
-<button type="button"
-        onclick="navigateToStep(0)"
-        class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200
-               text-xs font-bold px-3 py-1.5 rounded transition-colors
-               flex items-center gap-2 shadow-sm">
-    <i class="fa-solid fa-folder-open"></i> Cargar / Modificar Archivos
-</button>
-</div>
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-xs">
+                            <i class="fa-solid fa-share-from-square"></i> Inyectar → Etapa 2</button>
+                        <button type="button" onclick="navigateToStep(0)"
+                            class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-folder-open"></i> Cargar Archivos
+                        </button>
+                    </div>
                 </div>
 
                 <div id="s1_tabDashboard"
