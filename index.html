@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AnÃ¡lisis Inventario Obras v2</title>
+    <title>Análisis Inventario Obras v2</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS para Excel -->
@@ -38,9 +38,9 @@
     <header
         class="bg-white border-b border-slate-300 shadow-sm h-16 flex items-center justify-between px-6 shrink-0 z-20">
         <div class="flex items-center gap-3">
-            <!-- "Archivos y Etapas" se moviÃ³ a la barra de Etapa 1 (etapa1BCMO.html, botÃ³n "Archivos y Etapas").
-                 "Ajustes / Memoria" (FÃ³rmula Obra BF + Guardar/Cargar SesiÃ³n) y "Reiniciar Cruce" se sacaron
-                 del header: no se usaban / cada etapa ya tiene su propio botÃ³n de limpieza local
+            <!-- "Archivos y Etapas" se movió a la barra de Etapa 1 (etapa1BCMO.html, botón "Archivos y Etapas").
+                 "Ajustes / Memoria" (Fórmula Obra BF + Guardar/Cargar Sesión) y "Reiniciar Cruce" se sacaron
+                 del header: no se usaban / cada etapa ya tiene su propio botón de limpieza local
                  (Limpiar BCMO en Etapa 1, Limpiar Etapa 2 en Etapa 2). Las funciones toggleConfig() y
                  resetApp() siguen existiendo por si se necesitan restaurar en el futuro. -->
         </div>
@@ -48,7 +48,7 @@
         <!-- CONTROLES DE USUARIO Y FECHA VISIBLES -->
         <div class="flex items-center gap-4">
             <div class="flex items-center gap-2 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-lg shadow-sm"
-                title="Datos obligatorios para procesar la auditorÃ­a">
+                title="Datos obligatorios para procesar la auditoría">
                 <i class="fa-solid fa-user-tie text-indigo-700"></i>
                 <input type="text" id="auditorName" oninput="checkReadyToConsolidate()"
                     placeholder="Analista / Auditor *"
@@ -69,18 +69,22 @@
     </header>
 
     <!-- STEPPER DE ETAPAS INTERACTIVO -->
-    <div class="bg-white border-b border-slate-200 px-6 py-2.5 shrink-0 flex items-center justify-center gap-0 z-10 select-none">
-        <div class="stepper-step flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onclick="navigateToStep(0)">
+    <div
+        class="bg-white border-b border-slate-200 px-6 py-2.5 shrink-0 flex items-center justify-center gap-0 z-10 select-none">
+        <div class="stepper-step flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+            onclick="navigateToStep(0)">
             <div class="stepper-dot" id="stepDot0">1</div>
-            <span class="stepper-label" id="stepLabel0">Etapa 1 Â· BCMO</span>
+            <span class="stepper-label" id="stepLabel0">Etapa 1 · BCMO</span>
         </div>
         <div class="stepper-line" id="stepLine0"></div>
-        <div class="stepper-step flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onclick="navigateToStep(1)">
+        <div class="stepper-step flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+            onclick="navigateToStep(1)">
             <div class="stepper-dot" id="stepDot1">2</div>
-            <span class="stepper-label" id="stepLabel1">Etapa 2 Â· ConsolidaciÃ³n</span>
+            <span class="stepper-label" id="stepLabel1">Etapa 2 · Consolidación</span>
         </div>
         <div class="stepper-line" id="stepLine1"></div>
-        <div class="stepper-step flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onclick="navigateToStep(2)">
+        <div class="stepper-step flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+            onclick="navigateToStep(2)">
             <div class="stepper-dot" id="stepDot2">3</div>
             <span class="stepper-label" id="stepLabel2">Resultados</span>
         </div>
@@ -92,13 +96,13 @@
         <p class="text-sm font-semibold text-slate-600" id="globalLoadingText">Procesando...</p>
     </div>
 
-    <!-- PANEL DE CONFIGURACIÃ“N (Oculto por defecto) -->
+    <!-- PANEL DE CONFIGURACIÓN (Oculto por defecto) -->
     <div id="configPanel"
         class="hidden bg-white border-b border-slate-300 px-6 py-4 shadow-inner shrink-0 text-sm flex-col gap-4 z-10">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="flex flex-col gap-3">
                 <div class="flex items-center gap-4">
-                    <label class="font-bold text-slate-700 w-32">FÃ³rmula Obra BF:</label>
+                    <label class="font-bold text-slate-700 w-32">Fórmula Obra BF:</label>
                     <input type="text" id="formulaInput" value='LEFT(SUBSTITUTE([Nodo], " ", ""), 7)'
                         class="flex-1 p-1.5 border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none formula-input text-xs text-indigo-700 bg-slate-50">
                 </div>
@@ -106,22 +110,22 @@
                     <label class="font-bold text-slate-700">Contratistas a ignorar (Corporativo):</label>
                     <textarea id="configExcludedContratistas" rows="2"
                         class="w-full p-2 border border-slate-300 rounded focus:ring-1 focus:ring-indigo-500 outline-none text-xs bg-slate-50">Suspendida, Sin obra, En hold, Cancelada, Obra suspendida, Sin obra EXT, PP, Compras, P. Propio, Obras, Tercero</textarea>
-                    <p class="text-[10px] text-slate-400">Separadas por comas. Estas opciones serÃ¡n omitidas
-                        automÃ¡ticamente en el selector del archivo Corporativo.</p>
+                    <p class="text-[10px] text-slate-400">Separadas por comas. Estas opciones serán omitidas
+                        automáticamente en el selector del archivo Corporativo.</p>
                 </div>
             </div>
 
             <div class="flex flex-col gap-3">
                 <div class="flex flex-col gap-1 mt-auto">
-                    <label class="font-bold text-slate-700">RestauraciÃ³n y SesiÃ³n:</label>
+                    <label class="font-bold text-slate-700">Restauración y Sesión:</label>
                     <div class="flex items-center gap-2">
                         <button type="button" onclick="exportFullSessionJSON()"
                             class="bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded text-xs font-bold transition-colors flex items-center gap-2">
-                            <i class="fa-solid fa-download"></i> Guardar SesiÃ³n
+                            <i class="fa-solid fa-download"></i> Guardar Sesión
                         </button>
                         <button type="button" onclick="document.getElementById('jsonFileInput').click()"
                             class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded text-xs font-bold transition-colors flex items-center gap-2">
-                            <i class="fa-solid fa-upload"></i> Restaurar SesiÃ³n
+                            <i class="fa-solid fa-upload"></i> Restaurar Sesión
                         </button>
                         <input type="file" id="jsonFileInput" accept=".json" class="hidden"
                             onchange="importFullSessionJSON(event)">
@@ -131,7 +135,7 @@
         </div>
     </div>
 
-    <!-- ÃREA PRINCIPAL -->
+    <!-- ÁREA PRINCIPAL -->
 
     <main class="flex-1 flex flex-col min-h-0 relative" id="mainContainer">
 
@@ -169,7 +173,7 @@
     <script src="modules/consolidacion.js"></script>
     <script>
         // ============================================================================
-        // LÃ“GICA DE LA ETAPA 2 (CONSOLIDACIÃ“N Y AUDITORÃA DE AVANCES)
+        // LÓGICA DE LA ETAPA 2 (CONSOLIDACIÓN Y AUDITORÍA DE AVANCES)
         // ============================================================================
         // --- ESTADO GLOBAL Y MEMORIA ---
         let dataAvance = null;
@@ -194,8 +198,8 @@
         let stateOverrides = {};
 
         // --- Persistencia del Historial de Cambios Manuales ---
-        // Mismo patrÃ³n que ya usa Etapa 1 (excludedTasks, excludedMaterials, etc.):
-        // se guarda en localStorage para que sobreviva a un F5 o cierre de pestaÃ±a.
+        // Mismo patrón que ya usa Etapa 1 (excludedTasks, excludedMaterials, etc.):
+        // se guarda en localStorage para que sobreviva a un F5 o cierre de pestaña.
         function persistStateOverrides() {
             try {
                 localStorage.setItem('stateOverrides_v1', JSON.stringify(stateOverrides));
@@ -217,14 +221,14 @@
         }
         loadStateOverrides();
 
-        // Reglas de EstandarizaciÃ³n DinÃ¡mica (Punto 5)
+        // Reglas de Estandarización Dinámica (Punto 5)
         let standardizationRules = {
             'TERMINADO': 'TERMINADO',
             'TERMINADA - CALDARA': 'FINALIZADO',
             'CANCELADA': 'CANCELADA',
             'SIC CANCELADA': 'CANCELADA',
-            'EN EJECUCIÃ“N': 'EN EJECUCIÃ“N',
-            'EN EJECUCION': 'EN EJECUCIÃ“N',
+            'EN EJECUCIÓN': 'EN EJECUCIÓN',
+            'EN EJECUCION': 'EN EJECUCIÓN',
             'A EJECUTAR': 'A EJECUTAR',
             'CANCELADO': 'CANCELADA'
         };
@@ -232,12 +236,12 @@
 
         // Reglas Condicionales (Fecha Limite)
         let conditionalRules = [
-            { org: 'CT PARCIAL', lt: 'FINALIZADO', gte: 'CIERRE TÃ‰CNICO PARCIAL' }
+            { org: 'CT PARCIAL', lt: 'FINALIZADO', gte: 'CIERRE TÉCNICO PARCIAL' }
         ];
 
-        let ctRecategorizadosData = []; // Para la PestaÃ±a de Recategorizaciones
+        let ctRecategorizadosData = []; // Para la Pestaña de Recategorizaciones
 
-        // Filtros MÃºltiples
+        // Filtros Múltiples
         let activeStateFilters = [];
         let activeModalityFilters = [];
         let activeObraConsiderarFilters = [];
@@ -245,27 +249,27 @@
         let activeOrphansModFilters = [];
 
         let currentEditNodo = null;
-        // Guarda el "antes" (Nodo/Estado/Modalidad) del registro que se estÃ¡ editando,
+        // Guarda el "antes" (Nodo/Estado/Modalidad) del registro que se está editando,
         // para poder calcular Valor Anterior -> Nuevo Valor en el Historial de Cambios Manuales.
         let currentEditOriginals = { nodo: null, estado: '', modalidad: '' };
 
         const corporativoEstadoMapping = {
-            'CIERRE TÃ‰CNICO': 'TERMINADO',
+            'CIERRE TÉCNICO': 'TERMINADO',
             'CANCELADO': 'CANCELADA',
             'SUSPENDIDA': 'SUSPENDIDA',
             'A REASIGNAR': 'A REASIGNAR',
             'FINALIZADA': 'TERMINADO',
             'A EJECUTAR': 'A EJECUTAR',
             'CT-OBRA CANCELADA': 'CANCELADA',
-            'EN EJECUCIÃ“N': 'EN EJECUCIÃ“N',
-            'EN EJECUCION': 'EN EJECUCIÃ“N',
+            'EN EJECUCIÓN': 'EN EJECUCIÓN',
+            'EN EJECUCION': 'EN EJECUCIÓN',
             'A CANCELAR': 'CANCELADA',
             'CANCELADA': 'CANCELADA',
             'SUSPENDIDO': 'SUSPENDIDA',
             'PARCIAL FINALIZADO': 'TERMINADO'
         };
 
-        // Estilos CategÃ³ricos Profesionales
+        // Estilos Categóricos Profesionales
         const stateColorMap = {
             'TERMINADO': { badge: 'bg-emerald-100 text-emerald-800 border-emerald-200', text: 'text-emerald-700 font-semibold' },
             'FINALIZADA CON CONSUMO': { badge: 'bg-emerald-100 text-emerald-800 border-emerald-200', text: 'text-emerald-700 font-semibold' },
@@ -273,12 +277,12 @@
             'FINALIZADA CON CONSUMO PARCIAL': { badge: 'bg-teal-100 text-teal-800 border-teal-200', text: 'text-teal-700 font-bold' },
             'EN EJECUCION CON CONSUMO PARCIAL': { badge: 'bg-cyan-100 text-cyan-800 border-cyan-200', text: 'text-cyan-700 font-bold' },
             'EN EJECUCION': { badge: 'bg-blue-100 text-blue-800 border-blue-200', text: 'text-blue-700 font-semibold' },
-            'EN EJECUCIÃ“N': { badge: 'bg-blue-100 text-blue-800 border-blue-200', text: 'text-blue-700 font-semibold' },
+            'EN EJECUCIÓN': { badge: 'bg-blue-100 text-blue-800 border-blue-200', text: 'text-blue-700 font-semibold' },
             'A EJECUTAR': { badge: 'bg-slate-100 text-slate-700 border-slate-300', text: 'text-slate-600 font-semibold' },
             'CANCELADA': { badge: 'bg-rose-100 text-rose-800 border-rose-200', text: 'text-rose-700 font-semibold' },
             'SUSPENDIDA': { badge: 'bg-red-100 text-red-800 border-red-200', text: 'text-red-700 font-semibold' },
             'A REASIGNAR': { badge: 'bg-orange-100 text-orange-800 border-orange-200', text: 'text-orange-700 font-semibold' },
-            'VERIFICAR: Â¿A EJECUTAR o EN EJECUCION?': { badge: 'bg-amber-100 text-amber-800 border-amber-200', text: 'text-amber-700 font-bold' },
+            'VERIFICAR: ¿A EJECUTAR o EN EJECUCION?': { badge: 'bg-amber-100 text-amber-800 border-amber-200', text: 'text-amber-700 font-bold' },
             'DEFAULT': { badge: 'bg-purple-100 text-purple-800 border-purple-200', text: 'text-purple-700 font-semibold' }
         };
 
@@ -320,9 +324,14 @@
             }
         }
 
-        // TransiciÃ³n de cross-fade entre dos secciones, en vez de un toggle seco de "hidden"
+        // Transición de cross-fade entre dos secciones, en vez de un toggle seco de "hidden"
         function fadeSwapSection(hideEl, showEl, showDisplayClass) {
             hideEl.classList.add('fade-out-active');
+            const consEl = document.getElementById('s2_consolidacionModule');
+            if (consEl && !consEl.classList.contains('hidden') && showEl && showEl.id === 'resultsSection') {
+                consEl.classList.add('hidden');
+                consEl.classList.remove('flex', 'fade-out-active', 'fade-in-active');
+            }
             setTimeout(() => {
                 hideEl.classList.add('hidden');
                 if (showDisplayClass) hideEl.classList.remove(showDisplayClass);
@@ -340,8 +349,8 @@
             }, 180);
         }
 
-        // Actualiza el contador de una pestaÃ±a sin reescribir todo el botÃ³n
-        // (evita perder el Ã­cono/estructura). El badge solo se muestra si count > 0.
+        // Actualiza el contador de una pestaña sin reescribir todo el botón
+        // (evita perder el ícono/estructura). El badge solo se muestra si count > 0.
         function setTabBadge(spanId, count) {
             const el = document.getElementById(spanId);
             if (!el) return;
@@ -352,9 +361,13 @@
                 el.textContent = '';
                 el.classList.add('hidden');
             }
-            const diagBadgeIds = ['tabRecatCount', 'tabOrphansCount', 'tabBcmoSinCruceCount', 'tabCaducidadCount', 'tabSinModalidadCount'];
+            const diagBadgeIds = ['tabRecatCount', 'tabOrphansCount', 'tabBcmoSinCruceCount', 'tabCaducidadCount'];
             if (diagBadgeIds.includes(spanId)) {
                 s1_updateDiagBadgeTotal();
+            }
+            const preAuditBadgeIds = ['tabValidacionContratistaCount', 'tabSinModalidadCount'];
+            if (preAuditBadgeIds.includes(spanId)) {
+                s1_updatePreAuditBadgeTotal();
             }
         }
 
@@ -388,24 +401,30 @@
 
         function navigateToStep(stepIndex) {
             const bcmoEl = document.getElementById('s1_bcmoModule');
+            const consEl = document.getElementById('s2_consolidacionModule');
             const setupEl = document.getElementById('setupSection');
             const resultsEl = document.getElementById('resultsSection');
 
             if (stepIndex === 0) {
                 // Etapa 1: BCMO
+                if (consEl && !consEl.classList.contains('hidden')) {
+                    closeConsolidacionModule();
+                }
                 openBcmoModule();
             } else if (stepIndex === 1) {
-                // Etapa 2: ConsolidaciÃ³n
+                // Etapa 2: Consolidación
                 if (bcmoEl && !bcmoEl.classList.contains('hidden')) {
                     closeBcmoModule();
-                } else {
-                    showSetupSection();
                 }
+                openConsolidacionModule();
             } else if (stepIndex === 2) {
                 // Etapa 3: Resultados
                 if (dataConsolidada && dataConsolidada.length > 0) {
                     if (bcmoEl && !bcmoEl.classList.contains('hidden')) {
                         bcmoEl.classList.add('hidden');
+                    }
+                    if (consEl && !consEl.classList.contains('hidden')) {
+                        consEl.classList.add('hidden');
                     }
                     showResultsSection();
                 } else {
@@ -417,6 +436,10 @@
         function showSetupSection() {
             const resultsEl = document.getElementById('resultsSection');
             const setupEl = document.getElementById('setupSection');
+            const consEl = document.getElementById('s2_consolidacionModule');
+            const bcmoEl = document.getElementById('s1_bcmoModule');
+            if (bcmoEl) bcmoEl.classList.add('hidden');
+            if (consEl) consEl.classList.add('hidden');
             if (resultsEl.classList.contains('hidden')) {
                 setupEl.classList.remove('hidden');
             } else {
@@ -427,6 +450,9 @@
                 btnResults.classList.remove('hidden');
             }
             updateStepper(1);
+            if (typeof actualizarTarjetasEtapa2UI === 'function') {
+                actualizarTarjetasEtapa2UI();
+            }
         }
 
         function showResultsSection() {
@@ -441,7 +467,8 @@
         }
 
         function switchTab(tab) {
-            const diagTabs = ['audit', 'orphans', 'recat', 'detallepm', 'bcmosincruce', 'caducidad', 'sinmodalidad'];
+            const preAuditTabs = ['validacioncontratista', 'sinmodalidad'];
+            const diagTabs = ['audit', 'orphans', 'recat', 'detallepm', 'bcmosincruce', 'caducidad'];
 
             document.getElementById('tabDataContent').classList.toggle('hidden', tab !== 'data');
             document.getElementById('tabAuditContent').classList.toggle('hidden', tab !== 'audit');
@@ -457,6 +484,8 @@
             if (dtEl) dtEl.classList.toggle('hidden', tab !== 'detalletareas');
 
             document.getElementById('tabDataBtn').classList.toggle('active', tab === 'data');
+            const preBtn = document.getElementById('tabPreAuditBtn');
+            if (preBtn) preBtn.classList.toggle('active', preAuditTabs.includes(tab));
             document.getElementById('tabDiagBtn').classList.toggle('active', diagTabs.includes(tab));
 
             document.querySelectorAll('.diag-menu-item').forEach(el => el.classList.remove('active'));
@@ -468,11 +497,13 @@
             document.getElementById('tabCaducidadBtn').classList.toggle('active', tab === 'caducidad');
             const smBtn = document.getElementById('tabSinModalidadBtn');
             if (smBtn) smBtn.classList.toggle('active', tab === 'sinmodalidad');
-            document.getElementById('tabValidacionContratistaBtn').classList.toggle('active', tab === 'validacioncontratista');
+            const vcBtn = document.getElementById('tabValidacionContratistaBtn');
+            if (vcBtn) vcBtn.classList.toggle('active', tab === 'validacioncontratista');
             const dtBtn = document.getElementById('tabDetalleTareasBtn');
             if (dtBtn) dtBtn.classList.toggle('active', tab === 'detalletareas');
 
             s1_closeDiagMenu();
+            s1_closePreAuditMenu();
 
             const activeContentId = {
                 data: 'tabDataContent', audit: 'tabAuditContent', orphans: 'tabOrphansContent',
@@ -502,28 +533,65 @@
             if (tab === 'detalletareas' && typeof renderDetalleTareasTable === 'function') renderDetalleTareasTable();
         }
 
-        // MenÃº desplegable "DiagnÃ³stico": agrupa las 6 vistas secundarias
+        // Menú desplegable "Pre-Auditoría": agrupa Validación Contratista y Obras sin Modalidad
+        function s1_togglePreAuditMenu(evt) {
+            if (evt) evt.stopPropagation();
+            s1_closeDiagMenu();
+            const el = document.getElementById('preAuditMenuDropdown');
+            if (el) el.classList.toggle('hidden');
+        }
+
+        function s1_closePreAuditMenu() {
+            const el = document.getElementById('preAuditMenuDropdown');
+            if (el) el.classList.add('hidden');
+        }
+
+        // Menú desplegable "Diagnóstico": agrupa las vistas técnicas
         function s1_toggleDiagMenu(evt) {
             if (evt) evt.stopPropagation();
-            document.getElementById('diagMenuDropdown').classList.toggle('hidden');
+            s1_closePreAuditMenu();
+            const el = document.getElementById('diagMenuDropdown');
+            if (el) el.classList.toggle('hidden');
         }
 
         function s1_closeDiagMenu() {
-            document.getElementById('diagMenuDropdown').classList.add('hidden');
+            const el = document.getElementById('diagMenuDropdown');
+            if (el) el.classList.add('hidden');
         }
 
         document.addEventListener('click', (e) => {
-            const dropdown = document.getElementById('diagMenuDropdown');
-            const btn = document.getElementById('tabDiagBtn');
-            if (!dropdown || dropdown.classList.contains('hidden')) return;
-            if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
-                s1_closeDiagMenu();
+            const diagDropdown = document.getElementById('diagMenuDropdown');
+            const diagBtn = document.getElementById('tabDiagBtn');
+            if (diagDropdown && !diagDropdown.classList.contains('hidden')) {
+                if (!diagDropdown.contains(e.target) && !diagBtn.contains(e.target)) {
+                    s1_closeDiagMenu();
+                }
+            }
+
+            const preDropdown = document.getElementById('preAuditMenuDropdown');
+            const preBtn = document.getElementById('tabPreAuditBtn');
+            if (preDropdown && !preDropdown.classList.contains('hidden')) {
+                if (!preDropdown.contains(e.target) && !preBtn.contains(e.target)) {
+                    s1_closePreAuditMenu();
+                }
             }
         });
 
-        // Suma los badges de las 6 vistas agrupadas para mostrar el total en "DiagnÃ³stico"
+        // Suma los badges de las vistas de Pre-Auditoría
+        function s1_updatePreAuditBadgeTotal() {
+            const ids = ['tabValidacionContratistaCount', 'tabSinModalidadCount'];
+            let total = 0;
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                const n = el ? parseInt(el.textContent, 10) : 0;
+                if (!isNaN(n)) total += n;
+            });
+            setTabBadge('tabPreAuditCount', total);
+        }
+
+        // Suma los badges de las 4 vistas agrupadas para mostrar el total en "Diagnóstico"
         function s1_updateDiagBadgeTotal() {
-            const ids = ['tabRecatCount', 'tabOrphansCount', 'tabBcmoSinCruceCount', 'tabCaducidadCount', 'tabSinModalidadCount'];
+            const ids = ['tabRecatCount', 'tabOrphansCount', 'tabBcmoSinCruceCount', 'tabCaducidadCount'];
             let total = 0;
             ids.forEach(id => {
                 const el = document.getElementById(id);
@@ -535,12 +603,15 @@
 
 
         function resetApp() {
-            if (!confirm("Â¿Desea iniciar un nuevo cruce? Se limpiarÃ¡n los archivos cargados (sus modificaciones manuales se mantendrÃ¡n en memoria).")) return;
+            if (!confirm("¿Desea iniciar un nuevo cruce? Se limpiarán los archivos cargados (sus modificaciones manuales se mantendrán en memoria).")) return;
 
             dataAvance = dataAvanceCorporativo = dataBCMO = dataTarea = dataMateriales = null;
+            window.dataTarea = null;
             dataCorporativoRaw = [];
             dataConsolidada = filteredConsolidada = [];
             fileUploadDates = { avance: null, bcmo: null, tarea: null, pmovxf: null, corporativo: null };
+
+            if (typeof renderDetalleTareasTable === 'function') renderDetalleTareasTable();
 
             // Limpiar overrides manuales de BCMO Sin Cruce
             if (window.bcmoSinCruceOverrides) window.bcmoSinCruceOverrides.clear();
@@ -551,11 +622,16 @@
             actualizarEstadoUI('statusMateriales', false);
             actualizarEstadoUI('statusCorpInd', false);
 
-            document.getElementById('statusCorporativo').textContent = 'No cargado';
-            document.getElementById('btnDeleteCorp').classList.add('hidden');
+            const statCorp = document.getElementById('statusCorporativo');
+            if (statCorp) statCorp.textContent = 'No cargado';
+            const btnDelCorp = document.getElementById('btnDeleteCorp');
+            if (btnDelCorp) btnDelCorp.classList.add('hidden');
 
-            document.getElementById('btnConsolidar').disabled = true;
-            document.getElementById('btnConsolidar').className = "w-full bg-slate-300 text-slate-500 font-bold py-3 rounded shadow-sm text-sm cursor-not-allowed transition-colors";
+            const btnCons = document.getElementById('btnConsolidar');
+            if (btnCons) {
+                btnCons.disabled = true;
+                btnCons.className = "w-full sm:w-auto min-w-[240px] bg-slate-300 text-slate-500 font-bold py-3 px-6 rounded-xl shadow-sm text-sm cursor-not-allowed transition-all flex items-center justify-center gap-2";
+            }
 
             document.getElementById('resultsSection').classList.add('hidden');
             document.getElementById('resultsSection').classList.remove('flex');
@@ -564,10 +640,21 @@
             const btnResultsReset = document.getElementById('btnGoToResults');
             if (btnResultsReset) btnResultsReset.classList.add('hidden');
 
-            document.getElementById('fileInput').value = "";
-            document.getElementById('fileCorporativo').value = "";
+            // Limpiar badges de pestañas y dropdowns
+            ['tabValidacionContratistaCount', 'tabSinModalidadCount', 'tabRecatCount', 'tabOrphansCount', 'tabBcmoSinCruceCount', 'tabCaducidadCount'].forEach(id => {
+                setTabBadge(id, 0);
+            });
+
+            const fi = document.getElementById('fileInput'); if (fi) fi.value = "";
+            const fc = document.getElementById('fileCorporativo'); if (fc) fc.value = "";
+            const ft = document.getElementById('s2_fileTarea'); if (ft) ft.value = "";
+
+            if (typeof actualizarTarjetasEtapa2UI === 'function') {
+                actualizarTarjetasEtapa2UI();
+            }
+
             switchTab('data');
-            showToast("SesiÃ³n reiniciada. Listo para nuevo cruce.", "info");
+            showToast("Sesión reiniciada. Listo para nuevo cruce.", "info");
         }
 
         // --- JSON MEMORY (SESION COMPLETA) ---
@@ -611,7 +698,7 @@
             dlNode.remove();
             URL.revokeObjectURL(url);
 
-            showToast("SesiÃ³n completa guardada exitosamente.", "success");
+            showToast("Sesión completa guardada exitosamente.", "success");
         }
 
         function importFullSessionJSON(event) {
@@ -628,6 +715,7 @@
                         dataAvanceCorporativo = parsed.dataAvanceCorporativo || null;
                         dataBCMO = parsed.dataBCMO || null;
                         dataTarea = parsed.dataTarea || null;
+                        window.dataTarea = dataTarea;
                         dataMateriales = parsed.dataMateriales || null;
                         headersAvance = parsed.headersAvance || [];
                         fileUploadDates = parsed.fileUploadDates || { avance: null, bcmo: null, tarea: null, pmovxf: null, corporativo: null };
@@ -648,7 +736,7 @@
                         if (dataTarea) actualizarEstadoUI('statusTarea', true, fileUploadDates.tarea);
                         if (dataMateriales) actualizarEstadoUI('statusMateriales', true, fileUploadDates.pmovxf);
 
-                        showToast(`SesiÃ³n restaurada correctamente.`, "success");
+                        showToast(`Sesión restaurada correctamente.`, "success");
 
                         checkReadyToConsolidate();
                         if ((dataAvance || dataAvanceCorporativo) && (dataBCMO || dataTarea)) {
@@ -658,10 +746,10 @@
                             }
                         }
                     } else {
-                        throw new Error("Formato invÃ¡lido");
+                        throw new Error("Formato inválido");
                     }
                 } catch (err) {
-                    showToast("Error al cargar archivo de sesiÃ³n.", "error");
+                    showToast("Error al cargar archivo de sesión.", "error");
                 }
                 document.getElementById('jsonFileInput').value = "";
             };
@@ -670,7 +758,7 @@
 
         // --- FUNCIONES NUEVAS: CARGA CORPORATIVO ---
         function eliminarCargaCorp() {
-            if (!confirm("Â¿Desea eliminar los datos importados del archivo Corporativo?")) return;
+            if (!confirm("¿Desea eliminar los datos importados del archivo Corporativo?")) return;
             dataAvanceCorporativo = null;
             dataCorporativoRaw = [];
             fileUploadDates.corporativo = null;
@@ -681,6 +769,9 @@
             document.getElementById('btnDeleteCorp').classList.add('hidden');
 
             checkReadyToConsolidate();
+            if (typeof actualizarTarjetasEtapa2UI === 'function') {
+                actualizarTarjetasEtapa2UI();
+            }
 
             if (dataConsolidada.length > 0) {
                 procesarConsolidacion();
@@ -716,7 +807,7 @@
                     }
 
                     let json = XLSX.utils.sheet_to_json(worksheet, { range: headerRowIdx, defval: "" });
-                    
+
                     // Filtrar registros que no tengan informado el NODO
                     json = json.filter(r => String(r['Nodo'] || '').trim() !== '');
 
@@ -726,7 +817,7 @@
                     const excludedText = document.getElementById('configExcludedContratistas').value || "";
                     const excludedList = excludedText.split(',').map(s => s.trim().toUpperCase()).filter(s => s);
 
-                    // Poblar modal con Contratistas Ãºnicos vÃ¡lidos
+                    // Poblar modal con Contratistas únicos válidos
                     const contratistas = [...new Set(json.map(r => r['Contratista']).filter(c => c && String(c).trim() !== ''))]
                         .filter(c => !excludedList.includes(String(c).trim().toUpperCase()))
                         .sort();
@@ -737,7 +828,7 @@
                     if (contratistas.length > 0) {
                         document.getElementById('modalFiltroContratista').classList.remove('hidden');
                     } else {
-                        showToast("No se encontraron contratistas vÃ¡lidas (todas fueron filtradas o el archivo estÃ¡ vacÃ­o).", "error");
+                        showToast("No se encontraron contratistas válidas (todas fueron filtradas o el archivo está vacío).", "error");
                     }
                 } catch (error) {
                     showToast("No se pudo leer el archivo corporativo.", "error");
@@ -771,15 +862,15 @@
             const filtered = dataCorporativoRaw.filter(r => selectedOptions.includes(r['Contratista']));
 
             dataAvanceCorporativo = filtered.map(row => {
-                // CÃ¡lculo Fecha Cierre MÃ­nima
+                // Cálculo Fecha Cierre Mínima
                 const fFin = row['Fin'];
                 const fPuesta = row['Puesta en M.'];
-                const fCierre = row['Cierre TÃ©cnico'];
+                const fCierre = row['Cierre Técnico'];
                 const fechaMinima = getMinDate(fFin, fPuesta, fCierre);
 
                 const fMinStr = fechaMinima ? fechaMinima.toLocaleDateString('es-AR') : "";
 
-                // Mapeo de Estado Corporativo segÃºn requerimiento
+                // Mapeo de Estado Corporativo según requerimiento
                 let rawEstado = String(row['ESTADO'] || '').trim();
                 let upperEstado = rawEstado.toUpperCase();
                 let estadoMapeado = corporativoEstadoMapping[upperEstado] || upperEstado;
@@ -806,9 +897,12 @@
             document.getElementById('modalFiltroContratista').classList.add('hidden');
             showToast(`Se importaron ${dataAvanceCorporativo.length} registros de ${resumenNombres}.`, "success");
             checkReadyToConsolidate();
+            if (typeof actualizarTarjetasEtapa2UI === 'function') {
+                actualizarTarjetasEtapa2UI();
+            }
         }
 
-        // --- MOTOR DE FÃ“RMULAS EXCEL ---
+        // --- MOTOR DE FÓRMULAS EXCEL ---
         function evaluateExcelFormula(formula, context) {
             try {
                 let f = formula.replace(/\[Nodo\]/gi, `'${context.nodo || ""}'`);
@@ -824,7 +918,7 @@
             } catch (e) { return "ERR!"; }
         }
 
-        // --- INICIALIZACIÃ“N ---
+        // --- INICIALIZACIÓN ---
         document.addEventListener("DOMContentLoaded", () => {
             const globalAuditInput = document.getElementById('globalAuditDate');
             if (globalAuditInput) {
@@ -834,13 +928,17 @@
             const dropZone = document.getElementById('dropZone');
             const fileInput = document.getElementById('fileInput');
 
-            dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
-            dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-            dropZone.addEventListener('drop', (e) => {
-                e.preventDefault(); dropZone.classList.remove('dragover');
-                if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
-            });
-            fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFiles(e.target.files); });
+            if (dropZone) {
+                dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+                dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault(); dropZone.classList.remove('dragover');
+                    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+                });
+            }
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => { if (e.target.files.length) handleFiles(e.target.files); });
+            }
         });
 
         function handleFiles(files) {
@@ -888,17 +986,21 @@
                 showToast("El archivo de Avance de Obras ahora se procesa exclusivamente en la Etapa 1. Carga cancelada.", "error");
                 return;
             } else if (hStr.includes('ESTADO DE LIQUIDACION') || (hStr.includes('ENTREGADO') && hStr.includes('CONSUMIDO') && hStr.includes('TAREA'))) {
-                showToast("El archivo BCMO debe procesarse e inyectarse obligatoriamente desde el mÃ³dulo de la Etapa 1 (Arriba).", "error");
+                showToast("El archivo BCMO debe procesarse e inyectarse obligatoriamente desde el módulo de la Etapa 1 (Arriba).", "error");
             } else if (hStr.includes('PERMITE DECLARAR MATERIAL') && hStr.includes('ESTADO TAREA')) {
                 dataTarea = procesarHistorialTareas(data);
+                window.dataTarea = dataTarea;
                 fileUploadDates.tarea = dateStr;
                 actualizarEstadoUI('statusTarea', true, dateStr);
+                if (typeof renderDetalleTareasTable === 'function') renderDetalleTareasTable();
             } else if (hStr.includes('OBRA BF') || hStr.includes('DETALLE TKT')) {
                 dataTarea = normalizarDataset(data);
+                window.dataTarea = dataTarea;
                 fileUploadDates.tarea = dateStr;
                 actualizarEstadoUI('statusTarea', true, dateStr);
+                if (typeof renderDetalleTareasTable === 'function') renderDetalleTareasTable();
             } else if (hStr.includes('MOTIVO') && hStr.includes('FECHA_TRX')) {
-                showToast("El archivo PMOVXF debe cargarse e inyectarse desde el mÃ³dulo de la Etapa 1.", "error");
+                showToast("El archivo PMOVXF debe cargarse e inyectarse desde el módulo de la Etapa 1.", "error");
             }
             checkReadyToConsolidate();
             if (typeof window.renderRecatTable === 'function') window.renderRecatTable();
@@ -963,7 +1065,7 @@
             return mapped;
         }
 
-        // La funciÃ³n aplicarEstandarizacionInPlace fue extraÃ­da a modules/recategorizacion.js
+        // La función aplicarEstandarizacionInPlace fue extraída a modules/recategorizacion.js
 
         function actualizarEstadoUI(id, success, date) {
             const el = document.getElementById(id);
@@ -979,9 +1081,13 @@
             const title = labelMap[id] || id;
 
             if (success) {
-                el.innerHTML = `<span class="text-slate-800 font-medium"><i class="fa-solid fa-circle-check text-emerald-600 mr-2"></i>${title}</span><span class="text-[10px] text-slate-400 italic">${date}</span>`;
+                el.innerHTML = `<span class="text-slate-100 font-medium flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-400"></i>${title}</span><span class="text-[10px] text-slate-300/80 italic font-mono">${date}</span>`;
             } else {
-                el.innerHTML = `<span class="text-slate-500"><i class="fa-regular fa-circle mr-2"></i>${title}</span><span class="text-[10px] text-slate-400 italic"></span>`;
+                el.innerHTML = `<span class="text-slate-400 flex items-center gap-2"><i class="fa-regular fa-circle text-slate-500"></i>${title}</span><span class="text-[10px] text-slate-500 italic"></span>`;
+            }
+
+            if (typeof actualizarTarjetasEtapa2UI === 'function') {
+                actualizarTarjetasEtapa2UI();
             }
         }
 
@@ -1020,7 +1126,7 @@
 
         // --- PROCESAMIENTO CORE ---
         // procesarConsolidacion(), _procesarConsolidacionCore(), toggleStateFilter(),
-        // toggleModalityFilter(), renderPreview() han sido extraÃ­dos a modules/consolidacion.js
+        // toggleModalityFilter(), renderPreview() han sido extraídos a modules/consolidacion.js
 
         window.toggleOrphanStateFilter = function (estado) {
             const idx = activeOrphansStateFilters.indexOf(estado);
@@ -1037,32 +1143,32 @@
         };
 
         // --- FUNCIONES DE ESTANDARIZACION UI ---
-        // Toda la lÃ³gica de estandarizaciÃ³n, reglas y tabla recategorizada se encuentra en modules/recategorizacion.js
+        // Toda la lógica de estandarización, reglas y tabla recategorizada se encuentra en modules/recategorizacion.js
 
         // ============================================================
         // BCMO SIN CRUCE EN AVANCE DE OBRAS
         // ============================================================
-        // La lÃ³gica de la SOLAPA BCMO SIN CRUCE ha sido migrada a modules/bcmoSinCruce.js
+        // La lógica de la SOLAPA BCMO SIN CRUCE ha sido migrada a modules/bcmoSinCruce.js
 
         // ============================================================
         // GESTOR DE CADUCIDAD
         // ============================================================
-        // La lÃ³gica del GESTOR DE CADUCIDAD ha sido migrada a modules/caducidad.js
+        // La lógica del GESTOR DE CADUCIDAD ha sido migrada a modules/caducidad.js
 
         // ============================================================
-        // NODOS SIN REGISTRO (HUÃ‰RFANOS) Y SISTEMA DE EDICIÃ“N
+        // NODOS SIN REGISTRO (HUÉRFANOS) Y SISTEMA DE EDICIÓN
         // ============================================================
-        // La lÃ³gica de HUÃ‰RFANOS Y EDICIÃ“N DE ESTADO ha sido migrada a modules/orphans.js
+        // La lógica de HUÉRFANOS Y EDICIÓN DE ESTADO ha sido migrada a modules/orphans.js
 
         // NOTA: renderAuditTable(), removeOverride(), showDetails() y closeDetailsModal()
-        // viven exclusivamente en modules/auditoria.js. Antes habÃ­a "stubs" vacÃ­os acÃ¡
-        // que sobrescribÃ­an esas funciones reales por orden de carga de scripts â€” se
+        // viven exclusivamente en modules/auditoria.js. Antes había "stubs" vacíos acá
+        // que sobrescribían esas funciones reales por orden de carga de scripts — se
         // eliminaron porque causaban que el Historial de Cambios Manuales no se pintara.
 
-        // La lÃ³gica de la SOLAPA DETALLE DE OBRAS (PM) ha sido migrada a modules/detallePM.js
+        // La lógica de la SOLAPA DETALLE DE OBRAS (PM) ha sido migrada a modules/detallePM.js
 
-        // --- EXPORTACIÃ“N EXCEL NATIVA ---
-        // exportToExcel() fue extraÃ­da a modules/consolidacion.js
+        // --- EXPORTACIÓN EXCEL NATIVA ---
+        // exportToExcel() fue extraída a modules/consolidacion.js
 
 
         // ============================================================================
@@ -1105,6 +1211,404 @@
             updateStepper(1);
         }
 
+        function openConsolidacionModule() {
+            const bcmoEl = document.getElementById('s1_bcmoModule');
+            if (bcmoEl && !bcmoEl.classList.contains('hidden')) {
+                closeBcmoModule();
+            }
+            const el = document.getElementById('s2_consolidacionModule');
+            if (!el) return;
+            el.classList.remove('hidden');
+            el.classList.add('flex', 'fade-out-active');
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                el.classList.remove('fade-out-active');
+                el.classList.add('fade-in-active');
+            }));
+            updateStepper(1);
+            actualizarTarjetasEtapa2UI();
+        }
+
+        function closeConsolidacionModule() {
+            const el = document.getElementById('s2_consolidacionModule');
+            if (!el) return;
+            el.classList.add('fade-out-active');
+            setTimeout(() => {
+                el.classList.add('hidden');
+                el.classList.remove('flex', 'fade-out-active', 'fade-in-active');
+            }, 180);
+            updateStepper(1);
+            actualizarTarjetasEtapa2UI();
+        }
+
+        function s2_handleFileTarea(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                    s2_procesarDatosTarea(json, file.name);
+                } catch (err) {
+                    const textReader = new FileReader();
+                    textReader.onload = (te) => {
+                        const text = te.target.result;
+                        let delimiter = text.split('\n')[0].includes('\t') ? '\t' : (text.split('\n')[0].includes(';') ? ';' : ',');
+                        const lines = text.split('\n');
+                        const headers = lines[0].split(delimiter).map(h => h.trim());
+                        const json = [];
+                        for (let i = 1; i < lines.length; i++) {
+                            if (!lines[i].trim()) continue;
+                            const values = lines[i].split(delimiter);
+                            const row = {};
+                            for (let j = 0; j < headers.length; j++) row[headers[j]] = values[j] ? values[j].trim() : "";
+                            json.push(row);
+                        }
+                        s2_procesarDatosTarea(json, file.name);
+                    };
+                    textReader.readAsText(file, 'ISO-8859-1');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function s2_procesarDatosTarea(json, filename) {
+            if (!json || json.length === 0) {
+                showToast("El archivo Sistema TAREA está vacío.", "error");
+                return;
+            }
+            const dateStr = new Date().toLocaleString('es-AR');
+            const headers = Object.keys(json[0] || {});
+            const hStr = headers.join(' ').toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+            if (hStr.includes('PERMITE DECLARAR MATERIAL') && hStr.includes('ESTADO TAREA')) {
+                dataTarea = procesarHistorialTareas(json);
+            } else {
+                dataTarea = normalizarDataset(json);
+            }
+            window.dataTarea = dataTarea;
+            fileUploadDates.tarea = dateStr;
+            actualizarEstadoUI('statusTarea', true, dateStr);
+            actualizarTarjetasEtapa2UI();
+            checkReadyToConsolidate();
+            if (typeof window.renderRecatTable === 'function') window.renderRecatTable();
+            if (typeof renderDetalleTareasTable === 'function') renderDetalleTareasTable();
+            showToast("Sistema TAREA cargado exitosamente.", "success");
+        }
+
+        function s2_eliminarTarea() {
+            dataTarea = null;
+            window.dataTarea = null;
+            fileUploadDates.tarea = null;
+            const input = document.getElementById('s2_fileTarea');
+            if (input) input.value = '';
+            actualizarEstadoUI('statusTarea', false);
+            actualizarTarjetasEtapa2UI();
+            checkReadyToConsolidate();
+            if (typeof window.renderRecatTable === 'function') window.renderRecatTable();
+            if (typeof renderDetalleTareasTable === 'function') renderDetalleTareasTable();
+            showToast("Sistema TAREA removido.", "info");
+        }
+
+        function actualizarTarjetasEtapa2UI() {
+            // 1. Tarjeta 1: BCMO
+            const cardBCMO = document.getElementById('s2_cardBCMO');
+            const badgeBCMO = document.getElementById('s2_badgeBCMO');
+            const bodyBCMO = document.getElementById('s2_bodyBCMO');
+            const pillBCMO = document.getElementById('s2_pillBCMO');
+
+            if (dataBCMO && dataBCMO.length > 0) {
+                if (cardBCMO) {
+                    cardBCMO.className = "bg-emerald-50/40 border border-emerald-300 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all relative overflow-hidden border-t-4 border-t-emerald-500";
+                }
+                if (badgeBCMO) {
+                    badgeBCMO.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 shadow-xs";
+                    badgeBCMO.innerHTML = '<i class="fa-solid fa-lock text-emerald-700"></i> Precargado de Etapa 1 (Bloqueado)';
+                }
+                if (bodyBCMO) {
+                    bodyBCMO.innerHTML = `
+                        <div class="bg-white border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900 shadow-2xs">
+                            <div class="font-bold flex items-center gap-1.5 text-emerald-800 mb-1">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                <span>${dataBCMO.length.toLocaleString('es-AR')} registros de consumos</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500">${fileUploadDates.bcmo || 'Inyectado de Etapa 1'}</div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 italic mt-2 flex items-start gap-1">
+                            <i class="fa-solid fa-lock text-slate-400 mt-0.5 shrink-0"></i>
+                            <span><b>Bloqueado:</b> Archivo depurado en la Etapa 1. No se puede modificar aquí.</span>
+                        </p>
+                    `;
+                }
+                if (pillBCMO) {
+                    pillBCMO.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[11px]";
+                    pillBCMO.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> BCMO Precargado';
+                }
+            } else {
+                if (cardBCMO) {
+                    cardBCMO.className = "bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all relative overflow-hidden border-t-4 border-t-blue-500";
+                }
+                if (badgeBCMO) {
+                    badgeBCMO.className = "text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold flex items-center gap-1";
+                    badgeBCMO.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Pendiente Etapa 1';
+                }
+                if (bodyBCMO) {
+                    bodyBCMO.innerHTML = `
+                        <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-lg text-xs text-amber-900 mb-2">
+                            Requiere procesar consumos y depuración en el Analizador BCMO de la Etapa 1.
+                        </div>
+                        <button type="button" onclick="openBcmoModule()"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors text-xs shadow-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Ir a Etapa 1 para Cargar BCMO
+                        </button>
+                    `;
+                }
+                if (pillBCMO) {
+                    pillBCMO.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]";
+                    pillBCMO.innerHTML = '<i class="fa-regular fa-circle text-slate-400"></i> BCMO';
+                }
+            }
+
+            // 2. Tarjeta 2: PMOVXF
+            const cardPMOVXF = document.getElementById('s2_cardPMOVXF');
+            const badgePMOVXF = document.getElementById('s2_badgePMOVXF');
+            const bodyPMOVXF = document.getElementById('s2_bodyPMOVXF');
+            const pillPMOVXF = document.getElementById('s2_pillPMOVXF');
+
+            if (dataMateriales && dataMateriales.length > 0) {
+                if (cardPMOVXF) {
+                    cardPMOVXF.className = "bg-emerald-50/40 border border-emerald-300 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all relative overflow-hidden border-t-4 border-t-emerald-500";
+                }
+                if (badgePMOVXF) {
+                    badgePMOVXF.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 shadow-xs";
+                    badgePMOVXF.innerHTML = '<i class="fa-solid fa-lock text-emerald-700"></i> Precargado de Etapa 1 (Bloqueado)';
+                }
+                if (bodyPMOVXF) {
+                    bodyPMOVXF.innerHTML = `
+                        <div class="bg-white border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900 shadow-2xs">
+                            <div class="font-bold flex items-center gap-1.5 text-emerald-800 mb-1">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                <span>${dataMateriales.length.toLocaleString('es-AR')} movimientos transferidos</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500">${fileUploadDates.pmovxf || 'Inyectado de Etapa 1'}</div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 italic mt-2 flex items-start gap-1">
+                            <i class="fa-solid fa-lock text-slate-400 mt-0.5 shrink-0"></i>
+                            <span><b>Bloqueado:</b> Trazabilidad sincronizada desde Etapa 1.</span>
+                        </p>
+                    `;
+                }
+                if (pillPMOVXF) {
+                    pillPMOVXF.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[11px]";
+                    pillPMOVXF.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> PMOVXF Precargado';
+                }
+            } else {
+                if (cardPMOVXF) {
+                    cardPMOVXF.className = "bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all relative overflow-hidden border-t-4 border-t-amber-500";
+                }
+                if (badgePMOVXF) {
+                    badgePMOVXF.className = "text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded font-semibold";
+                    badgePMOVXF.textContent = 'No inyectado (Opcional)';
+                }
+                if (bodyPMOVXF) {
+                    bodyPMOVXF.innerHTML = `
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-500 mb-2">
+                            No se cargó PMOVXF en la Etapa 1. Si requiere trazabilidad de entregas, cárguelo en el Paso 4 de Etapa 1.
+                        </div>
+                    `;
+                }
+                if (pillPMOVXF) {
+                    pillPMOVXF.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]";
+                    pillPMOVXF.innerHTML = '<i class="fa-regular fa-circle text-slate-400"></i> PMOVXF';
+                }
+            }
+
+            // 3. Tarjeta 3: Avance de Obras (Principal)
+            const cardAvance = document.getElementById('s2_cardAvance');
+            const badgeAvance = document.getElementById('s2_badgeAvance');
+            const bodyAvance = document.getElementById('s2_bodyAvance');
+            const pillAvance = document.getElementById('s2_pillAvance');
+
+            if (dataAvance && dataAvance.length > 0) {
+                if (cardAvance) {
+                    cardAvance.className = "bg-emerald-50/40 border border-emerald-300 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all relative overflow-hidden border-t-4 border-t-emerald-500";
+                }
+                if (badgeAvance) {
+                    badgeAvance.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold flex items-center gap-1.5 shadow-xs";
+                    badgeAvance.innerHTML = '<i class="fa-solid fa-lock text-emerald-700"></i> Sincronizado de Etapa 1 (Bloqueado)';
+                }
+                if (bodyAvance) {
+                    bodyAvance.innerHTML = `
+                        <div class="bg-white border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900 shadow-2xs">
+                            <div class="font-bold flex items-center gap-1.5 text-emerald-800 mb-1">
+                                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                                <span>${dataAvance.length.toLocaleString('es-AR')} obras para ${s1_empresaAuditada || 'Contratista'}</span>
+                            </div>
+                            <div class="text-[11px] text-slate-500">${fileUploadDates.avance || 'Transferido de Etapa 1'}</div>
+                        </div>
+                        <p class="text-[11px] text-slate-500 italic mt-2 flex items-start gap-1">
+                            <i class="fa-solid fa-lock text-slate-400 mt-0.5 shrink-0"></i>
+                            <span><b>Bloqueado:</b> Filtrado para la empresa auditada en Etapa 1.</span>
+                        </p>
+                    `;
+                }
+                if (pillAvance) {
+                    pillAvance.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[11px]";
+                    pillAvance.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> Avance Listo';
+                }
+            } else {
+                if (cardAvance) {
+                    cardAvance.className = "bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all relative overflow-hidden border-t-4 border-t-orange-500";
+                }
+                if (badgeAvance) {
+                    badgeAvance.className = "text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold flex items-center gap-1";
+                    badgeAvance.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Pendiente';
+                }
+                if (bodyAvance) {
+                    bodyAvance.innerHTML = `
+                        <div class="p-3 bg-amber-50/70 border border-amber-200 rounded-lg text-xs text-amber-900 mb-2">
+                            El Avance General se carga en el Paso 3 de la Etapa 1 y se transfiere automáticamente.
+                        </div>
+                        <button type="button" onclick="openBcmoModule()"
+                            class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-3 rounded-lg transition-colors text-xs shadow-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Cargar Avance en Etapa 1
+                        </button>
+                    `;
+                }
+                if (pillAvance) {
+                    pillAvance.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]";
+                    pillAvance.innerHTML = '<i class="fa-regular fa-circle text-slate-400"></i> Avance';
+                }
+            }
+
+            // 4. Tarjeta 4: Sistema TAREA (Opcional)
+            const cardTarea = document.getElementById('s2_cardTarea');
+            const badgeTarea = document.getElementById('s2_badgeTarea');
+            const bodyTarea = document.getElementById('s2_bodyTarea');
+            const pillTarea = document.getElementById('s2_pillTarea');
+
+            if (dataTarea && dataTarea.length > 0) {
+                if (cardTarea) {
+                    cardTarea.className = "bg-emerald-50/40 border border-emerald-300 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all relative overflow-hidden border-t-4 border-t-emerald-500";
+                }
+                if (badgeTarea) {
+                    badgeTarea.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold flex items-center gap-1";
+                    badgeTarea.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> Cargado (Opcional)';
+                }
+                if (bodyTarea) {
+                    bodyTarea.innerHTML = `
+                        <div class="bg-white border border-emerald-200 rounded-lg p-3 text-xs text-emerald-900 shadow-2xs flex items-center justify-between gap-2">
+                            <div>
+                                <div class="font-bold text-emerald-800">${dataTarea.length.toLocaleString('es-AR')} registros</div>
+                                <div class="text-[11px] text-slate-500">${fileUploadDates.tarea || 'Cargado'}</div>
+                            </div>
+                            <button type="button" onclick="s2_eliminarTarea()" class="text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 w-7 h-7 rounded-lg flex items-center justify-center transition-colors shadow-2xs" title="Eliminar TAREA">
+                                <i class="fa-solid fa-trash-can text-xs"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+                if (pillTarea) {
+                    pillTarea.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[11px]";
+                    pillTarea.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> TAREA Listo';
+                }
+            } else {
+                if (cardTarea) {
+                    cardTarea.className = "bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all relative overflow-hidden border-t-4 border-t-indigo-500";
+                }
+                if (badgeTarea) {
+                    badgeTarea.className = "text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-semibold";
+                    badgeTarea.textContent = 'Opcional';
+                }
+                if (bodyTarea) {
+                    bodyTarea.innerHTML = `
+                        <input type="file" id="s2_fileTarea" accept=".xlsx, .xls, .csv" class="hidden" onchange="s2_handleFileTarea(event)">
+                        <button type="button" onclick="document.getElementById('s2_fileTarea').click()"
+                            class="w-full bg-white hover:bg-slate-50 text-indigo-600 border border-indigo-200 hover:border-indigo-300 font-semibold py-2 px-3 rounded-lg transition-colors text-xs shadow-sm flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Cargar Sistema TAREA
+                        </button>
+                        <div class="text-[11px] text-slate-400 italic text-center mt-1">No cargado (Opcional)</div>
+                    `;
+                }
+                if (pillTarea) {
+                    pillTarea.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]";
+                    pillTarea.innerHTML = '<i class="fa-regular fa-circle text-slate-400"></i> TAREA (Opcional)';
+                }
+            }
+
+            // 5. Tarjeta 5: Avance Corporativo (Opcional)
+            const cardCorp = document.getElementById('s2_cardCorp');
+            const badgeCorp = document.getElementById('s2_badgeCorp');
+            const btnDeleteCorp = document.getElementById('btnDeleteCorp');
+            const pillCorp = document.getElementById('s2_pillCorp');
+
+            if (dataCorporativoRaw && dataCorporativoRaw.length > 0) {
+                if (cardCorp) {
+                    cardCorp.className = "bg-emerald-50/40 border border-emerald-300 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all relative overflow-hidden border-t-4 border-t-emerald-500";
+                }
+                if (badgeCorp) {
+                    badgeCorp.className = "text-[10px] bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold flex items-center gap-1";
+                    badgeCorp.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> Cargado (Opcional)';
+                }
+                if (btnDeleteCorp) btnDeleteCorp.classList.remove('hidden');
+                if (pillCorp) {
+                    pillCorp.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[11px]";
+                    pillCorp.innerHTML = '<i class="fa-solid fa-check text-emerald-600"></i> Corp Listo';
+                }
+            } else {
+                if (cardCorp) {
+                    cardCorp.className = "bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md flex flex-col justify-between transition-all relative overflow-hidden border-t-4 border-t-teal-500";
+                }
+                if (badgeCorp) {
+                    badgeCorp.className = "text-[10px] bg-teal-50 text-teal-700 px-2 py-0.5 rounded font-semibold";
+                    badgeCorp.textContent = 'Opcional';
+                }
+                if (btnDeleteCorp) btnDeleteCorp.classList.add('hidden');
+                if (pillCorp) {
+                    pillCorp.className = "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium text-[11px]";
+                    pillCorp.innerHTML = '<i class="fa-regular fa-circle text-slate-400"></i> Corp (Opcional)';
+                }
+            }
+
+            // Sincronizar indicador de requisitos en pie del módulo
+            const txtReq = document.getElementById('s2_txtRequisitos');
+            const infoConsolidar = document.getElementById('s2_statusConsolidarInfo');
+            const auditor = document.getElementById('auditorName') ? document.getElementById('auditorName').value.trim() : '';
+            const auditDate = document.getElementById('globalAuditDate') ? document.getElementById('globalAuditDate').value : '';
+
+            const tieneAvance = !!((dataAvance && dataAvance.length > 0) || (dataAvanceCorporativo && dataAvanceCorporativo.length > 0));
+            const tieneBCMOoTarea = !!((dataBCMO && dataBCMO.length > 0) || (dataTarea && dataTarea.length > 0));
+
+            if (txtReq) {
+                if (tieneAvance && tieneBCMOoTarea) {
+                    txtReq.innerHTML = '<span class="text-emerald-700 font-bold flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Archivos requeridos listos.</span>';
+                } else {
+                    txtReq.innerHTML = '<span class="text-amber-700 font-medium flex items-center gap-1"><i class="fa-solid fa-circle-info"></i> Requiere Avance y (BCMO o TAREA).</span>';
+                }
+            }
+
+            if (infoConsolidar) {
+                if (!auditor || !auditDate) {
+                    infoConsolidar.innerHTML = '<span class="text-amber-600 font-semibold">⚠️ Recuerde completar el campo "Analista / Auditor" y la fecha en la barra superior.</span>';
+                } else if (tieneAvance && tieneBCMOoTarea) {
+                    infoConsolidar.innerHTML = '<span class="text-emerald-700 font-semibold">✓ Todos los datos requeridos están listos para consolidar.</span>';
+                } else {
+                    infoConsolidar.textContent = 'Se cruzará la información depurada para auditoría integral.';
+                }
+            }
+
+            checkReadyToConsolidate();
+        }
+
+        window.openConsolidacionModule = openConsolidacionModule;
+        window.closeConsolidacionModule = closeConsolidacionModule;
+        window.actualizarTarjetasEtapa2UI = actualizarTarjetasEtapa2UI;
+        window.s2_handleFileTarea = s2_handleFileTarea;
+        window.s2_eliminarTarea = s2_eliminarTarea;
+
         function inyectarAlConsolidador() {
             if (s1_processedData.length === 0) {
                 showToast("No hay datos del BCMO procesados para inyectar.", "error"); return;
@@ -1119,12 +1623,12 @@
                 '_N_LOCALIZADOR_COD': item.LocalizadorCod
             }));
 
-            fileUploadDates.bcmo = "Inyectado de MÃ³dulo BCMO: " + new Date().toLocaleString('es-AR');
+            fileUploadDates.bcmo = "Inyectado de Módulo BCMO: " + new Date().toLocaleString('es-AR');
             actualizarEstadoUI('statusBCMO', true, fileUploadDates.bcmo);
 
             if (s1_dataMateriales && s1_dataMateriales.length > 0) {
                 dataMateriales = s1_dataMateriales;
-                fileUploadDates.pmovxf = "Inyectado de MÃ³dulo Etapa 1: " + s1_fileUploadDates.pmovxf;
+                fileUploadDates.pmovxf = "Inyectado de Módulo Etapa 1: " + s1_fileUploadDates.pmovxf;
                 actualizarEstadoUI('statusMateriales', true, fileUploadDates.pmovxf);
             }
 
@@ -1149,10 +1653,11 @@
 
             checkReadyToConsolidate();
             closeBcmoModule();
+            actualizarTarjetasEtapa2UI();
 
             if (dataConsolidada.length > 0) {
                 procesarConsolidacion();
-                showToast("Resultados inyectados y cruce actualizado automÃ¡ticamente.", "success");
+                showToast("Resultados inyectados y cruce actualizado automáticamente.", "success");
             } else {
                 showToast("Resultados inyectados correctamente al consolidador.", "success");
             }
@@ -1160,7 +1665,7 @@
 
 
         // ============================================================================
-        // LÃ“GICA ETAPA 1 (ANALIZADOR BCMO - ENCAPSULADA PARA NO AFECTAR ETAPA 2)
+        // LÓGICA ETAPA 1 (ANALIZADOR BCMO - ENCAPSULADA PARA NO AFECTAR ETAPA 2)
         // ============================================================================
         const s1_defaultTasks = ["BERISSO", "DEPO", "DEVO", "DEVOEDIF", "DEVOIMP", "DEVORED", "EDARM", "EDCORP", "EDIF", "HUB", "IMP", "INST", "MOVI", "MRED", "OTROS", "REDCORP", "REFRED", "RIMP", "RINST", "RMRED", "RSERV", "SERV", "SORED", "TPRO", "UHF"];
         const s1_defaultMats = ["Precintos", "Separador de linga", "Manguitos protectores"];
@@ -1180,7 +1685,7 @@
         let s1_dataLocalizadores = null;          // Datos crudos del Reporte de Localizadores
         let s1_localizadorMap = null;              // Map: LOCALIZADOR.toUpperCase() -> NOMBRE PROV
         let s1_secundarioIndex = {};               // { OBRA_UPPER: [ {Contratista, LocalizadorCod, Item, Descripcion, Entregado, Consumido, Diferencia}, ... ] }
-        let s1_otraECData = [];                    // Resultado de la bÃºsqueda transversal ("Consumo en Otra EC")
+        let s1_otraECData = [];                    // Resultado de la búsqueda transversal ("Consumo en Otra EC")
         let s1_obrasReasignadasData = [];
         // --- Obras Excluidas por Tarea (nueva solapa) ---
         let s1_excluidasPorTareaData = [];      // Array de grupos: { Contratista, Obra, Tarea, Entregado, Consumido, Diferencia, Detalles }
@@ -1262,36 +1767,39 @@
 
             // Bloquear acceso a Verificar si no hay PM cargado
             if (tab === 'verification' && (!s1_dataMateriales || s1_dataMateriales.length === 0)) {
-                showToastGlobal("El PMOVXF es obligatorio para acceder a \"Obras a Verificar\". CÃ¡rguelo antes de analizar.", "error");
+                showToastGlobal("El PMOVXF es obligatorio para acceder a \"Obras a Verificar\". Cárguelo antes de analizar.", "error");
                 return;
             }
 
+            // Ocultar todos los paneles
             [elDash, elVerif, elInvalid, elReas, elOtraEC, elExcluidas].forEach(el => { if (el) el.classList.add('hidden'); });
-            btnDash.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive";
-            btnVerif.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive relative";
-            if (btnInvalid) btnInvalid.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-rose-600 font-bold";
-            if (btnReas) btnReas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-orange-600 font-bold";
-            if (btnOtraEC) btnOtraEC.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-purple-600 font-bold";
-            if (btnExcluidas) btnExcluidas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-inactive text-amber-600 font-bold";
 
+            // Resetear todos los botones a inactivo (clases unificadas)
+            [btnDash, btnVerif, btnInvalid, btnReas, btnOtraEC, btnExcluidas].forEach(btn => {
+                if (btn) {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // Activar el tab seleccionado
             if (tab === 'dashboard') {
                 elDash.classList.remove('hidden');
-                btnDash.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active";
+                btnDash.classList.add('active');
             } else if (tab === 'verification') {
                 elVerif.classList.remove('hidden');
-                btnVerif.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active relative";
+                btnVerif.classList.add('active');
             } else if (tab === 'invalid') {
                 if (elInvalid) elInvalid.classList.remove('hidden');
-                if (btnInvalid) btnInvalid.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-rose-700 font-bold border-b-2 border-rose-600";
+                if (btnInvalid) btnInvalid.classList.add('active');
             } else if (tab === 'reasignadas') {
                 if (elReas) elReas.classList.remove('hidden');
-                if (btnReas) btnReas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-orange-700 font-bold border-b-2 border-orange-500";
+                if (btnReas) btnReas.classList.add('active');
             } else if (tab === 'otraec') {
                 if (elOtraEC) elOtraEC.classList.remove('hidden');
-                if (btnOtraEC) btnOtraEC.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-purple-700 font-bold border-b-2 border-purple-500";
+                if (btnOtraEC) btnOtraEC.classList.add('active');
             } else if (tab === 'excluidas') {
                 if (elExcluidas) elExcluidas.classList.remove('hidden');
-                if (btnExcluidas) btnExcluidas.className = "px-4 py-2 text-sm rounded-t-lg transition-colors s1-tab-active text-amber-800 font-bold border-b-2 border-amber-500";
+                if (btnExcluidas) btnExcluidas.classList.add('active');
                 s1_renderExcluidasPorTareaTable();
             }
         }
@@ -1305,9 +1813,9 @@
                 document.getElementById('s1_resultsWorkspace').classList.add('hidden');
                 document.getElementById('s1_loader').classList.remove('hidden');
                 setTimeout(() => s1_analyzeData(s1_currentRawData), 200);
-                showToastGlobal("ConfiguraciÃ³n BCMO aplicada.", "success");
+                showToastGlobal("Configuración BCMO aplicada.", "success");
             } else {
-                s1_toggleConfigPanel(); showToastGlobal("ConfiguraciÃ³n BCMO guardada.", "success");
+                s1_toggleConfigPanel(); showToastGlobal("Configuración BCMO guardada.", "success");
             }
         }
 
@@ -1370,7 +1878,7 @@
             const dateStr = new Date().toLocaleString('es-AR');
 
             if (hStr.includes('MOTIVO') && hStr.includes('FECHA_TRX')) {
-                // Es el PMOVXF - requiere que el Avance General ya estÃ© cargado (secuencia obligatoria, es el paso 4)
+                // Es el PMOVXF - requiere que el Avance General ya esté cargado (secuencia obligatoria, es el paso 4)
                 if (!s1_dataAvanceGeneral || s1_dataAvanceGeneral.length === 0) {
                     showToastGlobal("Cargue primero el Avance General (paso 3) antes del PMOVXF.", "error");
                     return;
@@ -1381,7 +1889,7 @@
                 s1_checkReadyToAnalyze();
                 showToastGlobal("PMOVXF cargado exitosamente en Etapa 1.", "success");
             } else if (hStr.includes('ESTADO DE LIQUIDACION') || (hStr.includes('ENTREGADO') && hStr.includes('CONSUMIDO') && hStr.includes('TAREA'))) {
-                // Es el BCMO - requiere que el Reporte de Localizadores ya estÃ© cargado (secuencia obligatoria)
+                // Es el BCMO - requiere que el Reporte de Localizadores ya esté cargado (secuencia obligatoria)
                 if (!s1_localizadorMap || s1_localizadorMap.size === 0) {
                     showToastGlobal("Cargue primero el Reporte de Localizadores (paso 1) antes del BCMO.", "error");
                     return;
@@ -1398,12 +1906,12 @@
                 // Es el Reporte de Localizadores
                 s1_handleLocalizadoresFileRaw(data, dateStr);
             } else {
-                showToastGlobal(`El archivo ${filename} no es vÃ¡lido para la Etapa 1 (Se requiere BCMO, PMOVXF, Avance General o Reporte de Localizadores).`, "error");
+                showToastGlobal(`El archivo ${filename} no es válido para la Etapa 1 (Se requiere BCMO, PMOVXF, Avance General o Reporte de Localizadores).`, "error");
             }
         }
 
         function s1_handleLocalizadoresFileRaw(data, dateStr) {
-            if (!data || data.length === 0) { showToastGlobal("El Reporte de Localizadores estÃ¡ vacÃ­o.", "error"); return; }
+            if (!data || data.length === 0) { showToastGlobal("El Reporte de Localizadores está vacío.", "error"); return; }
             s1_dataLocalizadores = data;
 
             const headers = Object.keys(data[0]);
@@ -1426,7 +1934,7 @@
             s1_checkReadyToAnalyze();
             showToastGlobal(`Reporte de Localizadores cargado. ${s1_localizadorMap.size} localizadores mapeados.`, "success");
 
-            // Extraer razones sociales Ãºnicas y abrir el modal de selecciÃ³n de empresa auditada
+            // Extraer razones sociales únicas y abrir el modal de selección de empresa auditada
             const empresas = [...new Set(Array.from(s1_localizadorMap.values()))].filter(Boolean).sort();
             s1_abrirModalEmpresa(empresas);
         }
@@ -1459,7 +1967,7 @@
                 r.onload = (e) => {
                     try {
                         const data = new Uint8Array(e.target.result);
-                        const wb = XLSX.read(data, { type: 'array' });
+                        const wb = XLSX.read(data, { type: 'array', cellDates: true });
                         const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
                         s1_handleLocalizadoresFileRaw(json, dateStr);
                     } catch (err) { showToastGlobal("Error al leer el Reporte de Localizadores (Excel).", "error"); }
@@ -1489,7 +1997,7 @@
 
         function s1_handleAvanceGeneralFile(file) {
             const procesar = (json) => {
-                if (!json || json.length === 0) { showToastGlobal("El archivo Avance General estÃ¡ vacÃ­o.", "error"); return; }
+                if (!json || json.length === 0) { showToastGlobal("El archivo Avance General está vacío.", "error"); return; }
                 if (!s1_currentRawData || s1_currentRawData.length === 0) {
                     showToastGlobal("Cargue primero el archivo BCMO (paso 2) antes del Avance General.", "error");
                     return;
@@ -1533,7 +2041,7 @@
                 r.onload = (e) => {
                     try {
                         const data = new Uint8Array(e.target.result);
-                        const wb = XLSX.read(data, { type: 'array' });
+                        const wb = XLSX.read(data, { type: 'array', cellDates: true });
                         const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
                         procesar(json);
                     } catch (err) { showToastGlobal("Error al leer el Avance General.", "error"); }
@@ -1612,8 +2120,8 @@
         }
 
         /**
-         * Verifica si los archivos REQUERIDOS de la Etapa 1 estÃ¡n cargados
-         * (BCMO + Reporte de Localizadores) y actualiza el estado del botÃ³n Analizar.
+         * Verifica si los archivos REQUERIDOS de la Etapa 1 están cargados
+         * (BCMO + Reporte de Localizadores) y actualiza el estado del botón Analizar.
          */
         function s1_checkReadyToAnalyze() {
             const btn = document.getElementById('s1_btnAnalizar');
@@ -1644,10 +2152,10 @@
 
         // Secuencia obligatoria de carga: 1) Reporte de Localizadores -> 2) BCMO -> 3) Avance General -> 4) PMOVXF.
         // No es una dependencia de datos (cada archivo se guarda independiente al parsearse), es un orden de
-        // flujo guiado: Localizadores dispara la selecciÃ³n de empresa auditada (paso de "configuraciÃ³n inicial"),
-        // BCMO es el archivo central, Avance General se usa durante el anÃ¡lisis del BCMO, y PMOVXF es lo Ãºltimo
+        // flujo guiado: Localizadores dispara la selección de empresa auditada (paso de "configuración inicial"),
+        // BCMO es el archivo central, Avance General se usa durante el análisis del BCMO, y PMOVXF es lo último
         // que se necesita (Verificar Consumo / Etapa 2). Se bloquea tanto visualmente (botones grises,
-        // pointer-events-none) como a nivel de validaciÃ³n (ver gates en s1_clasificarArchivo /
+        // pointer-events-none) como a nivel de validación (ver gates en s1_clasificarArchivo /
         // s1_handleAvanceGeneralFileRaw / s1_handleLocalizadoresFileRaw), para que no se pueda saltear el orden.
         function s1_actualizarSecuenciaCarga() {
             const tieneLocalizadores = s1_localizadorMap && s1_localizadorMap.size > 0;
@@ -1661,9 +2169,9 @@
                 el.classList.toggle('pointer-events-none', !enabled);
             };
 
-            // Paso 2 (BCMO/PM, dropzone compartida): habilitada reciÃ©n con Localizadores cargado
+            // Paso 2 (BCMO/PM, dropzone compartida): habilitada recién con Localizadores cargado
             setEnabled('s1_dropZoneWrapper', tieneLocalizadores);
-            // Paso 3 (Avance General): habilitado reciÃ©n con BCMO cargado
+            // Paso 3 (Avance General): habilitado recién con BCMO cargado
             setEnabled('s1_avanceGeneralWrapper', tieneBCMO);
             setEnabled('s1_pmovxfWrapper', tieneAvance);
             // Paso 4 (PMOVXF): comparte dropzone con BCMO, pero visualmente se avisa que hace falta Avance
@@ -1733,7 +2241,7 @@
             document.getElementById('s1_searchObraDashboard').value = ""; document.getElementById('s1_searchObraVerif').value = "";
             if (document.getElementById('s1_massiveTotal')) document.getElementById('s1_massiveTotal').value = "";
             if (document.getElementById('s1_massiveParcial')) document.getElementById('s1_massiveParcial').value = "";
-            // Restablecer botÃ³n Analizar
+            // Restablecer botón Analizar
             s1_checkReadyToAnalyze();
             // Limpiar tag empresa auditada
             const tag = document.getElementById('s1_empresaAuditadaTag');
@@ -1763,12 +2271,12 @@
             const invalidGroupedRaw = {};
             const contratistasSet = new Set();
 
-            // Bloque Secundario: Ã­ndice de otras razones sociales (obra -> [items con consumo])
-            // Se usa despuÃ©s para la bÃºsqueda transversal "Consumo en Otra EC"
+            // Bloque Secundario: índice de otras razones sociales (obra -> [items con consumo])
+            // Se usa después para la búsqueda transversal "Consumo en Otra EC"
             const secundarioIndexLocal = {};
             const empresaAuditadaNorm = String(s1_empresaAuditada || '').trim().toUpperCase();
 
-            // PRIMERA PASADA: Agrupar todo sin omitir por lÃ³gica matemÃ¡tica (solo exclusiÃ³n base .4001 y tareas nulas)
+            // PRIMERA PASADA: Agrupar todo sin omitir por lógica matemática (solo exclusión base .4001 y tareas nulas)
             // Preparar Set de obras reasignadas si hay Avance General
             const obrasOtrasEmpresasSet = new Set(); // clave: obraKey
             const obrasEmpresaAvanceMap = {}; // obraKey -> empresa del avance
@@ -1812,38 +2320,38 @@
                     nR[cK] = row[key]; nR[cK.replace(/\s+/g, '_')] = row[key];
                 }
 
-//                 // REGLA 1.A: EXCLUSIÃ“N DE LOCALIZADORES QUE TERMINAN EN .3001, .4001 Y .1015
-//                 const locCod = String(nR['LOCALIZADOR_COD'] || nR['LOCALIZADOR COD'] || '').trim();
-//                 if (locCod.endsWith('.3001') || locCod.endsWith('.4001') || locCod.endsWith('.1015')) return;
-// 
-//                 const contratista = nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || nR['NOMBRE_PROV'] || 'Sin Contratista';
-//                 const tarea = String(nR['TAREA'] || '').trim();
-//                 const obra = String(nR['MOTIVO_DE_OBRA'] || nR['MOTIVO DE OBRA'] || nR['MOTIVO'] || 'Sin Obra').trim();
+                //                 // REGLA 1.A: EXCLUSIÓN DE LOCALIZADORES QUE TERMINAN EN .3001, .4001 Y .1015
+                //                 const locCod = String(nR['LOCALIZADOR_COD'] || nR['LOCALIZADOR COD'] || '').trim();
+                //                 if (locCod.endsWith('.3001') || locCod.endsWith('.4001') || locCod.endsWith('.1015')) return;
+                // 
+                //                 const contratista = nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || nR['NOMBRE_PROV'] || 'Sin Contratista';
+                //                 const tarea = String(nR['TAREA'] || '').trim();
+                //                 const obra = String(nR['MOTIVO_DE_OBRA'] || nR['MOTIVO DE OBRA'] || nR['MOTIVO'] || 'Sin Obra').trim();
 
 
 
 
-		// REGLA 1.A: EXCLUSIÃ“N DINÃMICA DE LOCALIZADORES (.3001, .4001 y familia .1XXX)
+                // REGLA 1.A: EXCLUSIÓN DINÁMICA DE LOCALIZADORES (.3001, .4001 y familia .1XXX)
                 const locCod = String(nR['LOCALIZADOR_COD'] || nR['LOCALIZADOR COD'] || '').trim();
-                
-                // PatrÃ³n: Termina en .1 seguido de exactamente 3 dÃ­gitos. ExcepciÃ³n: .1001 (usado por SORED)
+
+                // Patrón: Termina en .1 seguido de exactamente 3 dígitos. Excepción: .1001 (usado por SORED)
                 const esFamiliaSobrantes = /\.1\d{3}$/.test(locCod) && !locCod.endsWith('.1001');
-                
+
                 if (locCod.endsWith('.3001') || locCod.endsWith('.4001') || esFamiliaSobrantes) return;
 
-                // RazÃ³n Social real: cruce Localizador Cod (BCMO) -> LOCALIZADOR (Reporte de Localizadores) -> NOMBRE PROV
+                // Razón Social real: cruce Localizador Cod (BCMO) -> LOCALIZADOR (Reporte de Localizadores) -> NOMBRE PROV
                 const contratistaReal = (s1_localizadorMap && s1_localizadorMap.get(locCod.toUpperCase())) || nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || nR['NOMBRE_PROV'] || 'Sin Contratista';
                 const localizadorDescBCMO = String(nR['LOCALIZADOR_DESC'] || nR['LOCALIZADOR DESC'] || '');
                 const tarea = String(nR['TAREA'] || '').trim();
                 const obra = String(nR['MOTIVO_DE_OBRA'] || nR['MOTIVO DE OBRA'] || nR['MOTIVO'] || 'Sin Obra').trim();
 
-                // REGLA 1.B: Filtro de seguridad por texto en la descripciÃ³n original del localizador (BCMO)
+                // REGLA 1.B: Filtro de seguridad por texto en la descripción original del localizador (BCMO)
                 if (localizadorDescBCMO.toUpperCase().includes('SOBRANTES')) return;
 
-                // --- BIFURCACIÃ“N POR RAZÃ“N SOCIAL (Reporte de Localizadores) ---
-                // Bloque Principal = empresa auditada -> continÃºa con la lÃ³gica existente, sin cambios (mÃ¡s abajo).
-                // Bloque Secundario = cualquier otra razÃ³n social -> solo se indexa (obra -> Ã­tems con consumo>0)
-                // para la bÃºsqueda transversal de "Consumo en Otra EC"; no participa del anÃ¡lisis principal.
+                // --- BIFURCACIÓN POR RAZÓN SOCIAL (Reporte de Localizadores) ---
+                // Bloque Principal = empresa auditada -> continúa con la lógica existente, sin cambios (más abajo).
+                // Bloque Secundario = cualquier otra razón social -> solo se indexa (obra -> ítems con consumo>0)
+                // para la búsqueda transversal de "Consumo en Otra EC"; no participa del análisis principal.
                 const contratistaRealNorm = String(contratistaReal).trim().toUpperCase();
                 if (empresaAuditadaNorm && contratistaRealNorm !== empresaAuditadaNorm) {
                     if (invalidNomenclatures.includes(obra.toUpperCase())) return;
@@ -1886,8 +2394,8 @@
                     invalidGroupedRaw[gK].Consumido += parseDecimalGlobal(nR['CONSUMIDO']);
 
                     invalidGroupedRaw[gK].Detalles.push({
-                        "Ãtem": nR['ITEM'] || nR['CODIGO'] || '',
-                        "DescripciÃ³n": String(nR['DESCRIPCION'] || '').trim(),
+                        "Ítem": nR['ITEM'] || nR['CODIGO'] || '',
+                        "Descripción": String(nR['DESCRIPCION'] || '').trim(),
                         "UM": nR['UM'] || '',
                         "Entregado": parseDecimalGlobal(nR['ENTREGADO']),
                         "Consumido": parseDecimalGlobal(nR['CONSUMIDO']),
@@ -1906,7 +2414,7 @@
 
                 if (!obra && !tarea) return;
 
-                // InterceptaciÃ³n de la tarea "SORED" para verificar condiciones de descarte/interruptor
+                // Interceptación de la tarea "SORED" para verificar condiciones de descarte/interruptor
                 if (tarea.toUpperCase() === 'SORED') {
                     if (locCod.endsWith('.1001') && con > 0) {
                         const gK = `${contratista}|${obra}`;
@@ -1922,7 +2430,7 @@
 
                 if (tasksToExclude.includes(tarea.toUpperCase())) {
                     // Capturar obra excluida por tarea: solo si pertenece a la empresa auditada
-                    // y no estÃ¡ en nomenclatura invÃ¡lida ni en reasignadas.
+                    // y no está en nomenclatura inválida ni en reasignadas.
                     if (!invalidNomenclatures.includes(obra.toUpperCase()) &&
                         !(s1_dataAvanceGeneral && s1_empresaAuditada && obrasOtrasEmpresasSet.has(obra.toUpperCase()))) {
                         const gKExc = `${contratista}|${obra}`;
@@ -1943,8 +2451,8 @@
                         excEntry.Consumido += con;
                         excEntry.Diferencia += dif;
                         excEntry.Detalles.push({
-                            'Ãtem': nR['ITEM'] || nR['CODIGO'] || '',
-                            'DescripciÃ³n': String(nR['DESCRIPCION'] || '').trim(),
+                            'Ítem': nR['ITEM'] || nR['CODIGO'] || '',
+                            'Descripción': String(nR['DESCRIPCION'] || '').trim(),
                             'UM': nR['UM'] || '',
                             'Tarea': tarea,
                             'Entregado': ent,
@@ -1982,8 +2490,8 @@
                 }
 
                 groupedRaw[gK].items.push({
-                    "Ãtem": nR['ITEM'] || nR['CODIGO'] || '',
-                    "DescripciÃ³n": desc.trim(),
+                    "Ítem": nR['ITEM'] || nR['CODIGO'] || '',
+                    "Descripción": desc.trim(),
                     "UM": nR['UM'] || '',
                     "Entregado": ent,
                     "Consumido": con,
@@ -1992,14 +2500,14 @@
                 });
             });
 
-            // SEGUNDA PASADA: AplicaciÃ³n estricta de la regla matemÃ¡tica
+            // SEGUNDA PASADA: Aplicación estricta de la regla matemática
             const grouped = {};
             for (const gK in groupedRaw) {
                 const group = groupedRaw[gK];
                 const totalItems = group.items.length;
                 const excludedItemsCount = group.items.filter(i => i.Excluido).length;
 
-                // Si la cantidad de Ã­tems excluidos es IGUAL a la cantidad total de la obra, entonces SOLO tiene excluidos.
+                // Si la cantidad de ítems excluidos es IGUAL a la cantidad total de la obra, entonces SOLO tiene excluidos.
                 const onlyExcluded = (totalItems > 0 && excludedItemsCount === totalItems);
 
                 let finalEntregado = 0;
@@ -2013,7 +2521,7 @@
                 group.items.forEach(item => {
                     let ignorarCalculo = false;
 
-                    // REGLA MATEMÃTICA: Si es un escenario MIXTO, los artÃ­culos excluidos se ignoran en la suma.
+                    // REGLA MATEMÁTICA: Si es un escenario MIXTO, los artículos excluidos se ignoran en la suma.
                     if (!onlyExcluded && item.Excluido) {
                         ignorarCalculo = true;
                     }
@@ -2031,15 +2539,15 @@
                     finalDetalles.push({ ...item, Ignorado: ignorarCalculo });
                 });
 
-                // REGLA DE FALLBACK: En escenario MIXTO, si los artÃ­culos activos tienen
+                // REGLA DE FALLBACK: En escenario MIXTO, si los artículos activos tienen
                 // entrega=0 Y consumo=0 (no aportan datos reales), recalcular incluyendo
-                // los artÃ­culos excluidos para obtener un estado de liquidaciÃ³n verÃ­dico.
+                // los artículos excluidos para obtener un estado de liquidación verídico.
                 const hayItemsIgnorados = finalDetalles.some(i => i.Ignorado);
                 const activosEnCero = (finalEntregado === 0 && finalConsumido === 0);
                 let fallbackExcluidos = false;
 
                 if (!onlyExcluded && activosEnCero && hayItemsIgnorados) {
-                    // Recalcular sumando TODOS los Ã­tems (activos + excluidos)
+                    // Recalcular sumando TODOS los ítems (activos + excluidos)
                     finalEntregado = 0; finalConsumido = 0; finalDiferencia = 0;
                     group.items.forEach(item => {
                         finalEntregado += item.Entregado;
@@ -2096,7 +2604,7 @@
             setTabBadge('s1_reasignadasCountBadge', s1_obrasReasignadasData.length);
             s1_renderReasignadasTable();
 
-            // Obras Excluidas por Tarea: filtrar las que ya estÃ¡n en alguna otra pestaÃ±a
+            // Obras Excluidas por Tarea: filtrar las que ya están en alguna otra pestaña
             const obrasEnOtrasPestanas = new Set();
             s1_invalidData.forEach(d => obrasEnOtrasPestanas.add(`${d.Contratista}|${d.Obra}`));
             s1_obrasReasignadasData.forEach(d => obrasEnOtrasPestanas.add(`${d.Contratista}|${d.Obra}`));
@@ -2116,15 +2624,15 @@
             });
             setTabBadge('s1_excluidasCountBadge', s1_excluidasPorTareaData.length);
 
-            // RESCATE AUTOMÃTICO: si una obra excluida por tarea tiene MOTIVO_TAREA = ORED en el PMOVXF,
+            // RESCATE AUTOMÁTICO: si una obra excluida por tarea tiene MOTIVO_TAREA = ORED en el PMOVXF,
             // se promueve al Dashboard Principal (con badge de trazabilidad), en vez de quedar oculta.
             //
             // IMPORTANTE: el objeto de "excluida" (Contratista, Obra, Tarea, LocalizadorCod, Entregado,
             // Consumido, Diferencia, Detalles) NO tiene la misma forma que un item normal de
-            // s1_processedData. Si se empuja tal cual, s1_recalculateStates() â€”que corre a continuaciÃ³n,
-            // y de nuevo cada vez que cambia el umbral de verificaciÃ³nâ€” lee item.OriginalPorcentajeReal
+            // s1_processedData. Si se empuja tal cual, s1_recalculateStates() —que corre a continuación,
+            // y de nuevo cada vez que cambia el umbral de verificación— lee item.OriginalPorcentajeReal
             // para calcular '% Consumo', y al no existir muestra "NaN%" en el Dashboard. Por eso se
-            // completan acÃ¡ los campos faltantes antes de promoverlo.
+            // completan acá los campos faltantes antes de promoverlo.
             if (s1_dataMateriales && s1_dataMateriales.length > 0) {
                 const cleanStr = s => String(s || '').trim().toUpperCase().replace(/[\s\-_]/g, '');
                 const rescued = [];
@@ -2157,11 +2665,11 @@
                 s1_excluidasPorTareaData = stillExcluded;
                 setTabBadge('s1_excluidasCountBadge', s1_excluidasPorTareaData.length);
                 if (rescued.length > 0) {
-                    showToastGlobal(`${rescued.length} obra(s) rescatadas automÃ¡ticamente por TAREA ORED en PMOVXF.`, 'success');
+                    showToastGlobal(`${rescued.length} obra(s) rescatadas automáticamente por TAREA ORED en PMOVXF.`, 'success');
                 }
             }
 
-            // Guardar el Ã­ndice del Bloque Secundario (otras razones sociales) para la bÃºsqueda transversal.
+            // Guardar el índice del Bloque Secundario (otras razones sociales) para la búsqueda transversal.
             // La tabla "Consumo en Otra EC" se termina de calcular en s1_recalculateStates(), una vez
             // que cada obra del Bloque Principal ya tiene su naturalState ("Sin Consumo", etc.) asignado.
             s1_secundarioIndex = secundarioIndexLocal;
@@ -2191,7 +2699,7 @@
             // Banner de autorizadas
             if (autorizadasCount > 0) {
                 bannerEl?.classList.remove('hidden');
-                if (bannerTextEl) bannerTextEl.textContent = `${autorizadasCount} obra(s) autorizada(s) â€” se incluyeron en el Dashboard Principal.`;
+                if (bannerTextEl) bannerTextEl.textContent = `${autorizadasCount} obra(s) autorizada(s) — se incluyeron en el Dashboard Principal.`;
             } else {
                 bannerEl?.classList.add('hidden');
             }
@@ -2212,10 +2720,10 @@
 
             // Estados badge colors (igual que Dashboard)
             const s1_excluidaStateColors = {
-                'Consumido':        { badge: 'bg-emerald-100 text-emerald-800 border border-emerald-200' },
-                'Sin Consumo':      { badge: 'bg-slate-100 text-slate-700 border border-slate-300' },
-                'Verificar Consumo':{ badge: 'bg-amber-100 text-amber-800 border border-amber-200' },
-                'DEFAULT':          { badge: 'bg-purple-100 text-purple-800 border border-purple-200' }
+                'Consumido': { badge: 'bg-emerald-100 text-emerald-800 border border-emerald-200' },
+                'Sin Consumo': { badge: 'bg-slate-100 text-slate-700 border border-slate-300' },
+                'Verificar Consumo': { badge: 'bg-amber-100 text-amber-800 border border-amber-200' },
+                'DEFAULT': { badge: 'bg-purple-100 text-purple-800 border border-purple-200' }
             };
 
             filtered.forEach(item => {
@@ -2327,8 +2835,8 @@
             subtitle.textContent = `Contratista: ${item.Contratista} | Tarea excluida: ${item.Tarea}`;
             tbody.innerHTML = (item.Detalles || []).map(d => `
                 <tr class="border-b border-slate-100 hover:bg-amber-50">
-                    <td class="p-2 px-4 text-xs">${d['Ãtem'] || ''}</td>
-                    <td class="p-2 px-4 text-xs">${d['DescripciÃ³n'] || ''}</td>
+                    <td class="p-2 px-4 text-xs">${d['Ítem'] || ''}</td>
+                    <td class="p-2 px-4 text-xs">${d['Descripción'] || ''}</td>
                     <td class="p-2 px-4 text-xs">${d['UM'] || ''}</td>
                     <td class="p-2 px-4 text-xs">
                         <span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold border border-amber-200">${d['Tarea'] || ''}</span>
@@ -2338,12 +2846,12 @@
                     <td class="p-2 px-4 text-xs text-right">${s1_formatLocalNumber(d['Diferencia'] || 0)}</td>
                 </tr>
             `).join('');
-            // Agregar encabezado dinÃ¡mico al modal
+            // Agregar encabezado dinámico al modal
             const existingThead = modal.querySelector('table thead');
             if (existingThead) {
                 existingThead.innerHTML = `<tr>
-                    <th class="p-2 px-4 text-xs font-semibold border-b">Ãtem</th>
-                    <th class="p-2 px-4 text-xs font-semibold border-b">DescripciÃ³n</th>
+                    <th class="p-2 px-4 text-xs font-semibold border-b">Ítem</th>
+                    <th class="p-2 px-4 text-xs font-semibold border-b">Descripción</th>
                     <th class="p-2 px-4 text-xs font-semibold border-b">UM</th>
                     <th class="p-2 px-4 text-xs font-semibold border-b">Tarea</th>
                     <th class="p-2 px-4 text-xs font-semibold border-b text-right">Entregado</th>
@@ -2428,7 +2936,7 @@
             document.addEventListener('mouseup', dragEnd);
 
             function dragStart(e) {
-                if (s1_uniModalIsMaximized) return; // No arrastrar si estÃ¡ maximizado
+                if (s1_uniModalIsMaximized) return; // No arrastrar si está maximizado
                 // No arrastrar si se hace clic en botones
                 if (e.target.closest('button')) return;
 
@@ -2477,15 +2985,15 @@
             const obra = item.Obra;
             const contratista = item.Contratista;
 
-            document.getElementById('s1_uniModalTitle').textContent = `AnÃ¡lisis Integral: ${obra}`;
+            document.getElementById('s1_uniModalTitle').textContent = `Análisis Integral: ${obra}`;
             document.getElementById('s1_uniModalSubtitle').textContent = `Contratista: ${contratista} | Tarea Excluida Principal: ${item.Tarea}`;
 
             // --- Llenar Tab BCMO ---
             const tbodyBcmo = document.getElementById('s1_uniModalTableBody_bcmo');
             tbodyBcmo.innerHTML = (item.Detalles || []).map(d => `
                 <tr class="border-b border-slate-100 hover:bg-blue-50 transition-colors">
-                    <td class="p-2 px-4 text-xs font-mono font-semibold text-slate-700">${d['Ãtem'] || ''}</td>
-                    <td class="p-2 px-4 text-xs text-slate-600">${d['DescripciÃ³n'] || ''}</td>
+                    <td class="p-2 px-4 text-xs font-mono font-semibold text-slate-700">${d['Ítem'] || ''}</td>
+                    <td class="p-2 px-4 text-xs text-slate-600">${d['Descripción'] || ''}</td>
                     <td class="p-2 px-4 text-xs text-slate-500">${d['UM'] || ''}</td>
                     <td class="p-2 px-4 text-xs">
                         <span class="bg-amber-200 text-amber-900 px-2 py-1 rounded-md text-xs font-bold border border-amber-400 shadow-sm inline-block uppercase tracking-wide">${d['Tarea'] || ''}</span>
@@ -2529,10 +3037,10 @@
             } else {
                 emptyPm.classList.add('hidden');
                 tablePm.classList.remove('hidden');
-                
+
                 tbodyPm.innerHTML = movimientosPM.map(row => {
-                    const numero = row['_N_NUMERO'] || row['NUMERO'] || row['Numero'] || row['NÃºmero'] || '-';
-                    const articulo = row['_N_ARTICULO'] || row['ARTICULO'] || row['Articulo'] || row['ArtÃ­culo'] || '-';
+                    const numero = row['_N_NUMERO'] || row['NUMERO'] || row['Numero'] || row['Número'] || '-';
+                    const articulo = row['_N_ARTICULO'] || row['ARTICULO'] || row['Articulo'] || row['Artículo'] || '-';
                     const subinv = row['_N_SUBINV_DESTINO'] || row['SUBINV_DESTINO'] || row['Subinv_Destino'] || '-';
                     const loc = row['_N_LOCALIZADOR_DESTINO'] || row['LOCALIZADOR_DESTINO'] || row['Localizador_Destino'] || '-';
                     const ctdPend = row['_N_CTD_PENDIENTE'] || row['CTD_PENDIENTE'] || row['Ctd_Pendiente'] || '0';
@@ -2556,7 +3064,7 @@
 
                     const transaccion = `${numero} <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200 ml-1 shadow-sm whitespace-nowrap">${estadoLinea}</span>`;
                     const ubicacion = `<span class="text-slate-500">${subinv}</span> <i class="fa-solid fa-angle-right mx-1 text-slate-300 text-[10px]"></i> <span class="text-slate-700 font-medium">${loc}</span>`;
-                    
+
                     const p = s1_formatLocalNumber(ctdPendNum);
                     const s = s1_formatLocalNumber(cantSolNum);
                     const e = s1_formatLocalNumber(cantEntNum);
@@ -2641,32 +3149,32 @@
             s1_buildOtraECData();
         }
 
-        // BÃºsqueda transversal: para cada obra del Bloque Principal con estado "Sin Consumo",
-        // busca en el Ã­ndice del Bloque Secundario (otras razones sociales) si esa misma obra
+        // Búsqueda transversal: para cada obra del Bloque Principal con estado "Sin Consumo",
+        // busca en el índice del Bloque Secundario (otras razones sociales) si esa misma obra
         // registra consumo real en otra empresa. Los materiales se agrupan por Contratista+LocalizadorCod.
-       
-	
-//	function s1_buildOtraECData() {
-//            const gruposMap = {};
-//            s1_processedData.forEach(item => {
-//                if (item.naturalState !== 'Sin Consumo') return;
-//                const matches = s1_secundarioIndex[String(item.Obra || '').toUpperCase()];
-//                if (!matches || matches.length === 0) return;
- 
-		function s1_buildOtraECData() {
-            	const gruposMap = {};
-            	s1_processedData.forEach(item => {
+
+
+        //	function s1_buildOtraECData() {
+        //            const gruposMap = {};
+        //            s1_processedData.forEach(item => {
+        //                if (item.naturalState !== 'Sin Consumo') return;
+        //                const matches = s1_secundarioIndex[String(item.Obra || '').toUpperCase()];
+        //                if (!matches || matches.length === 0) return;
+
+        function s1_buildOtraECData() {
+            const gruposMap = {};
+            s1_processedData.forEach(item => {
                 // 1. Limpiamos la bandera por si los datos se recalcularon
-                item._enOtraEC = false; 
-                
+                item._enOtraEC = false;
+
                 if (item.naturalState !== 'Sin Consumo') return;
                 const matches = s1_secundarioIndex[String(item.Obra || '').toUpperCase()];
                 if (!matches || matches.length === 0) return;
-                
-                // 2. Marcamos la obra original para excluirla del Dashboard Principal
-                item._enOtraEC = true;               
 
-		matches.forEach(m => {
+                // 2. Marcamos la obra original para excluirla del Dashboard Principal
+                item._enOtraEC = true;
+
+                matches.forEach(m => {
                     const gK = `${m.Contratista}|${m.LocalizadorCod}`;
                     if (!gruposMap[gK]) {
                         gruposMap[gK] = {
@@ -2772,7 +3280,7 @@
             s1_recalculateStates();
         }
 
-        // NUEVA FUNCIÃ“N PARA SINCRONIZAR FILTRO DEL DASHBOARD
+        // NUEVA FUNCIÓN PARA SINCRONIZAR FILTRO DEL DASHBOARD
         function s1_syncFromDashboard() {
             const val = document.getElementById('s1_dashboardFilterEstado').value;
             document.getElementById('s1_filterEstado').value = val;
@@ -2793,28 +3301,28 @@
             s1_renderTable();
         }
 
-//        function s1_renderTable() {
-//            const fC = document.getElementById('s1_filterContratista').value;
-//            const fE = document.getElementById('s1_filterEstado').value;
-//            const fS = document.getElementById('s1_searchObraDashboard').value.trim().toLowerCase();
+        //        function s1_renderTable() {
+        //            const fC = document.getElementById('s1_filterContratista').value;
+        //            const fE = document.getElementById('s1_filterEstado').value;
+        //            const fS = document.getElementById('s1_searchObraDashboard').value.trim().toLowerCase();
 
-//            s1_filteredData = s1_processedData.filter(i => {
-//                if (fC !== 'ALL' && i.Contratista !== fC) return false;
-//                if (fE !== 'ALL' && i['Estado de liquidacion'] !== fE) return false;
-//                if (fS !== '' && !i.Obra.toLowerCase().includes(fS)) return false;
-//                return true;
-//            });
+        //            s1_filteredData = s1_processedData.filter(i => {
+        //                if (fC !== 'ALL' && i.Contratista !== fC) return false;
+        //                if (fE !== 'ALL' && i['Estado de liquidacion'] !== fE) return false;
+        //                if (fS !== '' && !i.Obra.toLowerCase().includes(fS)) return false;
+        //                return true;
+        //            });
 
 
-function s1_renderTable() {
+        function s1_renderTable() {
             const fC = document.getElementById('s1_filterContratista').value;
             const fE = document.getElementById('s1_filterEstado').value;
             const fS = document.getElementById('s1_searchObraDashboard').value.trim().toLowerCase();
 
             s1_filteredData = s1_processedData.filter(i => {
                 // 3. Si la obra fue absorbida por "Otra EC", la ocultamos de esta vista
-                if (i._enOtraEC) return false; 
-                
+                if (i._enOtraEC) return false;
+
                 if (fC !== 'ALL' && i.Contratista !== fC) return false;
                 if (fE !== 'ALL' && i['Estado de liquidacion'] !== fE) return false;
                 if (fS !== '' && !i.Obra.toLowerCase().includes(fS)) return false;
@@ -2846,16 +3354,16 @@ function s1_renderTable() {
                 const gK = `${item.Contratista}|${item.Obra}`;
 
                 const exclAlert = item.onlyExcluded
-                    ? `<i class="fa-solid fa-triangle-exclamation text-amber-500 ml-2" title="Alerta: La obra solo tiene entregas de artÃ­culos excluidos"></i>`
+                    ? `<i class="fa-solid fa-triangle-exclamation text-amber-500 ml-2" title="Alerta: La obra solo tiene entregas de artículos excluidos"></i>`
                     : '';
                 // Badge de fallback: activos en cero, se usaron los excluidos para calcular
                 const fallbackAlert = item.fallbackExcluidos
-                    ? `<i class="fa-solid fa-recycle text-violet-500 ml-2" title="Fallback aplicado: artÃ­culos activos en cero, se recalculÃ³ con artÃ­culos excluidos"></i>`
+                    ? `<i class="fa-solid fa-recycle text-violet-500 ml-2" title="Fallback aplicado: artículos activos en cero, se recalculó con artículos excluidos"></i>`
                     : '';
-                // Badge de trazabilidad: la obra fue rescatada automÃ¡ticamente desde "Excluidas por Tarea"
+                // Badge de trazabilidad: la obra fue rescatada automáticamente desde "Excluidas por Tarea"
                 // por registrar MOTIVO_TAREA = ORED en el PMOVXF.
                 const rescatadaBadge = item._rescatadaOred
-                    ? `<span class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-300" title="Incluida automÃ¡ticamente por registrar TAREA ORED en PMOVXF">
+                    ? `<span class="ml-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 border border-teal-300" title="Incluida automáticamente por registrar TAREA ORED en PMOVXF">
                            <i class="fa-solid fa-rotate-right"></i> ORED
                        </span>`
                     : '';
@@ -2881,9 +3389,10 @@ function s1_renderTable() {
             const tbody = document.getElementById('s1_verificationTableBody'); tbody.innerHTML = '';
 
             let list = s1_processedData.filter(i => i.naturalState === 'Verificar Consumo');
+            setTabBadge('s1_verifCountBadge', list.length);
             if (fS !== '') list = list.filter(i => i.Obra.toLowerCase().includes(fS));
 
-            document.getElementById('s1_statsVerifText').innerHTML = `Mostrando <b>${list.length}</b> obras en revisiÃ³n.`;
+            document.getElementById('s1_statsVerifText').innerHTML = `Mostrando <b>${list.length}</b> obras en revisión.`;
 
             let cP = 0, cT = 0, cPar = 0;
             list.forEach(i => { const o = s1_manualOverrides[`${i.Contratista}|${i.Obra}`] || ""; if (o === "Consumo Total") cT++; else if (o === "Consumo Parcial") cPar++; else cP++; });
@@ -2899,10 +3408,10 @@ function s1_renderTable() {
                 if (cO === "Consumo Total") selClass += "border-emerald-400 bg-emerald-50 text-emerald-800"; else if (cO === "Consumo Parcial") selClass += "border-blue-400 bg-blue-50 text-blue-800"; else selClass += "border-slate-300 bg-white text-slate-600";
 
                 const exclAlert = i.onlyExcluded
-                    ? `<i class="fa-solid fa-triangle-exclamation text-amber-500 ml-2" title="Alerta: La obra solo tiene entregas de artÃ­culos excluidos"></i>`
+                    ? `<i class="fa-solid fa-triangle-exclamation text-amber-500 ml-2" title="Alerta: La obra solo tiene entregas de artículos excluidos"></i>`
                     : '';
                 const fallbackAlert = i.fallbackExcluidos
-                    ? `<i class="fa-solid fa-recycle text-violet-500 ml-2" title="Fallback: artÃ­culos activos en cero, recalculado con excluidos"></i>`
+                    ? `<i class="fa-solid fa-recycle text-violet-500 ml-2" title="Fallback: artículos activos en cero, recalculado con excluidos"></i>`
                     : '';
 
                 const pmBtn = hasPM
@@ -2931,7 +3440,7 @@ function s1_renderTable() {
                 document.getElementById('s1_resultsWorkspace').classList.add('hidden');
                 document.getElementById('s1_loader').classList.remove('hidden');
                 setTimeout(() => s1_analyzeData(s1_currentRawData), 200);
-                showToastGlobal("Reglas de exclusiÃ³n aplicadas y datos recalculados.", "success");
+                showToastGlobal("Reglas de exclusión aplicadas y datos recalculados.", "success");
             } else {
                 showToastGlobal("Reglas guardadas exitosamente.", "success");
             }
@@ -2942,15 +3451,15 @@ function s1_renderTable() {
             if (!dRow) return;
 
             document.getElementById('s1_modalTitle').textContent = `Detalles: ${dRow.Obra}`;
-            document.getElementById('s1_modalSubtitle').textContent = `Contratista: ${dRow.Contratista} | Estado: Nomenclatura InvÃ¡lida`;
+            document.getElementById('s1_modalSubtitle').textContent = `Contratista: ${dRow.Contratista} | Estado: Nomenclatura Inválida`;
 
             const tbody = document.getElementById('s1_modalTableBody'); tbody.innerHTML = '';
             dRow.Detalles.forEach(det => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition-colors bg-rose-50/20";
                 tr.innerHTML = `
-                    <td class="p-2 px-4 text-xs text-slate-500 font-mono">${det['Ãtem']}</td>
-                    <td class="p-2 px-4 text-xs text-slate-700 font-medium">${det['DescripciÃ³n']}</td>
+                    <td class="p-2 px-4 text-xs text-slate-500 font-mono">${det['Ítem']}</td>
+                    <td class="p-2 px-4 text-xs text-slate-700 font-medium">${det['Descripción']}</td>
                     <td class="p-2 px-4 text-xs text-slate-500 text-center">${det['UM']}</td>
                     <td class="p-2 px-4 text-xs text-slate-600 text-right">${s1_formatLocalNumber(det['Entregado'])}</td>
                     <td class="p-2 px-4 text-xs text-slate-600 text-right">${s1_formatLocalNumber(det['Consumido'])}</td>
@@ -2975,19 +3484,19 @@ function s1_renderTable() {
 
                 let exclBadge = '';
                 if (det['FallbackRescatado']) {
-                    exclBadge = `<span class="bg-violet-100 text-violet-800 px-1.5 py-0.5 rounded text-[10px] font-bold ml-2 border border-violet-300" title="ArtÃ­culo excluido rescatado por fallback: activos en cero">Fallback</span>`;
+                    exclBadge = `<span class="bg-violet-100 text-violet-800 px-1.5 py-0.5 rounded text-[10px] font-bold ml-2 border border-violet-300" title="Artículo excluido rescatado por fallback: activos en cero">Fallback</span>`;
                 } else if (det['Ignorado']) {
                     exclBadge = `<span class="bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded text-[10px] font-bold ml-2 border border-slate-300" title="Item ignorado para el porcentaje de avance">Ignorado</span>`;
                 } else if (det['Excluido']) {
-                    exclBadge = `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold ml-2 border border-amber-200" title="Ãšnico material excluido que fue rescatado">Rescatado</span>`;
+                    exclBadge = `<span class="bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-[10px] font-bold ml-2 border border-amber-200" title="Único material excluido que fue rescatado">Rescatado</span>`;
                 }
 
                 const textClass = det['Ignorado'] ? "text-slate-400 line-through" : "text-slate-700 font-medium";
                 const numClass = det['Ignorado'] ? "text-slate-400" : "text-slate-600";
 
                 tr.innerHTML = `
-                    <td class="p-2 px-4 text-xs text-slate-500 font-mono ${det['Ignorado'] ? 'line-through' : ''}">${det['Ãtem']}</td>
-                    <td class="p-2 px-4 text-xs ${textClass}">${det['DescripciÃ³n']}${exclBadge}</td>
+                    <td class="p-2 px-4 text-xs text-slate-500 font-mono ${det['Ignorado'] ? 'line-through' : ''}">${det['Ítem']}</td>
+                    <td class="p-2 px-4 text-xs ${textClass}">${det['Descripción']}${exclBadge}</td>
                     <td class="p-2 px-4 text-xs text-slate-500 text-center">${det['UM']}</td>
                     <td class="p-2 px-4 text-xs ${numClass} text-right">${s1_formatLocalNumber(det['Entregado'])}</td>
                     <td class="p2 px-4 text-xs ${numClass} text-right">${s1_formatLocalNumber(det['Consumido'])}</td>
@@ -3005,17 +3514,17 @@ function s1_renderTable() {
                 showToastGlobal("No hay datos del PMOVXF cargados.", "error"); return;
             }
 
-            // Buscar el registro de BCMO para obtener las diferencias de los artÃ­culos
+            // Buscar el registro de BCMO para obtener las diferencias de los artículos
             const cleanCode = (code) => {
                 let str = String(code || '').trim().toUpperCase();
-                // Quitar ceros a la izquierda si es puramente numÃ©rico para evitar descalces entre formato texto/nÃºmero
+                // Quitar ceros a la izquierda si es puramente numérico para evitar descalces entre formato texto/número
                 if (/^\d+$/.test(str)) {
                     str = String(parseInt(str, 10));
                 }
                 return str;
             };
 
-            // ComparaciÃ³n flexible de nombres de obras
+            // Comparación flexible de nombres de obras
             const matchObra = (motivoRaw, obraRaw) => {
                 const cleanStr = (s) => String(s || '').trim().toUpperCase().replace(/[\s-_]/g, '');
                 const m = cleanStr(motivoRaw);
@@ -3028,10 +3537,10 @@ function s1_renderTable() {
             const articulosConDiferencia = {};
             if (dRow && dRow.Detalles) {
                 dRow.Detalles.forEach(det => {
-                    const itemCod = cleanCode(det['Ãtem']);
+                    const itemCod = cleanCode(det['Ítem']);
                     const dif = parseFloat(det['Diferencia']) || 0;
                     if (itemCod && dif > 0) {
-                        articulosConDiferencia[itemCod] = String(det['DescripciÃ³n'] || '').trim();
+                        articulosConDiferencia[itemCod] = String(det['Descripción'] || '').trim();
                     }
                 });
             }
@@ -3042,7 +3551,7 @@ function s1_renderTable() {
                 return matchObra(motivo, obra);
             });
 
-            document.getElementById('s1_pmModalTitle').textContent = `PM â€” ${obra}`;
+            document.getElementById('s1_pmModalTitle').textContent = `PM — ${obra}`;
             document.getElementById('s1_pmModalSubtitle').textContent = `${movimientos.length} movimiento(s) filtrado(s) del PMOVXF`;
 
             const tbody = document.getElementById('s1_pmModalTableBody');
@@ -3054,8 +3563,8 @@ function s1_renderTable() {
             } else {
                 emptyMsg.classList.add('hidden');
                 movimientos.forEach(row => {
-                    const numero = row['_N_NUMERO'] || row['NUMERO'] || row['Numero'] || row['NÃºmero'] || '-';
-                    const articulo = row['_N_ARTICULO'] || row['ARTICULO'] || row['Articulo'] || row['ArtÃ­culo'] || '-';
+                    const numero = row['_N_NUMERO'] || row['NUMERO'] || row['Numero'] || row['Número'] || '-';
+                    const articulo = row['_N_ARTICULO'] || row['ARTICULO'] || row['Articulo'] || row['Artículo'] || '-';
                     const subinv = row['_N_SUBINV_DESTINO'] || row['SUBINV_DESTINO'] || row['Subinv_Destino'] || '-';
                     const loc = row['_N_LOCALIZADOR_DESTINO'] || row['LOCALIZADOR_DESTINO'] || row['Localizador_Destino'] || '-';
                     const ctdPend = row['_N_CTD_PENDIENTE'] || row['CTD_PENDIENTE'] || row['Ctd_Pendiente'] || '0';
@@ -3105,8 +3614,8 @@ function s1_renderTable() {
             if (s1_processedData.length === 0) { showToastGlobal("No hay datos para exportar.", "error"); return; }
             const d1 = s1_filteredData.map(i => ({ "Contratista": i.Contratista, "Tarea / Obra": i.Obra, "Entregado": i.Entregado, "Consumido": i.Consumido, "Diferencia": i.Diferencia, "% Consumo": i.PorcentajeReal, "Estado de Liquidacion": i['Estado de liquidacion'] }));
             const lVerif = s1_processedData.filter(i => i.naturalState === 'Verificar Consumo');
-            const d2 = lVerif.map(i => ({ "Contratista": i.Contratista, "Tarea / Obra": i.Obra, "% Consumo": i.PorcentajeReal, "Estado AutomÃ¡tico": i.naturalState, "Obra Consumida (DecisiÃ³n)": s1_manualOverrides[`${i.Contratista}|${i.Obra}`] || "Pendiente", "Estado Final de LiquidaciÃ³n": i['Estado de liquidacion'] }));
-            const d3 = []; s1_filteredData.forEach(i => { i.Detalles.forEach(d => { d3.push({ "Contratista": i.Contratista, "Tarea / Obra": i.Obra, "Estado de Liquidacion": i['Estado de liquidacion'], "Ãtem": d['Ãtem'], "DescripciÃ³n": d['DescripciÃ³n'], "UM": d['UM'], "Entregado": d['Entregado'], "Consumido": d['Consumido'], "Diferencia": d['Diferencia'] }); }); });
+            const d2 = lVerif.map(i => ({ "Contratista": i.Contratista, "Tarea / Obra": i.Obra, "% Consumo": i.PorcentajeReal, "Estado Automático": i.naturalState, "Obra Consumida (Decisión)": s1_manualOverrides[`${i.Contratista}|${i.Obra}`] || "Pendiente", "Estado Final de Liquidación": i['Estado de liquidacion'] }));
+            const d3 = []; s1_filteredData.forEach(i => { i.Detalles.forEach(d => { d3.push({ "Contratista": i.Contratista, "Tarea / Obra": i.Obra, "Estado de Liquidacion": i['Estado de liquidacion'], "Ítem": d['Ítem'], "Descripción": d['Descripción'], "UM": d['UM'], "Entregado": d['Entregado'], "Consumido": d['Consumido'], "Diferencia": d['Diferencia'] }); }); });
 
             const ws1 = XLSX.utils.json_to_sheet(d1); const ws2 = XLSX.utils.json_to_sheet(d2); const ws3 = XLSX.utils.json_to_sheet(d3);
             const fmt = (ws, isV = false) => {
@@ -3138,7 +3647,7 @@ function s1_renderTable() {
     </script>
 
     <!-- ============================================================ -->
-    <!-- MÃ“DULOS DE FUNCIONES                                          -->
+    <!-- MÓDULOS DE FUNCIONES                                          -->
     <!-- ============================================================ -->
     <script src="modules/procesadorTarea.js"></script>
     <script src="modules/detalleTarea.js"></script>
@@ -3153,7 +3662,7 @@ function s1_renderTable() {
             'use strict';
 
             // --------------------------------------------------------
-            // Helpers de inyecciÃ³n
+            // Helpers de inyección
             // --------------------------------------------------------
 
             /** Reemplaza un marcador por un conjunto de nodos del DOM */
@@ -3171,7 +3680,7 @@ function s1_renderTable() {
             }
 
             // -------------------------------------------------------------------
-            // ObtenciÃ³n del HTML del componente usando variables preâ€‘cargadas.
+            // Obtención del HTML del componente usando variables preâ€‘cargadas.
             // Los archivos *.js generados exponen window.__COMP_...__ con el HTML
             // como cadena. Esta estrategia funciona con el protocolo
             // file:// sin necesidad de fetch().
@@ -3186,15 +3695,15 @@ function s1_renderTable() {
             }
 
             // --------------------------------------------------------
-            // Carga y distribuciÃ³n de Etapa 1 (BCMO)
+            // Carga y distribución de Etapa 1 (BCMO)
             // El componente etapa1BCMO.html contiene:
             //   - Parte A (tarjeta): hasta el div#s1_bcmoModule (exclusive)
-            //   - Parte B (mÃ³dulo): el div#s1_bcmoModule y sus submodales
+            //   - Parte B (módulo): el div#s1_bcmoModule y sus submodales
             // --------------------------------------------------------
             async function loadEtapa1() {
                 const html = getComponentHTML('__COMP_ETAPA1_BCMO__');
 
-                // Encontrar el Ã­ndice donde comienza s1_bcmoModule
+                // Encontrar el índice donde comienza s1_bcmoModule
                 const splitMarker = '<!-- [SPLIT-MARKER] s1_bcmoModule begin -->';
                 const splitIdx = html.indexOf(splitMarker);
 
@@ -3211,14 +3720,14 @@ function s1_renderTable() {
                 // Inyectar tarjeta dentro del setupSection
                 injectNodes('etapa1-card-container', parseHTML(cardHtml));
 
-                // Inyectar mÃ³dulo BCMO como hermano de setupSection (dentro de main)
+                // Inyectar módulo BCMO como hermano de setupSection (dentro de main)
                 if (moduleHtml) {
                     injectNodes('etapa1-bcmo-container', parseHTML(moduleHtml));
                 }
             }
 
             // --------------------------------------------------------
-            // Carga y distribuciÃ³n de Etapa 2 (ConsolidaciÃ³n)
+            // Carga y distribución de Etapa 2 (Consolidación)
             // El componente etapa2Consolidacion.html contiene:
             //   - Parte A (tarjeta): hasta el comentario de resultsSection
             //   - Parte B (resultados): el div#resultsSection + modales
@@ -3226,7 +3735,7 @@ function s1_renderTable() {
             async function loadEtapa2() {
                 const html = getComponentHTML('__COMP_ETAPA2_CONSOLIDACION__');
 
-                // Encontrar el Ã­ndice donde comienza resultsSection
+                // Encontrar el índice donde comienza resultsSection
                 const splitMarker = '<!-- [SPLIT-MARKER] resultsSection begin -->';
                 const splitIdx = html.indexOf(splitMarker);
 
@@ -3257,7 +3766,7 @@ function s1_renderTable() {
                     await Promise.all([loadEtapa1(), loadEtapa2()]);
                     console.log('[Loader] âœ“ Todos los componentes cargados e inyectados.');
                 } catch (e) {
-                    console.error('[Loader] Error crÃ­tico al cargar componentes:', e);
+                    console.error('[Loader] Error crítico al cargar componentes:', e);
                 }
 
                 // Restaurar addEventListener original
@@ -3273,9 +3782,13 @@ function s1_renderTable() {
                         catch (err) { console.error('[Loader] Error en handler DOMContentLoaded:', err); }
                     });
                 }
+
+                if (typeof window.actualizarTarjetasEtapa2UI === 'function') {
+                    window.actualizarTarjetasEtapa2UI();
+                }
             }
 
-            // Arrancar cuando el DOM estÃ© listo
+            // Arrancar cuando el DOM esté listo
             if (document.readyState === 'loading') {
                 if (window._origAEL) {
                     window._origAEL.call(document, 'DOMContentLoaded', initApp);
