@@ -17,23 +17,23 @@
 
 <!-- [SPLIT-MARKER] s1_bcmoModule begin -->
 <div id="s1_bcmoModule" class="hidden absolute inset-0 z-40 bg-slate-50 flex-col overflow-hidden">
-    <nav class="bg-white border-b border-slate-300 shadow-sm p-4 flex justify-between items-center z-20 relative shrink-0">
-        <div class="flex items-center gap-3">
+    <nav class="bg-white border-b border-slate-300 shadow-sm px-4 py-1.5 h-11 flex justify-between items-center z-20 relative shrink-0">
+        <div class="flex items-center gap-2.5">
             <button onclick="closeBcmoModule()"
-                class="text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-colors mr-1 w-8 h-8 rounded-full flex items-center justify-center border border-slate-200"
-                title="Volver a Etapa 2">
+                class="text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-colors w-7 h-7 rounded-full flex items-center justify-center border border-slate-200 text-xs"
+                title="Volver">
                 <i class="fa-solid fa-arrow-left"></i>
             </button>
-            <i class="fa-solid fa-chart-pie text-xl text-indigo-600"></i>
-            <h1 class="text-lg font-bold text-slate-800 tracking-wide">Analizador BCMO</h1>
+            <i class="fa-solid fa-chart-pie text-base text-indigo-600"></i>
+            <h1 class="text-sm font-bold text-slate-800 tracking-wide">Analizador BCMO</h1>
             <span
-                class="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded ml-2 hidden sm:inline-block">Auditoría
+                class="text-[11px] font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded hidden sm:inline-block">Auditoría
                 de Obras</span>
         </div>
         <div>
             <button onclick="s1_toggleConfigPanel()"
-                class="text-slate-500 hover:text-indigo-600 text-sm font-medium transition-colors flex items-center gap-1">
-                <i class="fa-solid fa-sliders"></i> <span class="hidden sm:inline">Ajustes y Memoria</span>
+                class="text-slate-500 hover:text-indigo-600 text-xs font-medium transition-colors flex items-center gap-1.5">
+                <i class="fa-solid fa-sliders text-xs"></i> <span class="hidden sm:inline">Ajustes y Memoria</span>
             </button>
         </div>
     </nav>
@@ -123,211 +123,254 @@
                     class="fa-solid fa-check"></i> Aplicar Reglas Actuales</button></div>
     </aside>
 
-    <main class="flex-grow p-4 md:p-6 mx-auto w-full flex flex-col z-0 overflow-y-auto custom-scrollbar">
-        <section class="flex-grow flex flex-col h-full space-y-4">
+    <main class="flex-grow p-3 sm:p-4 mx-auto w-full max-w-7xl flex flex-col z-0 overflow-y-auto custom-scrollbar">
+        <section class="flex-grow flex flex-col h-full space-y-2.5">
 
-            <!-- Banner Informativo de Secuencia de Carga -->
-            <div class="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-xl text-xs flex items-center gap-2.5 shadow-sm shrink-0 mb-2">
-                <i class="fa-solid fa-circle-info text-blue-600 text-base shrink-0"></i>
-                <p class="leading-relaxed"><b>Secuencia de Carga:</b> Para realizar el análisis es necesario cargar los <b>4 archivos en orden secuencial del 1 al 4</b>. Cada paso se habilitará automáticamente al completar el anterior.</p>
+            <!-- Banner y Botón de Carga Automática de Etapa 1 -->
+            <div class="bg-gradient-to-r from-indigo-700 via-violet-700 to-blue-700 rounded-xl p-3.5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0 border border-white/20">
+                        <i class="fa-solid fa-wand-magic-sparkles text-lg text-amber-300"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-300/30">Modo Asistido</span>
+                            <h3 class="text-sm font-bold text-white">Carga Automática de Etapa 1</h3>
+                        </div>
+                        <p class="text-[11px] text-indigo-100 mt-0.5">Selecciona todos los archivos juntos (Localizadores, BCMO, Avance, PMOVXF). El asistente los clasificará y guiará en orden.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.batchLoader.iniciarCargaEtapa(1)"
+                    class="bg-white hover:bg-slate-100 text-indigo-900 font-bold text-xs px-4 py-2.5 rounded-lg transition-all shadow-md flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:scale-[1.02] active:scale-[0.98]">
+                    <i class="fa-solid fa-cloud-arrow-up text-indigo-600"></i>
+                    <span>Cargar Todos los Archivos</span>
+                </button>
             </div>
 
-            <!-- Contenedor Principal de Carga: Cuadrícula de Tarjetas Premium -->
-            <div id="s1_uploadWrapper" class="flex flex-col gap-5 w-full">
+            <!-- Banner Informativo de Secuencia de Carga Manual -->
+            <div class="bg-blue-50 border border-blue-200 text-blue-800 py-1.5 px-3 rounded-lg text-xs flex items-center gap-2 shadow-2xs shrink-0 mb-1">
+                <i class="fa-solid fa-circle-info text-blue-600 text-sm shrink-0"></i>
+                <p class="leading-snug"><b>Modo Manual (Opcional):</b> También puedes cargar individualmente los <b>4 archivos en orden secuencial del 1 al 4</b> utilizando los botones de cada tarjeta.</p>
+            </div>
+
+            <!-- Contenedor Principal de Carga: Cuadrícula de Tarjetas 3x2 Compacta -->
+            <div id="s1_uploadWrapper" class="flex flex-col gap-3 w-full">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
 
                     <!-- ═══ TARJETA 1: Reporte de Localizadores ═══ -->
-                    <div id="s1_cardLocalizadores" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group">
-                        <div class="flex items-start justify-between p-5 pb-3">
-                            <div class="w-12 h-12 rounded-2xl bg-violet-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                                <i class="fa-solid fa-link text-violet-600 text-xl"></i>
+                    <div id="s1_cardLocalizadores" class="bg-white border border-slate-200 rounded-xl shadow-2xs hover:shadow-xs transition-all flex flex-col relative overflow-hidden group">
+                        <div class="flex items-start justify-between p-3.5 pb-2">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-violet-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-link text-violet-600 text-base sm:text-lg"></i>
                             </div>
-                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-violet-700 bg-violet-100 px-2.5 py-1 rounded-full">
+                            <span class="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-violet-700 bg-violet-100 px-2.5 py-0.5 rounded-full">
                                 <span class="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span>
                                 Requerido
                             </span>
                         </div>
-                        <div class="px-5 pb-4 flex-grow">
-                            <h3 class="text-sm font-bold text-slate-800 mb-1.5">Reporte de Localizadores <span class="text-rose-500">*</span></h3>
-                            <p class="text-xs text-slate-500 leading-relaxed">Mapea la Razón Social y define la empresa contratista a auditar. Base analítica del cruce de legajos.</p>
-                            <div id="s1_statusLocalizadores" class="mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
+                        <div class="px-3.5 pb-2 flex-grow">
+                            <h3 class="text-xs sm:text-sm font-bold text-slate-800 mb-1">Reporte de Localizadores <span class="text-rose-500">*</span></h3>
+                            <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded mb-1.5 shadow-2xs">
+                                <i class="fa-solid fa-server text-violet-500 text-[9px]"></i> Origen: <span class="font-bold">Sistema ORACLE EBS</span>
+                            </div>
+                            <p class="text-[11px] sm:text-xs text-slate-500 leading-snug">Mapea la Razón Social y define la empresa contratista a auditar.</p>
+                            <div id="s1_statusLocalizadores" class="mt-2 text-[11px] text-slate-400 flex items-center gap-1.5">
                                 <i class="fa-regular fa-circle text-slate-300"></i>
                                 <span>Sin cargar</span>
                             </div>
                         </div>
-                        <div class="border-t border-slate-100 mx-5"></div>
-                        <div class="flex items-center justify-between px-5 py-3 gap-3">
-                            <span class="text-[11px] text-slate-400 font-mono">Formato: .xlsx / .csv</span>
+                        <div class="border-t border-slate-100 mx-3.5"></div>
+                        <div class="flex items-center justify-between px-3.5 py-2 gap-2">
+                            <span class="text-[10px] sm:text-[11px] text-slate-400 font-mono">.xlsx / .csv</span>
                             <div class="flex items-center gap-2">
-                                <input type="file" id="s1_localizadoresInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
+                                <input type="file" id="s1_localizadoresInput" accept=".xlsx, .xls, .csv, .txt" class="hidden" onclick="this.value = null">
                                 <button type="button" onclick="document.getElementById('s1_localizadoresInput').click()"
-                                    class="bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
-                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar archivo
+                                    class="bg-violet-600 hover:bg-violet-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- ═══ TARJETA 2: Archivo BCMO ═══ -->
-                    <div id="s1_dropZoneWrapper" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group opacity-40 pointer-events-none">
-                        <div class="flex items-start justify-between p-5 pb-3">
-                            <div class="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                                <i class="fa-solid fa-file-excel text-blue-600 text-xl"></i>
+                    <div id="s1_dropZoneWrapper" class="bg-white border border-slate-200 rounded-xl shadow-2xs hover:shadow-xs transition-all flex flex-col relative overflow-hidden group opacity-40 pointer-events-none">
+                        <div class="flex items-start justify-between p-3.5 pb-2">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-file-excel text-blue-600 text-base sm:text-lg"></i>
                             </div>
-                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full">
+                            <span class="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">
                                 <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
                                 Requerido
                             </span>
                         </div>
-                        <div class="px-5 pb-4 flex-grow">
-                            <h3 class="text-sm font-bold text-slate-800 mb-1.5">Archivo BCMO <span class="text-rose-500">*</span></h3>
-                            <p class="text-xs text-slate-500 leading-relaxed">Reporte maestro de liquidación y consumos base de obra. Fuente principal del análisis depurado.</p>
-                            <div id="s1_statusBCMO" class="mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
+                        <div class="px-3.5 pb-2 flex-grow">
+                            <h3 class="text-xs sm:text-sm font-bold text-slate-800 mb-1">Archivo BCMO <span class="text-rose-500">*</span></h3>
+                            <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded mb-1.5 shadow-2xs">
+                                <i class="fa-solid fa-server text-blue-500 text-[9px]"></i> Origen: <span class="font-bold">Sistema ORACLE EBS</span>
+                            </div>
+                            <p class="text-[11px] sm:text-xs text-slate-500 leading-snug">Reporte maestro de liquidación y consumos base de obra.</p>
+                            <div id="s1_statusBCMO" class="mt-2 text-[11px] text-slate-400 flex items-center gap-1.5">
                                 <i class="fa-regular fa-circle text-slate-300"></i>
                                 <span>Sin cargar</span>
                             </div>
                         </div>
-                        <div class="border-t border-slate-100 mx-5"></div>
-                        <div class="flex items-center justify-between px-5 py-3 gap-3">
-                            <span class="text-[11px] text-slate-400 font-mono">Formato: .xlsx / .csv</span>
+                        <div class="border-t border-slate-100 mx-3.5"></div>
+                        <div class="flex items-center justify-between px-3.5 py-2 gap-2">
+                            <span class="text-[10px] sm:text-[11px] text-slate-400 font-mono">.xlsx / .csv</span>
                             <div class="flex items-center gap-2">
                                 <div id="s1_dropZone" class="hidden"></div>
-                                <input type="file" id="s1_fileInput" accept=".xlsx, .xls, .csv, .txt" multiple class="hidden">
+                                <input type="file" id="s1_fileInput" accept=".xlsx, .xls, .csv, .txt" multiple class="hidden" onclick="this.value = null">
                                 <button type="button" onclick="document.getElementById('s1_fileInput').click()"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
-                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar archivo
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- ═══ TARJETA 3: Avance General ═══ -->
-                    <div id="s1_avanceGeneralWrapper" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group opacity-40 pointer-events-none">
-                        <div class="flex items-start justify-between p-5 pb-3">
-                            <div class="w-12 h-12 rounded-2xl bg-orange-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                                <i class="fa-solid fa-chart-line text-orange-500 text-xl"></i>
+                    <div id="s1_avanceGeneralWrapper" class="bg-white border border-slate-200 rounded-xl shadow-2xs hover:shadow-xs transition-all flex flex-col relative overflow-hidden group opacity-40 pointer-events-none">
+                        <div class="flex items-start justify-between p-3.5 pb-2">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-orange-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-chart-line text-orange-500 text-base sm:text-lg"></i>
                             </div>
-                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-orange-700 bg-orange-100 px-2.5 py-1 rounded-full">
+                            <span class="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-orange-700 bg-orange-100 px-2.5 py-0.5 rounded-full">
                                 <span class="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
                                 Requerido
                             </span>
                         </div>
-                        <div class="px-5 pb-4 flex-grow">
-                            <h3 class="text-sm font-bold text-slate-800 mb-1.5">Avance General <span class="text-rose-500">*</span></h3>
-                            <p class="text-xs text-slate-500 leading-relaxed">Filtra Obras Reasignadas y modalidades de liquidación. Genera el dataset filtrado para auditoria.</p>
-                            <div id="s1_statusAvanceGeneral" class="mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
+                        <div class="px-3.5 pb-2 flex-grow">
+                            <h3 class="text-xs sm:text-sm font-bold text-slate-800 mb-1">Avance General <span class="text-rose-500">*</span></h3>
+                            <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded mb-1.5 shadow-2xs">
+                                <i class="fa-solid fa-table text-orange-500 text-[9px]"></i> Origen: <span class="font-bold">Planilla compartida por el sector de Obras</span>
+                            </div>
+                            <p class="text-[11px] sm:text-xs text-slate-500 leading-snug">Filtra Obras Reasignadas y modalidades de liquidación.</p>
+                            <div id="s1_statusAvanceGeneral" class="mt-2 text-[11px] text-slate-400 flex items-center gap-1.5">
                                 <i class="fa-regular fa-circle text-slate-300"></i>
                                 <span>Sin cargar</span>
                             </div>
                         </div>
-                        <div class="border-t border-slate-100 mx-5"></div>
-                        <div class="flex items-center justify-between px-5 py-3 gap-3">
-                            <span class="text-[11px] text-slate-400 font-mono">Formato: .xlsx / .csv</span>
+                        <div class="border-t border-slate-100 mx-3.5"></div>
+                        <div class="flex items-center justify-between px-3.5 py-2 gap-2">
+                            <span class="text-[10px] sm:text-[11px] text-slate-400 font-mono">.xlsx / .csv</span>
                             <div class="flex items-center gap-2">
-                                <input type="file" id="s1_avanceGeneralInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
+                                <input type="file" id="s1_avanceGeneralInput" accept=".xlsx, .xls, .csv, .txt" class="hidden" onclick="this.value = null">
                                 <button type="button" onclick="document.getElementById('s1_avanceGeneralInput').click()"
-                                    class="bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
-                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar archivo
+                                    class="bg-orange-500 hover:bg-orange-600 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- ═══ TARJETA 4: PMOVXF ═══ -->
-                    <div id="s1_pmovxfWrapper" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group opacity-40 pointer-events-none">
-                        <div class="flex items-start justify-between p-5 pb-3">
-                            <div class="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                                <i class="fa-solid fa-boxes-stacked text-amber-600 text-xl"></i>
+                    <div id="s1_pmovxfWrapper" class="bg-white border border-slate-200 rounded-xl shadow-2xs hover:shadow-xs transition-all flex flex-col relative overflow-hidden group opacity-40 pointer-events-none">
+                        <div class="flex items-start justify-between p-3.5 pb-2">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                                <i class="fa-solid fa-boxes-stacked text-amber-600 text-base sm:text-lg"></i>
                             </div>
-                            <span class="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+                            <span class="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-bold text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full">
                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                                 Opcional
                             </span>
                         </div>
-                        <div class="px-5 pb-4 flex-grow">
-                            <h3 class="text-sm font-bold text-slate-800 mb-1.5">PMOVXF (Detalle PM)</h3>
-                            <p class="text-xs text-slate-500 leading-relaxed">Detalle de consumos y movimientos PM. Habilita trazabilidad de entregas y Auditoría PM Activa.</p>
-                            <div id="s1_statusMateriales" class="mt-3 text-[11px] text-slate-400 flex items-center gap-1.5">
+                        <div class="px-3.5 pb-2 flex-grow">
+                            <h3 class="text-xs sm:text-sm font-bold text-slate-800 mb-1">PMOVXF (Detalle PM)</h3>
+                            <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded mb-1.5 shadow-2xs">
+                                <i class="fa-solid fa-chart-pie text-amber-500 text-[9px]"></i> Origen: <span class="font-bold">Sistema Tableau</span>
+                            </div>
+                            <p class="text-[11px] sm:text-xs text-slate-500 leading-snug">Detalle de consumos y movimientos PM. Auditoría PM Activa.</p>
+                            <div id="s1_statusMateriales" class="mt-2 text-[11px] text-slate-400 flex items-center gap-1.5">
                                 <i class="fa-regular fa-circle text-slate-300"></i>
                                 <span>No cargado (Opcional)</span>
                             </div>
                         </div>
-                        <div class="border-t border-slate-100 mx-5"></div>
-                        <div class="flex items-center justify-between px-5 py-3 gap-3">
-                            <span class="text-[11px] text-slate-400 font-mono">Formato: .xlsx / .csv</span>
+                        <div class="border-t border-slate-100 mx-3.5"></div>
+                        <div class="flex items-center justify-between px-3.5 py-2 gap-2">
+                            <span class="text-[10px] sm:text-[11px] text-slate-400 font-mono">.xlsx / .csv</span>
                             <div class="flex items-center gap-2">
-                                <input type="file" id="s1_pmovxfInput" accept=".xlsx, .xls, .csv, .txt" class="hidden">
+                                <input type="file" id="s1_pmovxfInput" accept=".xlsx, .xls, .csv, .txt" class="hidden" onclick="this.value = null">
                                 <button type="button" onclick="document.getElementById('s1_pmovxfInput').click()"
-                                    class="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm">
-                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar archivo
+                                    class="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                                    <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Seleccionar
                                 </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- ═══ TARJETA 5: Panel de Reglas ═══ -->
-                    <div class="bg-indigo-950 border border-indigo-800 rounded-2xl shadow-sm flex flex-col relative overflow-hidden">
-                        <div class="flex items-center justify-between px-5 pt-4 pb-2">
-                            <h4 class="text-xs font-bold text-indigo-200 uppercase tracking-widest flex items-center gap-2">
+                    <div class="bg-indigo-950 border border-indigo-800 rounded-xl shadow-2xs flex flex-col relative overflow-hidden">
+                        <div class="flex items-center justify-between px-3.5 pt-3 pb-1">
+                            <h4 class="text-[10px] sm:text-xs font-bold text-indigo-200 uppercase tracking-wider flex items-center gap-1.5">
                                 <i class="fa-solid fa-shield-halved text-indigo-400"></i>
                                 Reglas de Negocio
                             </h4>
-                            <i class="fa-solid fa-gears text-indigo-600 text-lg"></i>
+                            <i class="fa-solid fa-gears text-indigo-600 text-sm"></i>
                         </div>
-                        <div class="px-5 pb-3 flex-grow">
-                            <p class="text-xs text-indigo-400 leading-relaxed mb-4">El motor auditará consistencia de tickets, códigos de ítem presupuestario y desviaciones de obra en tiempo real.</p>
-                            <div class="space-y-2.5">
+                        <div class="px-3.5 pb-2 flex-grow">
+                            <p class="text-[11px] text-indigo-400 leading-snug mb-2">Auditoría automática de consistencia y tickets.</p>
+                            <div class="space-y-1.5">
                                 <div class="flex items-center justify-between">
-                                    <span class="text-xs text-indigo-300 flex items-center gap-2">
-                                        <i class="fa-solid fa-circle text-slate-600 text-[8px]" id="s1_ruleIconLoc"></i> Cruce BCMO / Legajo
+                                    <span class="text-[11px] text-indigo-300 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle text-slate-600 text-[6px]" id="s1_ruleIconLoc"></i> Reporte Localizadores
                                     </span>
-                                    <span class="text-[11px] font-bold text-rose-400" id="s1_ruleLabelLoc">Pendiente</span>
+                                    <span class="text-[10px] sm:text-[11px] font-bold text-rose-400" id="s1_ruleLabelLoc">Pendiente</span>
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-xs text-indigo-300 flex items-center gap-2">
-                                        <i class="fa-solid fa-circle text-slate-600 text-[8px]" id="s1_ruleIconBCMO"></i> Control de Inventario PM
+                                    <span class="text-[11px] text-indigo-300 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle text-slate-600 text-[6px]" id="s1_ruleIconBCMO"></i> Cruce BCMO / Legajo
                                     </span>
-                                    <span class="text-[11px] font-bold text-rose-400" id="s1_ruleLabelBCMO">Pendiente</span>
+                                    <span class="text-[10px] sm:text-[11px] font-bold text-rose-400" id="s1_ruleLabelBCMO">Pendiente</span>
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-xs text-indigo-300 flex items-center gap-2">
-                                        <i class="fa-solid fa-circle text-slate-600 text-[8px]" id="s1_ruleIconAvance"></i> Avance Principal
+                                    <span class="text-[11px] text-indigo-300 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-circle text-slate-600 text-[6px]" id="s1_ruleIconAvance"></i> Avance General
                                     </span>
-                                    <span class="text-[11px] font-bold text-rose-400" id="s1_ruleLabelAvance">Pendiente</span>
+                                    <span class="text-[10px] sm:text-[11px] font-bold text-rose-400" id="s1_ruleLabelAvance">Pendiente</span>
                                 </div>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-xs text-indigo-300 flex items-center gap-2">
-                                        <i class="fa-regular fa-circle text-indigo-700 text-[8px]" id="s1_ruleIconPM"></i> PMOVXF (PM)
+                                    <span class="text-[11px] text-indigo-300 flex items-center gap-1.5">
+                                        <i class="fa-regular fa-circle text-indigo-700 text-[6px]" id="s1_ruleIconPM"></i> Control Inventario PM
                                     </span>
-                                    <span class="text-[11px] font-semibold text-slate-500" id="s1_ruleLabelPM">Opcional</span>
+                                    <span class="text-[10px] sm:text-[11px] font-semibold text-slate-500" id="s1_ruleLabelPM">Opcional</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="border-t border-indigo-800 mx-5 mt-2"></div>
-                        <div class="px-5 py-3 text-[11px] text-indigo-500 font-medium flex items-center gap-1.5 hover:text-indigo-300 cursor-default transition-colors">
-                            <i class="fa-solid fa-arrows-rotate"></i> Mapeo automático de columnas
+                        <div class="border-t border-indigo-800 mx-3.5 mt-1"></div>
+                        <div class="px-3.5 py-1.5 text-[10px] sm:text-[11px] text-indigo-500 font-medium flex items-center gap-1.5">
+                            <i class="fa-solid fa-arrows-rotate text-[10px]"></i> Mapeo automático
                         </div>
                     </div>
 
-                </div>
-
-                <!-- Barra Inferior de Acción y Secuencia -->
-                <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 mt-2">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600">
-                            <i class="fa-solid fa-chart-pie text-lg"></i>
+                    <!-- ═══ TARJETA 6: Análisis y Depuración BCMO (Paso Final) ═══ -->
+                    <div class="bg-white border border-slate-200 rounded-xl shadow-2xs hover:shadow-xs transition-all flex flex-col relative overflow-hidden justify-between">
+                        <div class="p-3.5 pb-2">
+                            <div class="flex items-start justify-between pb-2">
+                                <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center shrink-0 text-blue-600">
+                                    <i class="fa-solid fa-chart-pie text-base sm:text-lg"></i>
+                                </div>
+                                <span class="inline-flex items-center gap-1 text-[10px] sm:text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
+                                    <i class="fa-solid fa-bolt text-blue-500 text-[10px]"></i> Paso Final
+                                </span>
+                            </div>
+                            <h3 class="text-xs sm:text-sm font-bold text-slate-800 mb-1">Análisis y Depuración BCMO</h3>
+                            <p class="text-[11px] sm:text-xs text-slate-500 leading-snug" id="s1_txtSecuenciaCargaInfo">
+                                Complete los 4 pasos en orden para habilitar el análisis maestro.
+                            </p>
                         </div>
-                        <div>
-                            <div class="text-sm font-bold text-slate-800">Análisis y Depuración BCMO</div>
-                            <div class="text-xs text-slate-500" id="s1_txtSecuenciaCargaInfo">Complete los 4 pasos en orden para habilitar el análisis.</div>
+                        <div class="p-3.5 pt-2 border-t border-slate-100 flex items-center gap-2">
+                            <button id="s1_btnAnalizar" onclick="s1_lanzarAnalisisBCMO()" disabled
+                                class="flex-1 bg-slate-200 text-slate-400 font-bold py-2 px-4 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-xs sm:text-sm border border-slate-300 shadow-2xs">
+                                <i class="fa-solid fa-magnifying-glass-chart"></i> Analizar BCMO
+                            </button>
+                            <button id="s1_btnVolverResultados" type="button" onclick="s1_mostrarResultadosWorkspace()"
+                                class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-3 rounded-xl transition-colors flex items-center justify-center gap-1.5 text-xs border border-slate-300 shadow-2xs cursor-pointer" title="Volver al panel de resultados ya procesados">
+                                <i class="fa-solid fa-table"></i> Ver Resultados
+                            </button>
                         </div>
                     </div>
-                    
-                    <button id="s1_btnAnalizar" onclick="s1_lanzarAnalisisBCMO()" disabled
-                        class="w-full sm:w-auto min-w-[240px] bg-slate-200 text-slate-400 font-bold py-3 px-6 rounded-xl transition-all cursor-not-allowed flex items-center justify-center gap-2 text-sm border border-slate-300">
-                        <i class="fa-solid fa-magnifying-glass-chart"></i> Analizar BCMO
-                    </button>
+
                 </div>
 
             </div>
@@ -339,47 +382,74 @@
             </div>
 
             <div id="s1_resultsWorkspace" class="hidden flex-col flex-grow h-full">
-                <!-- Barra de Tabs (homologada a Etapa 2) -->
-                <div class="flex items-center border-b border-slate-200 bg-slate-50 px-4 pt-2 shrink-0 relative gap-0 mb-4">
-                    <button onclick="s1_switchTabEtapa1('dashboard')" id="s1_btnTabDashboard"
-                        class="tab-btn active flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-table"></i> Dashboard Principal
-                    </button>
-                    <button onclick="s1_switchTabEtapa1('verification')" id="s1_btnTabVerification"
-                        class="tab-btn flex items-center gap-2 whitespace-nowrap relative">
-                        <i class="fa-solid fa-clipboard-check"></i> Verificar Consumo
-                        <span id="s1_verifCountBadge" class="tab-count-badge hidden"></span>
-                    </button>
-                    <button onclick="s1_switchTabEtapa1('invalid')" id="s1_btnTabInvalid"
-                        class="tab-btn flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-triangle-exclamation"></i> Nomenclatura Inválida
-                        <span id="s1_invalidCountBadge" class="tab-count-badge hidden"></span>
-                    </button>
-                    <button onclick="s1_switchTabEtapa1('reasignadas')" id="s1_btnTabReasignadas"
-                        class="tab-btn flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-arrows-turn-right"></i> Obras Reasignadas
-                        <span id="s1_reasignadasCountBadge" class="tab-count-badge hidden"></span>
-                    </button>
-                    <button onclick="s1_switchTabEtapa1('otraec')" id="s1_btnTabOtraEC"
-                        class="tab-btn flex items-center gap-2 whitespace-nowrap">
-                        <i class="fa-solid fa-magnifying-glass-dollar"></i> Consumo en Otra EC
-                        <span id="s1_otraECCountBadge" class="tab-count-badge hidden"></span>
-                    </button>
-                    <!-- Botón del tab "Excluidas por Tarea" eliminado: ahora es un proceso interno oculto. -->
+                <!-- Barra de Tabs y Acciones Responsiva -->
+                <div class="flex flex-col xl:flex-row xl:items-center justify-between border-b border-slate-200 bg-slate-50 px-3 pt-2 gap-2 shrink-0 mb-3 rounded-t-xl relative" style="z-index: 100;">
+                    <!-- Tira de pestañas con flujo visible para elementos flotantes -->
+                    <div class="flex items-center gap-1 min-w-0 -mb-[1px] pb-1 xl:pb-0 overflow-visible relative">
+                        <button onclick="s1_switchTabEtapa1('dashboard')" id="s1_btnTabDashboard"
+                            class="tab-btn active flex items-center gap-2 whitespace-nowrap">
+                            <i class="fa-solid fa-table"></i> Dashboard Principal
+                        </button>
+                        <button onclick="s1_switchTabEtapa1('verification')" id="s1_btnTabVerification"
+                            class="tab-btn flex items-center gap-2 whitespace-nowrap relative">
+                            <i class="fa-solid fa-clipboard-check"></i> Verificar Consumo
+                            <span id="s1_verifCountBadge" class="tab-count-badge hidden"></span>
+                        </button>
+                        <!-- MENÚ AGRUPADO: CORRECCIONES Y NOVEDADES -->
+                        <div class="relative" style="z-index: 200;">
+                            <button type="button" onclick="s1_toggleNovedadesMenu(event)" id="s1_btnTabNovedades"
+                                class="tab-btn flex items-center gap-2 whitespace-nowrap">
+                                <i class="fa-solid fa-clipboard-list text-indigo-600"></i> Correcciones y Novedades
+                                <span id="s1_novedadesCountBadge" class="tab-count-badge hidden"></span>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400"></i>
+                            </button>
+                            <div id="s1_novedadesMenuDropdown"
+                                class="hidden absolute left-0 top-full mt-1.5 w-72 bg-white border border-slate-200 rounded-xl shadow-2xl py-1.5" style="z-index: 9999;">
+                                <button type="button" onclick="s1_switchTabEtapa1('invalid')" id="s1_btnTabInvalid"
+                                    class="diag-menu-item w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-indigo-50/50 hover:text-indigo-900 transition-colors flex items-center justify-between gap-2 cursor-pointer">
+                                    <span class="flex items-center gap-2.5 font-medium">
+                                        <i class="fa-solid fa-triangle-exclamation text-rose-500 w-4"></i>
+                                        <span>Nomenclatura Inválida</span>
+                                    </span>
+                                    <span id="s1_invalidCountBadge" class="tab-count-badge hidden ml-auto"></span>
+                                </button>
+                                <button type="button" onclick="s1_switchTabEtapa1('reasignadas')" id="s1_btnTabReasignadas"
+                                    class="diag-menu-item w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-indigo-50/50 hover:text-indigo-900 transition-colors flex items-center justify-between gap-2 cursor-pointer">
+                                    <span class="flex items-center gap-2.5 font-medium">
+                                        <i class="fa-solid fa-arrows-turn-right text-orange-500 w-4"></i>
+                                        <span>Obras Reasignadas</span>
+                                    </span>
+                                    <span id="s1_reasignadasCountBadge" class="tab-count-badge hidden ml-auto"></span>
+                                </button>
+                                <button type="button" onclick="s1_switchTabEtapa1('otraec')" id="s1_btnTabOtraEC"
+                                    class="diag-menu-item w-full text-left px-3.5 py-2.5 text-xs text-slate-700 hover:bg-indigo-50/50 hover:text-indigo-900 transition-colors flex items-center justify-between gap-2 cursor-pointer">
+                                    <span class="flex items-center gap-2.5 font-medium">
+                                        <i class="fa-solid fa-magnifying-glass-dollar text-purple-500 w-4"></i>
+                                        <span>Consumo en Otra EC</span>
+                                    </span>
+                                    <span id="s1_otraECCountBadge" class="tab-count-badge hidden ml-auto"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-                    <!-- Botones de Acción al lado derecho -->
-                    <div class="ml-auto flex items-center gap-2 pb-1">
+                    <!-- Botones de Acción: compactos, contenidos y sin saltos de línea -->
+                    <div class="flex items-center justify-end gap-1.5 pb-2 xl:pb-1 shrink-0 flex-wrap">
                         <button onclick="s1_resetUI()"
-                            class="bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold py-1.5 px-3 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-xs"
-                            title="Limpiar datos BCMO"><i class="fa-solid fa-trash-can"></i> Limpiar</button>
+                            class="whitespace-nowrap bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-semibold h-8 px-2.5 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5 text-xs cursor-pointer"
+                            title="Limpiar datos BCMO">
+                            <i class="fa-solid fa-trash-can"></i> Limpiar
+                        </button>
                         <button onclick="s1_exportToExcel_Etapa1()"
-                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-1.5 px-3 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-xs">
-                            <i class="fa-solid fa-file-excel"></i> Exportar</button>
+                            class="whitespace-nowrap bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-8 px-3 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5 text-xs cursor-pointer">
+                            <i class="fa-solid fa-file-excel"></i> Exportar
+                        </button>
                         <button onclick="inyectarAlConsolidador()"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-1.5 px-3 rounded-lg transition-colors shadow-sm flex items-center gap-2 text-xs">
-                            <i class="fa-solid fa-share-from-square"></i> Inyectar → Etapa 2</button>
-                        <button type="button" onclick="navigateToStep(0)"
-                            class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-2 shadow-sm">
+                            class="whitespace-nowrap bg-indigo-600 hover:bg-indigo-700 text-white font-bold h-8 px-3.5 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5 text-xs cursor-pointer">
+                            <i class="fa-solid fa-share-from-square"></i> Inyectar → Etapa 2
+                        </button>
+                        <button type="button" onclick="s1_volverACargarArchivos()"
+                            class="whitespace-nowrap bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-bold h-8 px-3 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer">
                             <i class="fa-solid fa-folder-open"></i> Cargar Archivos
                         </button>
                     </div>
@@ -421,7 +491,7 @@
                                     <th class="p-3 text-sm font-semibold border-b text-right">Diferencia</th>
                                     <th class="p-3 text-sm font-semibold border-b text-center">% Consumo</th>
                                     <th class="p-3 text-sm font-semibold border-b">Estado Liquidación</th>
-                                    <th class="p-3 text-sm font-semibold border-b text-center">Detalle</th>
+                                    <th class="p-3 text-sm font-semibold border-b text-center">Acciones / Detalle</th>
                                 </tr>
                             </thead>
                             <tbody id="s1_tableBody" class="divide-y divide-slate-100"></tbody>
@@ -457,16 +527,23 @@
                             </h2>
                             <i class="fa-solid fa-chevron-down text-slate-500" id="s1_massivePanelIcon"></i>
                         </div>
-                        <div id="s1_massivePanelContent" class="hidden p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div id="s1_massivePanelContent" class="hidden p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div><label class="block text-sm font-bold text-emerald-700 mb-2">Total</label><textarea
                                     id="s1_massiveTotal" rows="4"
-                                    class="w-full text-sm p-3 border border-emerald-300 rounded-lg bg-emerald-50"></textarea>
+                                    class="w-full text-sm p-3 border border-emerald-300 rounded-lg bg-emerald-50"
+                                    placeholder="Pegar obras a marcar Consumo Total..."></textarea>
                             </div>
                             <div><label class="block text-sm font-bold text-blue-700 mb-2">Parcial</label><textarea
                                     id="s1_massiveParcial" rows="4"
-                                    class="w-full text-sm p-3 border border-blue-300 rounded-lg bg-blue-50"></textarea>
+                                    class="w-full text-sm p-3 border border-blue-300 rounded-lg bg-blue-50"
+                                    placeholder="Pegar obras a marcar Consumo Parcial..."></textarea>
                             </div>
-                            <div class="md:col-span-2 flex justify-end"><button onclick="s1_applyMassiveOverrides()"
+                            <div><label class="block text-sm font-bold text-slate-700 mb-2">Sin Consumo</label><textarea
+                                    id="s1_massiveSinConsumo" rows="4"
+                                    class="w-full text-sm p-3 border border-slate-300 rounded-lg bg-slate-50"
+                                    placeholder="Pegar obras a marcar Sin Consumo..."></textarea>
+                            </div>
+                            <div class="md:col-span-3 flex justify-end"><button onclick="s1_applyMassiveOverrides()"
                                     class="bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg shadow-sm"><i
                                         class="fa-solid fa-layer-group"></i> Aplicar Asignación</button></div>
                         </div>

@@ -41,21 +41,25 @@
 
 <!-- MODULO DE CARGA DEDICADO ETAPA 2 -->
 <div id="s2_consolidacionModule" class="hidden absolute inset-0 z-40 bg-slate-50 flex-col overflow-hidden">
-    <nav class="bg-white border-b border-slate-300 shadow-sm p-4 flex justify-between items-center z-20 relative shrink-0">
-        <div class="flex items-center gap-3">
+    <nav class="bg-white border-b border-slate-300 shadow-sm px-4 py-1.5 h-11 flex justify-between items-center z-20 relative shrink-0">
+        <div class="flex items-center gap-2.5">
             <button type="button" onclick="closeConsolidacionModule()"
-                class="text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-colors mr-1 w-8 h-8 rounded-full flex items-center justify-center border border-slate-200"
+                class="text-slate-500 hover:text-indigo-600 hover:bg-slate-100 transition-colors w-7 h-7 rounded-full flex items-center justify-center border border-slate-200 text-xs"
                 title="Volver a Etapas">
                 <i class="fa-solid fa-arrow-left"></i>
             </button>
-            <i class="fa-solid fa-layer-group text-xl text-indigo-600"></i>
-            <h1 class="text-lg font-bold text-slate-800 tracking-wide">Módulo de Consolidación (Etapa 2)</h1>
-            <span class="text-xs font-medium bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded ml-2 hidden sm:inline-block">Cruce Analítico Maestro</span>
+            <i class="fa-solid fa-layer-group text-base text-indigo-600"></i>
+            <h1 class="text-sm font-bold text-slate-800 tracking-wide">Módulo de Consolidación (Etapa 2)</h1>
+            <span class="text-[11px] font-medium bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded hidden sm:inline-block">Cruce Analítico Maestro</span>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
             <button type="button" onclick="openFaqModal()"
-                class="bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-sm">
+                class="bg-white border border-amber-200 hover:bg-amber-50 text-amber-700 font-bold px-2.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5 shadow-2xs">
                 <i class="fa-solid fa-circle-question"></i> <span class="hidden sm:inline">Preguntas Frecuentes</span>
+            </button>
+            <button type="button" id="s2_btnSiguienteEtapa" onclick="s2_avanzarSiguienteEtapa()"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3.5 py-1 rounded-md text-xs transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                <span>Siguiente Etapa</span> <i class="fa-solid fa-arrow-right"></i>
             </button>
         </div>
     </nav>
@@ -96,15 +100,19 @@
                     </div>
                     <div class="px-5 pb-4 flex-grow">
                         <h3 class="text-sm font-bold text-slate-800 mb-1.5">BCMO Consolidado</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed">Inyectado automáticamente desde la <b class="text-blue-600">Etapa 1</b> con verificación de consumos depurada.</p>
+                        <p class="text-xs text-slate-500 leading-relaxed">Depurado e inyectado automáticamente desde la <b class="text-blue-600">Etapa 1</b>.</p>
                         <div id="s2_bodyBCMO" class="mt-3">
                             <!-- Contenido dinámico via JS -->
                         </div>
                     </div>
                     <div class="border-t border-slate-100 mx-5"></div>
                     <div class="flex items-center justify-between px-5 py-3 text-[11px] text-slate-400 gap-2">
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-link text-slate-300"></i> Integrado desde Etapa 1</span>
-                        <span class="text-slate-300 font-medium">Revisar</span>
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-lock text-slate-300"></i> Exclusivo Etapa 1</span>
+                        <button type="button" onclick="navigateToStep(0)"
+                            class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 hover:text-blue-700 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                            title="Ir a Etapa 1 para verificar y transferir">
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i> Ir a Etapa 1
+                        </button>
                     </div>
                 </div>
 
@@ -121,15 +129,19 @@
                     </div>
                     <div class="px-5 pb-4 flex-grow">
                         <h3 class="text-sm font-bold text-slate-800 mb-1.5">PMOVXF (Materiales)</h3>
-                        <p class="text-xs text-slate-500 leading-relaxed">Detalle de consumos y movimientos PM transferidos desde la Etapa 1.</p>
+                        <p class="text-xs text-slate-500 leading-relaxed">Detalle de movimientos PM transferidos y auditados desde la <b class="text-amber-600">Etapa 1</b>.</p>
                         <div id="s2_bodyPMOVXF" class="mt-3">
                             <!-- Contenido dinámico via JS -->
                         </div>
                     </div>
                     <div class="border-t border-slate-100 mx-5"></div>
                     <div class="flex items-center justify-between px-5 py-3 text-[11px] text-slate-400 gap-2">
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-slate-300"></i> Auditoría PM Activa</span>
-                        <span class="text-slate-300 font-medium">Protegido</span>
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-lock text-slate-300"></i> Exclusivo Etapa 1</span>
+                        <button type="button" onclick="navigateToStep(0)"
+                            class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 hover:text-amber-700 bg-slate-50 hover:bg-amber-50 border border-slate-200 hover:border-amber-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                            title="Ir a Etapa 1 para verificar y transferir">
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i> Ir a Etapa 1
+                        </button>
                     </div>
                 </div>
 
@@ -146,15 +158,19 @@
                     </div>
                     <div class="px-5 pb-4 flex-grow">
                         <h3 class="text-sm font-bold text-slate-800 mb-1.5">Avance de Obras (Principal) <span class="text-rose-500">*</span></h3>
-                        <p class="text-xs text-slate-500 leading-relaxed">Reporte de Localizadores y Razón Social maestro. Base analítica del cruce de legajos.</p>
+                        <p class="text-xs text-slate-500 leading-relaxed">Depurado por empresa e inyectado desde la <b class="text-orange-600">Etapa 1</b>.</p>
                         <div id="s2_bodyAvance" class="mt-3">
                             <!-- Contenido dinámico via JS -->
                         </div>
                     </div>
                     <div class="border-t border-slate-100 mx-5"></div>
                     <div class="flex items-center justify-between px-5 py-3 text-[11px] text-slate-400 gap-2">
-                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-arrows-rotate text-slate-300"></i> Sincronizado</span>
-                        <span class="text-slate-300 font-medium">Caché activa</span>
+                        <span class="flex items-center gap-1.5"><i class="fa-solid fa-lock text-slate-300"></i> Exclusivo Etapa 1</span>
+                        <button type="button" onclick="navigateToStep(0)"
+                            class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 hover:text-orange-700 bg-slate-50 hover:bg-orange-50 border border-slate-200 hover:border-orange-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-2xs"
+                            title="Ir a Etapa 1 para verificar y transferir">
+                            <i class="fa-solid fa-arrow-left text-[10px]"></i> Ir a Etapa 1
+                        </button>
                     </div>
                 </div>
 
@@ -163,7 +179,7 @@
 
         <!-- ═══════ SECCIÓN B: Archivos Complementarios ═══════ -->
         <div class="mb-6">
-            <div class="flex items-center gap-3 mb-4">
+            <div class="flex items-center gap-3 mb-3">
                 <div class="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
                     <i class="fa-solid fa-cloud-arrow-up text-indigo-600 text-sm"></i>
                 </div>
@@ -173,10 +189,34 @@
                 </div>
                 <div class="ml-auto h-px flex-grow bg-indigo-100 hidden sm:block"></div>
             </div>
+
+            <!-- Banner y Botón de Carga Automática de Etapa 2 -->
+            <div class="bg-gradient-to-r from-teal-700 via-indigo-700 to-indigo-800 rounded-xl p-3.5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0 border border-white/20">
+                        <i class="fa-solid fa-wand-magic-sparkles text-lg text-teal-300"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-teal-300 bg-teal-400/20 px-2 py-0.5 rounded-full border border-teal-300/30">Modo Asistido</span>
+                            <h3 class="text-sm font-bold text-white">Carga Automática de Insumos Complementarios</h3>
+                        </div>
+                        <p class="text-[11px] text-teal-100 mt-0.5">Selecciona juntos el archivo de Sistema TAREA y el archivo Corporativo. El asistente guiará los diálogos de filtrado.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.batchLoader.iniciarCargaEtapa(2)"
+                    class="bg-white hover:bg-slate-100 text-teal-900 font-bold text-xs px-4 py-2.5 rounded-lg transition-all shadow-md flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:scale-[1.02] active:scale-[0.98]">
+                    <i class="fa-solid fa-cloud-arrow-up text-teal-600"></i>
+                    <span>Cargar TAREA y Corporativo</span>
+                </button>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
                 <!-- ═══ TARJETA 4: Sistema TAREA (Opcional) ═══ -->
                 <div id="s2_cardTarea" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group border-t-4 border-t-indigo-500">
+                    <!-- Input persistente fuera de s2_bodyTarea para evitar destruccion en innerHTML -->
+                    <input type="file" id="s2_fileTarea" accept=".xlsx, .xls, .csv" class="hidden" onclick="this.value = null" onchange="s2_handleFileTarea(event)">
                     <div class="flex items-start justify-between p-5 pb-3">
                         <div class="w-12 h-12 rounded-2xl bg-indigo-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                             <i class="fa-solid fa-file-invoice text-indigo-600 text-xl"></i>
@@ -187,24 +227,28 @@
                         </span>
                     </div>
                     <div class="px-5 pb-4 flex-grow">
-                        <h3 class="text-sm font-bold text-slate-800 mb-1.5">Sistema TAREA</h3>
+                        <h3 class="text-sm font-bold text-slate-800 mb-1">Sistema TAREA</h3>
+                        <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded mb-1.5 shadow-2xs">
+                            <i class="fa-solid fa-chart-pie text-indigo-500 text-[9px]"></i> Origen: <span class="font-bold">Sistema Tableau</span>
+                        </div>
                         <p class="text-xs text-slate-500 leading-relaxed">Cruce opcional de rendición por orden de trabajo y cuadrilla operativa.</p>
                         <div id="s2_bodyTarea" class="mt-3">
-                            <input type="file" id="s2_fileTarea" accept=".xlsx, .xls, .csv" class="hidden" onchange="s2_handleFileTarea(event)">
+                            <p class="text-xs text-slate-400 italic">No cargado</p>
                         </div>
                     </div>
                     <div class="border-t border-slate-100 mx-5"></div>
                     <div class="flex items-center justify-between px-5 py-3 gap-3">
                         <span class="text-[11px] text-slate-400 font-mono">Formato: .xlsx / .csv</span>
                         <button type="button" onclick="document.getElementById('s2_fileTarea').click()"
-                            class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-lg transition-colors">
-                            <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Cargar TAREA
+                            class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-2xs">
+                            <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Cargar / Reemplazar
                         </button>
                     </div>
                 </div>
 
                 <!-- ═══ TARJETA 5: Avance Corporativo (Opcional) ═══ -->
                 <div id="s2_cardCorp" class="bg-white border border-slate-200 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col relative overflow-hidden group border-t-4 border-t-teal-500">
+                    <input type="file" id="fileCorporativo" accept=".xlsx, .xls, .csv" class="hidden" onclick="this.value = null" onchange="preAnalizarCorporativo(event)">
                     <div class="flex items-start justify-between p-5 pb-3">
                         <div class="w-12 h-12 rounded-2xl bg-teal-100 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                             <i class="fa-solid fa-building-user text-teal-600 text-xl"></i>
@@ -215,7 +259,10 @@
                         </span>
                     </div>
                     <div class="px-5 pb-4 flex-grow">
-                        <h3 class="text-sm font-bold text-slate-800 mb-1.5">Sector Corporativo</h3>
+                        <h3 class="text-sm font-bold text-slate-800 mb-1">Sector Corporativo</h3>
+                        <div class="inline-flex items-center gap-1.5 text-[10px] font-semibold text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded mb-1.5 shadow-2xs">
+                            <i class="fa-solid fa-table text-teal-500 text-[9px]"></i> Origen: <span class="font-bold">Planilla compartida por el sector de Corporativo</span>
+                        </div>
                         <p class="text-xs text-slate-500 leading-relaxed">Archivo adicional corporativo para homologación de centros de costos.</p>
                         <div id="s2_bodyCorp" class="mt-3">
                             <p id="statusCorporativoText" class="text-[11px] text-slate-400 italic">No cargado</p>
@@ -223,17 +270,16 @@
                     </div>
                     <div class="border-t border-slate-100 mx-5"></div>
                     <div class="flex items-center justify-between px-5 py-3 gap-3">
-                        <input type="file" id="fileCorporativo" accept=".xlsx, .xls, .csv" class="hidden" onchange="preAnalizarCorporativo(event)">
                         <div id="statusCorporativo" class="text-[11px] text-slate-400 italic">-</div>
                         <div class="flex items-center gap-2">
                             <button type="button" id="btnDeleteCorp" onclick="eliminarCargaCorp()"
-                                class="hidden text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 w-7 h-7 rounded-lg flex items-center justify-center transition-colors shadow-sm shrink-0"
+                                class="hidden text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 w-7 h-7 rounded-lg flex items-center justify-center transition-colors shadow-sm shrink-0 cursor-pointer"
                                 title="Eliminar corporativo">
                                 <i class="fa-solid fa-trash-can text-[10px]"></i>
                             </button>
                             <button type="button" onclick="document.getElementById('fileCorporativo').click()"
-                                class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-lg transition-colors">
-                                <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Cargar Corporativo
+                                class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-2xs">
+                                <i class="fa-solid fa-cloud-arrow-up text-[10px]"></i> Cargar / Reemplazar
                             </button>
                         </div>
                     </div>
@@ -331,6 +377,11 @@
                     class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
                     <span class="flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation w-4 text-rose-500"></i> Obras sin Modalidad</span>
                     <span id="tabSinModalidadCount" class="tab-count-badge hidden ml-auto"></span>
+                </button>
+                <button type="button" onclick="switchTab('incoherenciastarea')" id="tabIncoherenciasTareaBtn"
+                    class="diag-menu-item w-full text-left px-3.5 py-2 text-sm text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-between gap-2">
+                    <span class="flex items-center gap-2"><i class="fa-solid fa-spell-check w-4 text-amber-500"></i> Incoherencias Nombre TAREA</span>
+                    <span id="tabIncoherenciasTareaCount" class="tab-count-badge hidden ml-auto"></span>
                 </button>
             </div>
         </div>
@@ -470,6 +521,10 @@
                     </button>
                     <div class="text-sm text-indigo-700 font-bold bg-indigo-50 px-3 py-1.5 rounded-md border border-indigo-200 shadow-sm"
                         id="statsText">0 registros</div>
+                    <button type="button" onclick="s2_avanzarSiguienteEtapa()"
+                        class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 rounded-md text-xs transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <span>Siguiente Etapa</span> <i class="fa-solid fa-arrow-right"></i>
+                    </button>
                     <button type="button" onclick="openConfigReglas()"
                         class="bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 font-semibold px-3 py-1.5 rounded-md text-xs transition-colors shadow-sm"
                         title="Gestor Reglas"><i class="fa-solid fa-sliders"></i></button>
@@ -1063,14 +1118,14 @@
             <!-- Tabla -->
             <div class="flex-1 overflow-auto custom-scrollbar p-0">
                 <table class="w-full text-left text-sm whitespace-nowrap">
-                    <thead class="bg-slate-50 sticky top-0 border-b border-slate-200">
+                    <thead class="bg-slate-50 sticky top-0 border-b border-slate-200 text-xs">
                         <tr>
                             <th class="p-3 font-semibold w-12 text-center border-r border-slate-200">#</th>
-                            <th class="p-3 font-semibold text-left border-r border-slate-200">Sector Informante / Origen
-                            </th>
-                            <th class="p-3 font-semibold text-left border-r border-slate-200">Nodo</th>
+                            <th class="p-3 font-semibold text-left border-r border-slate-200">Sector Informante</th>
+                            <th class="p-3 font-semibold text-left border-r border-slate-200">Nombre de la Obra (Nodo)</th>
+                            <th class="p-3 font-semibold text-left border-r border-slate-200">Contratista</th>
                             <th class="p-3 font-semibold text-left border-r border-slate-200">Estado Original</th>
-                            <th class="p-3 font-semibold text-center border-r border-slate-200">Modalidad</th>
+                            <th class="p-3 font-semibold text-center border-r border-slate-200">Modalidad Requerida</th>
                             <th class="p-3 font-semibold text-center">Acción</th>
                         </tr>
                     </thead>
@@ -1248,6 +1303,121 @@
                     class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded text-sm font-semibold shadow-sm transition-colors flex items-center gap-2">
                     <i class="fa-solid fa-paper-plane"></i> Enviar por Mail
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PESTAÑA: INCOHERENCIAS NOMBRE TAREA -->
+    <div id="tabIncoherenciasTareaContent" class="hidden flex-1 flex flex-col min-h-0 bg-slate-50 p-6">
+        <div class="max-w-7xl mx-auto w-full flex flex-col h-full bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+            <!-- Cabecera -->
+            <div class="p-4 border-b border-amber-200 bg-amber-50 flex flex-col gap-3">
+                <div class="flex flex-wrap justify-between items-center gap-3">
+                    <div>
+                        <h2 class="text-lg font-bold text-amber-900 flex items-center gap-2">
+                            <i class="fa-solid fa-spell-check text-amber-600"></i> Incoherencias Nombre por TAREA (Brownfield)
+                        </h2>
+                        <p class="text-xs text-amber-800 mt-0.5">Control de correspondencia entre el nombre oficial de la obra (<strong>Nodo</strong>) y la variante de liquidación (<strong>Nombre por TAREA</strong>)</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Buscador rápido -->
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+                            <input type="text" id="incoherenciasTareaSearch" oninput="renderIncoherenciasTareaTable()"
+                                placeholder="Buscar nodo, proyecto, contratista..."
+                                class="pl-8 pr-3 py-1.5 text-xs border border-amber-300 rounded focus:border-amber-500 outline-none bg-white font-medium text-slate-700 shadow-sm w-64">
+                        </div>
+
+                        <!-- Botón Exportar Excel -->
+                        <button type="button" onclick="exportIncoherenciasTareaToExcel()"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5"
+                            title="Descargar listado de inconsistencias en Excel">
+                            <i class="fa-solid fa-file-excel"></i> Exportar Inconsistencias
+                        </button>
+
+                        <!-- Botón Notificar por Correo -->
+                        <button type="button" onclick="enviarMailIncoherenciasTarea()"
+                            class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded text-xs font-bold transition-colors shadow-sm flex items-center gap-1.5"
+                            title="Generar correo de reclamo y solicitud de corrección">
+                            <i class="fa-solid fa-envelope"></i> Notificar Inconsistencia
+                        </button>
+
+                        <!-- Badge de Conteo -->
+                        <div class="text-sm text-amber-800 font-bold bg-white px-3 py-1.5 rounded border border-amber-300 shadow-sm"
+                            id="incoherenciasTareaCountText">0 inconsistencias</div>
+                    </div>
+                </div>
+
+                <!-- Barra de Píldoras Filtradoras Segmentadas -->
+                <div class="flex flex-wrap items-center gap-1.5 pt-1 border-t border-amber-200/60">
+                    <span class="text-[11px] font-bold text-amber-900/80 mr-1 flex items-center gap-1">
+                        <i class="fa-solid fa-filter text-amber-600"></i> Filtrar vista:
+                    </span>
+                    <button type="button" onclick="setIncoherenciasTareaFilter('prioritarias')" id="btnIncFiltro_prioritarias"
+                        class="inc-filter-pill active px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs border border-amber-400 bg-amber-600 text-white cursor-pointer">
+                        <span>Prioritarias a Notificar</span>
+                        <span class="bg-amber-800 text-white px-1.5 py-0.2 rounded-full text-[10px]" id="badgeCountPrioritarias">0</span>
+                    </button>
+                    <button type="button" onclick="setIncoherenciasTareaFilter('mal_tipeadas')" id="btnIncFiltro_mal_tipeadas"
+                        class="inc-filter-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer">
+                        <span class="text-rose-600">●</span> <span>Mal Tipeadas</span>
+                        <span class="bg-rose-100 text-rose-800 px-1.5 py-0.2 rounded-full text-[10px]" id="badgeCountMalTipeadas">0</span>
+                    </button>
+                    <button type="button" onclick="setIncoherenciasTareaFilter('iniciadas_terminadas')" id="btnIncFiltro_iniciadas_terminadas"
+                        class="inc-filter-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer">
+                        <span class="text-sky-600">●</span> <span>Iniciadas / Terminadas</span>
+                        <span class="bg-sky-100 text-sky-800 px-1.5 py-0.2 rounded-full text-[10px]" id="badgeCountIniciadas">0</span>
+                    </button>
+                    <button type="button" onclick="setIncoherenciasTareaFilter('a_ejecutar_tickets')" id="btnIncFiltro_a_ejecutar_tickets"
+                        class="inc-filter-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer">
+                        <span class="text-amber-600">●</span> <span>A Ejecutar con Tkts</span>
+                        <span class="bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full text-[10px]" id="badgeCountConTickets">0</span>
+                    </button>
+                    <button type="button" onclick="setIncoherenciasTareaFilter('a_ejecutar_sin_tickets')" id="btnIncFiltro_a_ejecutar_sin_tickets"
+                        class="inc-filter-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border border-slate-300 bg-white text-slate-500 hover:text-slate-800 hover:bg-slate-100 cursor-pointer"
+                        title="Obras en estado A EJECUTAR que aún no registran tickets cerrados">
+                        <span class="text-slate-400">○</span> <span>A Ejecutar (Sin Tkts)</span>
+                        <span class="bg-slate-200 text-slate-700 px-1.5 py-0.2 rounded-full text-[10px]" id="badgeCountSinTickets">0</span>
+                    </button>
+                    <button type="button" onclick="setIncoherenciasTareaFilter('todas')" id="btnIncFiltro_todas"
+                        class="inc-filter-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer">
+                        <span>Ver Todas</span>
+                        <span class="bg-slate-100 text-slate-700 px-1.5 py-0.2 rounded-full text-[10px]" id="badgeCountTodas">0</span>
+                    </button>
+                </div>
+
+                <!-- Info contextual de la regla -->
+                <div class="bg-amber-100/70 border border-amber-300 text-amber-900 p-3 rounded-lg text-xs flex items-start gap-2 shadow-sm">
+                    <i class="fa-solid fa-circle-exclamation mt-0.5 text-amber-600"></i>
+                    <div>
+                        <p><strong>Criterio de Validación Brownfield (Modalidad TAREA):</strong> El campo <strong>Nodo</strong> es la clave rectora. Para obras Brownfield, si los primeros 7 caracteres del <strong>Nodo</strong> (sin espacios) coinciden con <strong>Nombre por TAREA</strong>, se considera plenamente consistente. Esta auditoría detecta discrepancias y errores tipográficos comunes como la omisión del sufijo (ej: <code>LP222</code> cuando debe ser <code>LP222FO</code>) o la asignación errónea de obra civil (ej: <code>LP224OC</code> en lugar de <code>LP224FO</code>).</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Inconsistencias -->
+            <div class="flex-1 overflow-auto custom-scrollbar p-0">
+                <table class="w-full text-left text-sm whitespace-nowrap" style="border-collapse: collapse;">
+                    <thead class="bg-slate-50 border-b border-slate-200 sticky top-0 z-10">
+                        <tr>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center w-12">#</th>
+                            <th class="p-3 font-semibold text-xs text-amber-900 border-r bg-amber-50">Nodo (Oficial)</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Proyecto / Etapa</th>
+                            <th class="p-3 font-semibold text-xs text-rose-800 border-r bg-rose-50/50">Nombre por TAREA (Informado)</th>
+                            <th class="p-3 font-semibold text-xs text-emerald-800 border-r bg-emerald-50/50">Nombre Esperado (Sugerido)</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Inconsistencia Detectada</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r">Estado</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600 border-r text-center">% Avance</th>
+                            <th class="p-3 font-semibold text-xs text-slate-600">Contratista</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incoherenciasTareaTableBody" class="divide-y divide-slate-100"></tbody>
+                </table>
+                <div id="emptyIncoherenciasTareaState" class="hidden p-12 text-center text-slate-400">
+                    <i class="fa-solid fa-circle-check text-5xl mb-4 text-emerald-500 opacity-60"></i>
+                    <p class="text-sm font-semibold text-slate-700">Sin Inconsistencias Detectadas</p>
+                    <p class="text-xs mt-1 text-slate-400">Todas las obras liquidadas por modalidad TAREA tienen el Nombre por TAREA alineado con su Nodo.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1782,5 +1952,102 @@
                 <tbody id="detModalTableBody" class="divide-y divide-slate-100"></tbody>
             </table>
         </div>
+    </div>
+</div>
+
+<!-- MODAL PROFESIONAL: NOTIFICACIÓN DE INCOHERENCIAS Y COPIADO DE TABLAS -->
+<div id="incoherenciasMailModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closeIncoherenciasMailModal()"></div>
+    <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full relative z-10 border border-slate-200 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+        
+        <!-- HEADER CON GRADIENTE ELEGANTE -->
+        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-5 flex items-center justify-between border-b border-indigo-900/40">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center text-indigo-300 text-lg shadow-inner">
+                    <i class="fa-solid fa-envelope-circle-check"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
+                        Notificación Lista para Enviar
+                    </h3>
+                    <p class="text-xs text-indigo-200/80 font-medium" id="incoherenciasModalContratistaText">
+                        Contratista: CONTRATISTA
+                    </p>
+                </div>
+            </div>
+            <button type="button" onclick="closeIncoherenciasMailModal()"
+                class="text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- CONTENIDO DEL MODAL -->
+        <div class="p-6 flex flex-col gap-4 bg-slate-50/60">
+            
+            <!-- Resumen de Métricas de Inconsistencias -->
+            <div class="grid grid-cols-3 gap-2.5">
+                <div class="bg-white p-2.5 rounded-xl border border-red-100 shadow-2xs text-center">
+                    <div class="text-[11px] font-bold text-red-600 uppercase tracking-wider">Mal Tipeadas</div>
+                    <div class="text-lg font-extrabold text-slate-800" id="incoherenciasModalCountP1">0</div>
+                </div>
+                <div class="bg-white p-2.5 rounded-xl border border-sky-100 shadow-2xs text-center">
+                    <div class="text-[11px] font-bold text-sky-600 uppercase tracking-wider">Sin Nombre</div>
+                    <div class="text-lg font-extrabold text-slate-800" id="incoherenciasModalCountP2">0</div>
+                </div>
+                <div class="bg-white p-2.5 rounded-xl border border-amber-100 shadow-2xs text-center">
+                    <div class="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Avance / Tkts</div>
+                    <div class="text-lg font-extrabold text-slate-800" id="incoherenciasModalCountP3">0</div>
+                </div>
+            </div>
+
+            <!-- Caja de Instrucciones Paso a Paso -->
+            <div class="bg-indigo-50/80 border border-indigo-200/70 rounded-xl p-4 flex flex-col gap-3">
+                <div class="flex items-start gap-3">
+                    <div class="w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                        1
+                    </div>
+                    <div class="text-xs text-slate-700">
+                        <strong class="text-indigo-950 font-bold">Cliente de correo preparado:</strong> Se inició la ventana en tu programa de correo (Outlook, Gmail, etc.) con el asunto y resumen.
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                        2
+                    </div>
+                    <div class="text-xs text-slate-700">
+                        <strong class="text-emerald-950 font-bold">Tablas enriquecidas copiadas:</strong> La totalidad del detalle con formato de tabla profesional ya se encuentra cargado en tu portapapeles.
+                    </div>
+                </div>
+
+                <!-- Callout de Atajo Ctrl+V -->
+                <div class="bg-white p-3 rounded-lg border border-indigo-200 flex items-center justify-between shadow-2xs mt-1">
+                    <span class="text-xs font-semibold text-slate-700">Pegar en el cuerpo del correo:</span>
+                    <span class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-300 text-slate-800 font-mono text-xs font-bold px-2.5 py-1 rounded shadow-2xs">
+                        <i class="fa-solid fa-keyboard text-slate-400"></i> Ctrl + V
+                    </span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FOOTER DE ACCIONES -->
+        <div class="p-4 border-t border-slate-200 bg-white flex items-center justify-between gap-2">
+            <button type="button" onclick="copiarTablasIncoherenciasNuevamente()"
+                class="bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer">
+                <i class="fa-solid fa-copy text-slate-500"></i> Recopiar Tablas
+            </button>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="reabrirMailIncoherencias()"
+                    class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Reabrir Correo
+                </button>
+                <button type="button" onclick="closeIncoherenciasMailModal()"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-sm transition-colors cursor-pointer">
+                    Entendido
+                </button>
+            </div>
+        </div>
+
     </div>
 </div>

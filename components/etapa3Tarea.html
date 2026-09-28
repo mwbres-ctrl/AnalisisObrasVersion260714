@@ -1,0 +1,514 @@
+<!-- TARJETA ETAPA 3 (SETUP SECTION) -->
+<div id="s3_cardSetupSection" class="bg-white border border-slate-200 rounded-xl shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden transition-all duration-300">
+    <div id="s3_cardAccentBar" class="absolute top-0 left-0 w-1.5 h-full bg-purple-600 transition-colors"></div>
+    <div class="flex-1">
+        <div class="flex items-center gap-2 mb-1">
+            <span id="s3_badgeCardEtapa3" class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                Etapa 3
+            </span>
+            <span class="text-xs font-semibold text-slate-500">Módulo Especializado</span>
+            <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
+                <i class="fa-solid fa-code-compare text-purple-500 mr-1"></i> Origen: Tableau · Obras · Oracle EBS
+            </span>
+        </div>
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+            Modalidad TAREA: Consistencia BF, Control de Sobrantes y Saldos Reales
+        </h2>
+        <p class="text-slate-500 text-sm mt-1">
+            Aplica la matriz oficial de 20 reglas de negocio evaluando Tickets TAREA contra Avance de Obras, detecta sobrantes sin tickets y concilia materiales con descargos.
+        </p>
+
+        <div class="flex flex-wrap items-center gap-3 mt-4 text-xs">
+            <div id="s3_cardResumenObras" class="font-medium text-slate-600 flex items-center gap-1.5">
+                <i class="fa-solid fa-calculator text-purple-600"></i>
+                <span id="s3_msgCardEtapa3">Listo para cruce automático con datos de Etapas 1 y 2</span>
+            </div>
+            <div class="w-px h-3 bg-slate-300"></div>
+            <span id="s3_cardBadgeDescargos" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-300">
+                Descargos Opcionales
+            </span>
+        </div>
+    </div>
+
+    <div class="shrink-0 flex flex-col sm:flex-row items-center gap-3">
+        <button type="button" id="s3_btnExportarMaestroCard" onclick="s3_exportarMaestroConsolidadoTarea()"
+            class="bg-white border border-purple-300 hover:bg-purple-50 text-purple-700 text-xs font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center gap-2 shadow-2xs whitespace-nowrap cursor-pointer"
+            title="Exportar archivo maestro consolidado de obras TAREA similar a Etapa 2">
+            <i class="fa-solid fa-file-excel text-emerald-600"></i> Exportar Maestro TAREA
+        </button>
+        <button type="button" id="s3_btnAbrirTarea" onclick="openTareaModule()"
+            class="bg-purple-600 hover:bg-purple-700 text-white text-sm font-bold transition-all flex items-center gap-2 px-6 py-3 rounded-lg shadow-md border border-purple-700 hover:shadow-lg whitespace-nowrap cursor-pointer">
+            <i class="fa-solid fa-clipboard-check"></i> Abrir Módulo TAREA
+        </button>
+    </div>
+</div>
+
+<!-- [SPLIT-MARKER] s3_tareaModule begin -->
+
+<!-- MÓDULO DE TRABAJO DEDICADO ETAPA 3 (TAREA) -->
+<div id="s3_tareaModule" class="hidden absolute inset-0 z-40 bg-slate-100 flex-col overflow-hidden">
+    <!-- BARRA SUPERIOR -->
+    <nav class="bg-white border-b border-slate-300 shadow-xs px-4 py-2 h-12 flex justify-between items-center z-20 relative shrink-0">
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="closeTareaModule()"
+                class="text-slate-500 hover:text-purple-700 hover:bg-purple-50 transition-colors w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 text-xs font-bold"
+                title="Volver al Panel Principal">
+                <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center shadow-xs">
+                <i class="fa-solid fa-clipboard-check text-xs"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-sm font-bold text-slate-800 tracking-tight">Etapa 3 · Conciliador de Obras Modalidad TAREA</h1>
+                    <span class="bg-purple-100 text-purple-800 border border-purple-200 text-[10px] font-bold px-2 py-0.2 rounded">Matriz v7 + Saldos</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHIPS DE CONTEXTO AUDITORÍA -->
+        <!-- CONMUTADOR DE PANTALLAS (NO SE MEZCLAN) -->
+        <div class="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+            <button type="button" id="s3_navBtnInsumos" onclick="s3_mostrarPantalla('insumos')"
+                class="px-3 py-1 text-xs font-bold rounded-md transition-all bg-white text-purple-700 shadow-2xs cursor-pointer">
+                <i class="fa-solid fa-folder-open mr-1"></i> Insumos y Archivos
+            </button>
+            <button type="button" id="s3_navBtnResultados" onclick="s3_mostrarPantalla('resultados')"
+                class="px-3 py-1 text-xs font-semibold rounded-md transition-all text-slate-600 hover:text-slate-900 cursor-pointer">
+                <i class="fa-solid fa-chart-pie mr-1"></i> Resultados y Análisis
+            </button>
+        </div>
+
+        <!-- CHIPS DE CONTEXTO AUDITORÍA -->
+        <div class="flex items-center gap-2">
+            <div class="hidden md:flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-600">
+                <i class="fa-solid fa-building text-slate-400"></i>
+                <span id="s3_chipEmpresa" class="font-bold text-slate-800">Contratista</span>
+            </div>
+            <div class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-xs font-medium text-slate-600">
+                <i class="fa-solid fa-calendar-day text-slate-400"></i>
+                <span id="s3_chipFecha" class="font-bold text-slate-800">Fecha Corte</span>
+            </div>
+            <button type="button" onclick="s3_procesarCruceTareaUsuario()"
+                class="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-rotate"></i> Re-procesar
+            </button>
+        </div>
+    </nav>
+
+    <!-- ÁREA DE CONTENIDO CON SCROLL -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+
+        <!-- ============================================================= -->
+        <!-- PANTALLA 1: INSUMOS Y CARGA DE ARCHIVOS TAREA (SEPARADA)       -->
+        <!-- ============================================================= -->
+        <div id="s3_panelInsumos" class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center text-lg">
+                        <i class="fa-solid fa-folder-open"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-800">Insumos y Carga de Archivos para Modalidad TAREA</h2>
+                        <p class="text-xs text-slate-500">Verifica los archivos heredados o carga nuevos insumos antes de ejecutar el cruce analítico.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="s3_btnToggleResultadosRapido" onclick="s3_mostrarPantalla('resultados')" class="hidden text-xs font-bold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer">
+                        <i class="fa-solid fa-chart-pie mr-1"></i> Ir a Pantalla de Resultados <i class="fa-solid fa-arrow-right ml-1"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Banner y Botón de Carga Automática de Etapa 3 -->
+            <div class="bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-900 rounded-xl p-3.5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0 border border-white/20">
+                        <i class="fa-solid fa-wand-magic-sparkles text-lg text-purple-300"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-purple-300 bg-purple-400/20 px-2 py-0.5 rounded-full border border-purple-300/30">Modo Asistido</span>
+                            <h3 class="text-sm font-bold text-white">Carga Automática de Etapa 3 (Modalidad TAREA)</h3>
+                        </div>
+                        <p class="text-[11px] text-purple-100 mt-0.5">Selecciona todos los archivos juntos (Tickets, Avance, PM, Descargos). El asistente los identificará y cruzará automáticamente.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.batchLoader.iniciarCargaEtapa(3)"
+                    class="bg-white hover:bg-slate-100 text-purple-900 font-bold text-xs px-4 py-2.5 rounded-lg transition-all shadow-md flex items-center justify-center gap-2 shrink-0 cursor-pointer hover:scale-[1.02] active:scale-[0.98]">
+                    <i class="fa-solid fa-cloud-arrow-up text-purple-600"></i>
+                    <span>Cargar Todos los Archivos TAREA</span>
+                </button>
+            </div>
+
+            <!-- CUADRÍCULA DE 4 TARJETAS DE CARGA -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- TARJETA 1: TICKETS TAREA -->
+                <div id="s3_cardFileTarea" class="border border-slate-200 rounded-xl p-4 bg-slate-50 hover:bg-white hover:border-purple-300 transition-all flex flex-col justify-between relative group">
+                    <input type="file" id="s3_inputTarea" accept=".xlsx,.xls,.csv" class="hidden" onchange="s3_handleFileInputTarea(this.files[0])">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded" title="Sistema 1 · Analizador Estado de Obra BF v9.3.3">tarea_paso1_ticketsBF (v9.3.3)</span>
+                            <span id="s3_badgeStatusTarea" class="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">Pendiente</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-800">Tickets de Órdenes TAREA</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Reporte de tickets emitidos y consumidos (Tableau).</p>
+                        <div id="s3_descStatusTarea" class="mt-2 text-xs font-medium text-slate-600 bg-white p-2 rounded border border-slate-200/60 min-h-[38px] flex items-center">
+                            <span class="italic text-slate-400">Sin archivo cargado</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                        <button type="button" onclick="document.getElementById('s3_inputTarea').click()" class="text-xs font-bold text-purple-700 hover:text-purple-900 flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Cargar / Cambiar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TARJETA 2: AVANCE DE OBRAS -->
+                <div id="s3_cardFileAvance" class="border border-slate-200 rounded-xl p-4 bg-slate-50 hover:bg-white hover:border-purple-300 transition-all flex flex-col justify-between relative group">
+                    <input type="file" id="s3_inputAvance" accept=".xlsx,.xls,.csv" class="hidden" onchange="s3_handleFileInputAvance(this.files[0])">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded" title="Sistema 2 · Analizador Avance de Obras v2.0">tarea_paso2_avanceObras (v2.0)</span>
+                            <span id="s3_badgeStatusAvance" class="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">Pendiente</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-800">Sistema Avance de Obras</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Planilla de avance, nodos, estados y contratistas.</p>
+                        <div id="s3_descStatusAvance" class="mt-2 text-xs font-medium text-slate-600 bg-white p-2 rounded border border-slate-200/60 min-h-[38px] flex items-center">
+                            <span class="italic text-slate-400">Sin archivo cargado</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                        <button type="button" onclick="document.getElementById('s3_inputAvance').click()" class="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Cargar / Cambiar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TARJETA 3: REPORTE PM / PMOVXF -->
+                <div id="s3_cardFilePM" class="border border-slate-200 rounded-xl p-4 bg-slate-50 hover:bg-white hover:border-purple-300 transition-all flex flex-col justify-between relative group">
+                    <input type="file" id="s3_inputPM" accept=".xlsx,.xls,.csv" class="hidden" onchange="s3_handleFileInputPM(this.files[0])">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-teal-700 bg-teal-100 px-2 py-0.5 rounded" title="Sistema 4 · Materiales Obras BF v1.8">tarea_paso4_materiales (PMOVXF v1.8)</span>
+                            <span id="s3_badgeStatusPM" class="text-[10px] font-bold text-slate-500 bg-slate-200 px-2 py-0.5 rounded-full">Pendiente</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-800">Reporte Oracle EBS</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Materiales solicitados y entregados por obra.</p>
+                        <div id="s3_descStatusPM" class="mt-2 text-xs font-medium text-slate-600 bg-white p-2 rounded border border-slate-200/60 min-h-[38px] flex items-center">
+                            <span class="italic text-slate-400">Sin archivo cargado</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                        <button type="button" onclick="document.getElementById('s3_inputPM').click()" class="text-xs font-bold text-teal-700 hover:text-teal-900 flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Cargar / Cambiar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TARJETA 4: TAREAS EN DESC MAT -->
+                <div id="s3_cardFileDescargos" class="border border-slate-200 rounded-xl p-4 bg-slate-50 hover:bg-white hover:border-purple-300 transition-all flex flex-col justify-between relative group">
+                    <input type="file" id="s3_inputDescargos" accept=".xlsx,.xls,.csv" class="hidden" onchange="s3_handleFileInputDescargos(this.files[0], this)">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span id="s3_tagFileDescargos" class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2 py-0.5 rounded" title="Sistema 4 · Materiales Obras BF v1.8 (Saldos Reales)">tarea_paso4_descargos (Saldos v1.8)</span>
+                            <span id="s3_badgeStatusDescargos" class="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">Opcional</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-800">Tareas en Desc Mat</p>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Deducción de descargos para obtener saldo real.</p>
+                        <div id="s3_descStatusDescargos" class="mt-2 text-xs font-medium text-slate-600 bg-white p-2 rounded border border-slate-200/60 min-h-[38px] flex items-center">
+                            <span class="italic text-slate-400">Sin descargos cargados</span>
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                        <button type="button" onclick="document.getElementById('s3_inputDescargos').click()" class="text-xs font-bold text-amber-700 hover:text-amber-900 flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Cargar / Cambiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESUMEN DE CONTEXTO Y BOTÓN PRINCIPAL DE PROCESAMIENTO -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5 text-xs text-slate-600">
+                    <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold shrink-0">
+                        <i class="fa-solid fa-check-double text-xs"></i>
+                    </div>
+                    <div>
+                        <span class="font-bold text-slate-700">Auditoría Unificada:</span>
+                        <span class="text-slate-500 ml-1">Utiliza la contratista y fecha de corte establecidas en el encabezado general.</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <button type="button" id="s3_btnProcesarConsolidar" onclick="s3_procesarCruceTareaUsuario()"
+                        class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-sm px-6 py-3 rounded-xl shadow-md border border-purple-700 hover:shadow-lg transition-all flex items-center justify-center gap-2 w-full sm:w-auto cursor-pointer">
+                        <i class="fa-solid fa-bolt"></i> Procesar y Consolidar Modalidad TAREA
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- PANTALLA 2: RESULTADOS Y ANÁLISIS TAREA (SEPARADA)             -->
+        <!-- ============================================================= -->
+        <div id="s3_panelResultados" class="hidden space-y-2">
+
+            <!-- RESUMEN DE INDICADORES (KPIs COMPACTO) -->
+            <div class="flex flex-wrap items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
+                <div class="flex items-center gap-1.5 px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-xs">
+                    <span class="text-slate-500 font-medium">Total Matriz:</span>
+                    <span id="s3_badgeTotalMatriz" class="font-bold text-slate-800">0</span>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 rounded-md text-xs">
+                    <i class="fa-solid fa-circle-check text-emerald-600 text-[11px]"></i>
+                    <span class="text-emerald-700 font-medium">Considera (SI):</span>
+                    <span id="s3_badgeTotalSI" class="font-bold text-emerald-800">0</span>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 bg-rose-50 border border-rose-200 rounded-md text-xs">
+                    <i class="fa-solid fa-circle-xmark text-rose-500 text-[11px]"></i>
+                    <span class="text-rose-700 font-medium">Excluidas (NO):</span>
+                    <span id="s3_badgeTotalNO" class="font-bold text-rose-800">0</span>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-200 rounded-md text-xs">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 text-[11px]"></i>
+                    <span class="text-amber-700 font-medium">Sin Ticket:</span>
+                    <span id="s3_badgeTotalSobrantes" class="font-bold text-amber-800">0</span>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 bg-indigo-50 border border-indigo-200 rounded-md text-xs">
+                    <i class="fa-solid fa-boxes-stacked text-indigo-500 text-[11px]"></i>
+                    <span class="text-indigo-700 font-medium">Materiales SI:</span>
+                    <span id="s3_badgeTotalMateriales" class="font-bold text-indigo-800">0</span>
+                </div>
+            </div>
+
+            <!-- BARRA DE SOLAPAS Y ACCIONES -->
+            <div class="bg-white rounded-lg border border-slate-200 shadow-2xs px-3 py-1.5 flex flex-col md:flex-row items-start md:items-center justify-between gap-2.5">
+                <div class="flex space-x-5 border-b md:border-b-0 border-slate-200 w-full md:w-auto">
+                    <button type="button" id="s3_btnTabMatriz" onclick="s3_switchTab('MATRIZ')"
+                        class="pb-1.5 text-xs font-bold text-indigo-600 border-b-2 border-indigo-600 transition-colors flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-table-cells"></i> Cruce Obras TAREA
+                    </button>
+                    <button type="button" id="s3_btnTabSobrantes" onclick="s3_switchTab('SOBRANTES')"
+                        class="pb-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-circle-exclamation text-amber-500"></i> Obras TAREA Sin Ticket
+                    </button>
+                    <button type="button" id="s3_btnTabMateriales" onclick="s3_switchTab('MATERIALES')"
+                        class="pb-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 border-b-2 border-transparent transition-colors flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-cubes text-purple-500"></i> Materiales TAREA
+                    </button>
+                </div>
+
+                <!-- BOTONES DE ACCIONES POR SOLAPA -->
+                <div class="w-full md:w-auto">
+                    <!-- ACCIONES SOLAPA 1: Cruce Obras TAREA -->
+                    <div id="s3_actionsMatriz" class="flex flex-wrap items-center gap-2 justify-end">
+                        <button type="button" onclick="s3_exportarMaestroConsolidadoTarea()"
+                            class="bg-purple-700 hover:bg-purple-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs border border-purple-800 cursor-pointer"
+                            title="Descargar archivo Analisis_Vista_Consolidada.xlsx (Matriz Oficial Consolidada)">
+                            <i class="fa-solid fa-file-excel"></i> Analisis_Vista_Consolidada
+                        </button>
+                        <button type="button" onclick="s3_exportarExcelMatriz()"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            title="Descargar archivo Analisis_Vista_Consolidada.xlsx (Vista Consolidada)">
+                            <i class="fa-solid fa-table-cells"></i> Exportar Matriz
+                        </button>
+                        <button type="button" onclick="s3_exportarDetalle2()"
+                            class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            title="Descargar Exportar_2_Detalle.xlsx (Datos combinados de Tickets y Avance)">
+                            <i class="fa-solid fa-file-spreadsheet"></i> Exportar 2 (Detalle)
+                        </button>
+                        <button type="button" onclick="s3_exportarObrasSI()"
+                            class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            title="Descargar obras que consideran en Excel">
+                            <i class="fa-solid fa-check-double"></i> Exportar Obras SI
+                        </button>
+                        <button type="button" onclick="s3_generarMailConsultaObras()"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            title="Generar correo a Obras por falta de estado">
+                            <i class="fa-solid fa-envelope"></i> Mail Consulta
+                        </button>
+                    </div>
+
+                    <!-- ACCIONES SOLAPA 2: Obras TAREA Sin Ticket -->
+                    <div id="s3_actionsSobrantes" class="hidden flex flex-wrap items-center gap-2 justify-end">
+                        <button type="button" onclick="s3_exportarSobrantes()"
+                            class="bg-slate-700 hover:bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            title="Descargar sobrantes">
+                            <i class="fa-solid fa-file-arrow-down"></i> Exportar Sobrantes
+                        </button>
+                        <button type="button" onclick="s3_generarMailVerificarSobrantes()"
+                            class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            title="Generar correo por tickets no emitidos">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Mail Sin Ticket
+                        </button>
+                    </div>
+
+                    <!-- ACCIONES SOLAPA 3: Materiales TAREA -->
+                    <div id="s3_actionsMateriales" class="hidden flex flex-wrap items-center gap-2 justify-end">
+                        <button type="button" onclick="s3_exportarMateriales()"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            title="Descargar planilla de conciliación de materiales y saldos">
+                            <i class="fa-solid fa-boxes-packing"></i> Exportar Materiales
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- SOLAPA 1: MATRIZ DE CONSISTENCIA                             -->
+            <!-- ============================================================= -->
+            <div id="s3_secMatriz" class="space-y-2">
+                <!-- FILTROS DE TABLA MATRIZ (COMPACTOS) -->
+                <div class="bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-2xs flex flex-wrap gap-2.5 items-center">
+                    <div class="flex-1 min-w-[200px] relative">
+                        <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2 text-slate-400 text-xs"></i>
+                        <input type="text" oninput="s3_setFiltroTexto(this.value)"
+                            placeholder="Buscar por Obra BF, Nodo, Análisis..."
+                            class="w-full pl-7 pr-2.5 py-1 text-xs bg-slate-50 border border-slate-200 rounded-md text-slate-800 focus:bg-white focus:ring-1 focus:ring-purple-500 outline-none">
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[11px] font-medium text-slate-500 whitespace-nowrap">Detalle BF:</span>
+                        <select id="s3_filterDetalleBF" onchange="s3_setFiltroDetalleBF(this.value)"
+                            class="py-1 px-2 text-xs bg-slate-50 border border-slate-200 rounded-md text-slate-800 outline-none w-44">
+                            <option value="ALL">TODOS</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[11px] font-medium text-slate-500 whitespace-nowrap">Estado Avance:</span>
+                        <select id="s3_filterEstado" onchange="s3_setFiltroEstado(this.value)"
+                            class="py-1 px-2 text-xs bg-slate-50 border border-slate-200 rounded-md text-slate-800 outline-none w-40">
+                            <option value="ALL">TODOS</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[11px] font-medium text-slate-500 whitespace-nowrap">¿Considera?:</span>
+                        <select onchange="s3_setFiltroConsidera(this.value)"
+                            class="py-1 px-2 text-xs bg-slate-50 border border-slate-200 rounded-md text-slate-800 font-bold outline-none w-28">
+                            <option value="ALL">TODOS</option>
+                            <option value="SI">SOLO SI</option>
+                            <option value="NO">SOLO NO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- TABLA DE LA MATRIZ -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+                    <div class="overflow-x-auto max-h-[calc(100vh-270px)] min-h-[420px]">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 text-slate-600 sticky top-0 z-10 border-b border-slate-200 text-xs uppercase tracking-wider font-semibold">
+                                <tr>
+                                    <th class="p-2.5">Obra BF</th>
+                                    <th class="p-2.5">Detalle Obra BF</th>
+                                    <th class="p-2.5">Nodo</th>
+                                    <th class="p-2.5">Estado Avance</th>
+                                    <th class="p-2.5 text-center">% Avance</th>
+                                    <th class="p-2.5 text-center">Fecha Inicio</th>
+                                    <th class="p-2.5 text-center">¿Considera?</th>
+                                    <th class="p-2.5">Análisis / Criterio</th>
+                                    <th class="p-2.5">Indicación a Contratista</th>
+                                </tr>
+                            </thead>
+                            <tbody id="s3_tablaMatrizBody" class="divide-y divide-slate-100">
+                                <tr><td colspan="9" class="p-8 text-center text-slate-400 italic text-xs">Cargando datos de la matriz...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- SOLAPA 2: SOBRANTES EN AVANCE SIN TICKET                     -->
+            <!-- ============================================================= -->
+            <div id="s3_secSobrantes" class="hidden space-y-2">
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-2.5 flex items-start gap-2.5">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-base mt-0.5"></i>
+                    <div class="text-xs text-amber-900 leading-normal">
+                        <p class="font-bold">Control de Calidad: Obras registradas en el Avance que no registran Tickets en el Sistema TAREA</p>
+                        <p class="text-[11px] text-amber-800">Aquellas obras en estado <strong>EN EJECUCION</strong> o <strong>TERMINADO</strong> cuya fecha de inicio es anterior a la auditoría son diagnosticadas automáticamente con advertencia.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+                    <div class="overflow-x-auto max-h-[calc(100vh-270px)] min-h-[420px]">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 text-slate-600 sticky top-0 z-10 border-b border-slate-200 text-xs uppercase tracking-wider font-semibold">
+                                <tr>
+                                    <th class="p-2.5">Obra BF</th>
+                                    <th class="p-2.5">Nodo</th>
+                                    <th class="p-2.5">Estado Avance</th>
+                                    <th class="p-2.5 text-center">% Avance</th>
+                                    <th class="p-2.5 text-center">Fecha Inicio</th>
+                                    <th class="p-2.5">Contratista</th>
+                                    <th class="p-2.5">Diagnóstico / Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="s3_tablaSobrantesBody" class="divide-y divide-slate-100">
+                                <tr><td colspan="7" class="p-8 text-center text-slate-400 italic text-xs">Sin registros de sobrantes.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================= -->
+            <!-- SOLAPA 3: CONCILIACIÓN DE MATERIALES Y SALDOS REALES         -->
+            <!-- ============================================================= -->
+            <div id="s3_secMateriales" class="hidden space-y-2">
+                <!-- PANEL DE CARGA DE DESCARGOS -->
+                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs flex flex-col md:flex-row items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-base shrink-0 border border-purple-100">
+                            <i class="fa-solid fa-boxes-packing"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-800">Cargar Archivo de Descargos ("Tareas en Desc Mat")</h3>
+                            <p class="text-slate-500 text-[11px]">Deduce consumos cerrados por obra y artículo para obtener la <strong>CANTIDAD FINAL</strong> neta a inventariar.</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <label class="cursor-pointer bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-colors shadow-xs flex items-center gap-1.5">
+                            <i class="fa-solid fa-upload"></i> Subir Descargos (.xlsx)
+                            <input type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="s3_handleFileInputDescargos(this.files[0], this)">
+                        </label>
+                        <button type="button" onclick="s3_exportarMateriales()"
+                            class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer">
+                            <i class="fa-solid fa-file-excel"></i> Exportar Materiales
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TABLA DE MATERIALES -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
+                    <div class="overflow-x-auto max-h-[calc(100vh-270px)] min-h-[420px]">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 text-slate-600 sticky top-0 z-10 border-b border-slate-200 text-xs uppercase tracking-wider font-semibold">
+                                <tr>
+                                    <th class="p-2.5">Artículo</th>
+                                    <th class="p-2.5">Localizador Destino</th>
+                                    <th class="p-2.5">UDM</th>
+                                    <th class="p-2.5 text-right">Cant. Solicitada</th>
+                                    <th class="p-2.5 text-right">Cant. Entregada</th>
+                                    <th class="p-2.5 text-right bg-slate-100">Cant. a Considerar</th>
+                                    <th class="p-2.5 text-right text-purple-700">Descargado</th>
+                                    <th class="p-2.5 text-right bg-emerald-50 text-emerald-800">CANTIDAD FINAL</th>
+                                    <th class="p-2.5">Obra BF (PM)</th>
+                                    <th class="p-2.5">Obra BF (Cruce SI)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="s3_tablaMaterialesBody" class="divide-y divide-slate-100">
+                                <tr><td colspan="10" class="p-8 text-center text-slate-400 italic text-xs">Cargando reporte de materiales...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- Fin s3_panelResultados -->
+
+    </div>
+</div>
