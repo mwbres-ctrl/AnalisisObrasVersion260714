@@ -487,3 +487,9 @@ function saveStateChange() {
     // Recalculate consolidations after a short delay
     setTimeout(() => procesarConsolidacion(), 300);
 }
+
+
+// --- AUTO-EXPORTS FOR HTML EVENT HANDLERS ---
+if (typeof openEditModal !== 'undefined') window.openEditModal = openEditModal;
+if (typeof closeEditModal !== 'undefined') window.closeEditModal = closeEditModal;
+if (typeof saveStateChange !== 'undefined') window.saveStateChange = saveStateChange;

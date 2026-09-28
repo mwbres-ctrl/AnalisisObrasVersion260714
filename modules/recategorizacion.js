@@ -192,3 +192,9 @@ window.renderRecatTable = function () {
         tbody.appendChild(tr);
     });
 };
+
+
+// --- AUTO-EXPORTS FOR HTML EVENT HANDLERS ---
+if (typeof closeConfigReglasModal !== 'undefined') window.closeConfigReglasModal = closeConfigReglasModal;
+if (typeof saveConfigReglas !== 'undefined') window.saveConfigReglas = saveConfigReglas;
+if (typeof resetConfigReglas !== 'undefined') window.resetConfigReglas = resetConfigReglas;

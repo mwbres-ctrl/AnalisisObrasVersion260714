@@ -284,3 +284,7 @@ function renderDetallePMTable() {
         tbody.innerHTML += `<tr><td colspan="12" class="py-3 px-3 text-center text-slate-500 text-xs italic bg-slate-50">Mostrando 1000 de ${registros.length}. Aplique filtros para acotar la vista.</td></tr>`;
     }
 }
+
+
+// --- AUTO-EXPORTS FOR HTML EVENT HANDLERS ---
+if (typeof limpiarFiltrosPM !== 'undefined') window.limpiarFiltrosPM = limpiarFiltrosPM;

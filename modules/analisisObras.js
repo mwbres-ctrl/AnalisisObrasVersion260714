@@ -382,3 +382,7 @@ function enviarPorMailValidacionContratista() {
         window.location.href = mailtoLink;
     }, 300);
 }
+
+// --- AUTO-EXPORTS FOR HTML EVENT HANDLERS ---
+if (typeof descargarTablaValidacionContratista !== 'undefined') window.descargarTablaValidacionContratista = descargarTablaValidacionContratista;
+if (typeof enviarPorMailValidacionContratista !== 'undefined') window.enviarPorMailValidacionContratista = enviarPorMailValidacionContratista;

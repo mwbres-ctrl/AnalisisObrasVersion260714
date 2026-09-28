@@ -212,7 +212,11 @@ function _procesarConsolidacionCore() {
     if (dataAvance) {
         dataAvance.forEach(row => {
             const rowCopy = { ...row, 'Sector Informante': 'Obras' };
-            const k = String(rowCopy['_N_NODO'] || '').trim().toUpperCase();
+            const k = String(
+                rowCopy['_N_NODO'] || rowCopy['NODO'] || rowCopy['Nodo'] ||
+                rowCopy['_N_MOTIVO'] || rowCopy['MOTIVO'] || rowCopy['Motivo'] ||
+                rowCopy['_N_OBRA'] || rowCopy['OBRA'] || rowCopy['Obra'] || ''
+            ).trim().toUpperCase();
             if (k) mapAvance.set(k, rowCopy);
             else allAvance.push(rowCopy);
         });
@@ -288,9 +292,20 @@ function _procesarConsolidacionCore() {
         const fila = { ...rowAvance };
         Object.keys(fila).forEach(k => { if (k.startsWith('_N_')) delete fila[k]; });
 
-        let nodo = String(rowAvance['_N_NODO'] || '').trim();
-        let estadoAvance = String(rowAvance['_N_ESTADO'] || '').trim().toUpperCase();
-        let modalidad = String(rowAvance['_N_MODALIDAD_DE_LIQUIDACION'] || '').trim().toUpperCase();
+        let nodo = String(
+            rowAvance['_N_NODO'] || rowAvance['NODO'] || rowAvance['Nodo'] ||
+            rowAvance['_N_MOTIVO'] || rowAvance['MOTIVO'] || rowAvance['Motivo'] ||
+            rowAvance['_N_OBRA'] || rowAvance['OBRA'] || rowAvance['Obra'] || ''
+        ).trim();
+        let estadoAvance = String(
+            rowAvance['_N_ESTADO'] || rowAvance['ESTADO'] || rowAvance['Estado'] ||
+            rowAvance['_N_ESTADO_DE_AVANCE'] || rowAvance['ESTADO DE AVANCE'] || ''
+        ).trim().toUpperCase();
+        let modalidad = String(
+            rowAvance['_N_MODALIDAD_DE_LIQUIDACION'] || rowAvance['MODALIDAD DE LIQUIDACION'] ||
+            rowAvance['MODALIDAD DE LIQUIDACIÓN'] || rowAvance['_N_MODALIDAD'] ||
+            rowAvance['MODALIDAD'] || rowAvance['Modalidad'] || ''
+        ).trim().toUpperCase();
 
         // 1. APLICACIÓN DE TRAZABILIDAD Y CORRECCIONES MANUALES
         const originalEstado = estadoAvance;
@@ -566,6 +581,9 @@ function _procesarConsolidacionCore() {
     if (typeof renderDetalleTareasTable === 'function') {
         renderDetalleTareasTable();
     }
+    if (typeof renderIncoherenciasTareaTable === 'function') {
+        renderIncoherenciasTareaTable();
+    }
     hideLoadingOverlay();
 }
 
@@ -753,19 +771,20 @@ function renderPreview() {
             ? `<span class="text-indigo-600 font-bold" title="Original: ${item['Estado (Original Excel)']}"><i class="fa-solid fa-pen-nib mr-1 text-[10px]"></i> ${item['Estado (Motor)']}</span>`
             : item['Estado (Motor)'];
 
+        const nodoVal = item['Nodo'] || item['NODO'] || item['Nodo Original'] || item['Motivo'] || item['MOTIVO'] || '';
         const nodoRender = item['_MODIFICADO_NODO_']
-            ? `<span class="text-indigo-600 font-bold" title="Original: ${item['Nodo Original']}"><i class="fa-solid fa-spell-check mr-1 text-[10px]"></i> ${item['Nodo'] || item['NODO']}</span>`
-            : `<span class="text-slate-800">${item['Nodo'] || item['NODO']}</span>`;
+            ? `<span class="text-indigo-600 font-bold" title="Original: ${item['Nodo Original']}"><i class="fa-solid fa-spell-check mr-1 text-[10px]"></i> ${nodoVal || '-'}</span>`
+            : `<span class="text-slate-800">${nodoVal || '-'}</span>`;
 
         const tr = document.createElement('tr');
         tr.className = "group border-b border-slate-200 transition-colors";
         tr.innerHTML = `
             <td class="py-2 px-3 border-r border-slate-200 font-medium">${nodoRender}</td>
-            <td class="py-2 px-3 border-r border-slate-200 font-mono text-[10px] text-indigo-700 bg-indigo-50/20">${item['Obra BF']}</td>
+            <td class="py-2 px-3 border-r border-slate-200 font-mono text-[10px] text-indigo-700 bg-indigo-50/20">${item['Obra BF'] || '-'}</td>
             <td class="py-2 px-3 border-r border-slate-200">${modHtml}</td>
-            <td class="py-2 px-3 border-r border-slate-200 text-slate-500">${estadoRender}</td>
-            <td class="py-2 px-3 border-r border-slate-200 text-indigo-600 font-mono text-[10px] bg-indigo-50/30">${item['_AUDIT_']}</td>
-            <td class="py-2 px-3 border-r border-slate-200 ${style.text}">${item['Estado de Avance (Calculado)']}</td>
+            <td class="py-2 px-3 border-r border-slate-200 text-slate-500">${estadoRender || '-'}</td>
+            <td class="py-2 px-3 border-r border-slate-200 text-indigo-600 font-mono text-[10px] bg-indigo-50/30">${item['_AUDIT_'] || '-'}</td>
+            <td class="py-2 px-3 border-r border-slate-200 ${style.text}">${item['Estado de Avance (Calculado)'] || '-'}</td>
             <td class="py-2 px-3 border-r border-slate-200 text-[11px] font-semibold text-slate-700 bg-amber-50/20">${item['Estado de Entregas'] || '-'}</td>
             <td class="py-2 px-3 border-r border-slate-200 text-[11px] font-semibold text-blue-700 bg-blue-50/20">${item['Obra a considerar'] || '-'}</td>
             <td class="py-2 px-3 border-r border-slate-200 text-xs ${obs.includes('reclamar a Obras') || obs.includes('corregir el estado') || item['_ES_HUERFANO'] ? 'text-red-700 font-bold bg-red-50' : 'text-slate-600'} truncate max-w-[250px]" title="${obs}">${obs}</td>
@@ -1026,15 +1045,14 @@ function enviarMailReclamoSinModalidad() {
     cuerpo += `Se solicita la regularización urgente de la Modalidad de Liquidación para las siguientes obras informadas sin modalidad asignada.\n`;
     cuerpo += `Es condición necesaria definir si cada obra debe ser procesada bajo la modalidad de LEGAJO o TAREA:\n\n`;
 
-    list.slice(0, 40).forEach((item, idx) => {
-        const nodo = item['Nodo'] || item['NODO'] || '-';
-        const est = item['Estado (Original Excel)'] || '-';
+    list.slice(0, 50).forEach((item, idx) => {
+        const obra = item['Nodo'] || item['NODO'] || '-';
         const sec = item['Sector Informante'] || (item['_ORIGEN'] === 'CORPORATIVO' ? 'Corporativo' : 'Obras');
-        cuerpo += `${idx + 1}. Nodo/Obra: ${nodo} | Estado: ${est} | Sector: ${sec}\n`;
+        cuerpo += `${idx + 1}. Sector Informante: ${sec} | Obra: ${obra}\n`;
     });
 
-    if (list.length > 40) {
-        cuerpo += `\n... y ${list.length - 40} obras adicionales (ver archivo adjunto o sistema).\n`;
+    if (list.length > 50) {
+        cuerpo += `\n... y ${list.length - 50} obras adicionales (ver archivo adjunto o sistema).\n`;
     }
 
     cuerpo += `\nAgradecemos regularizar la asignación a la brevedad para poder avanzar con el analisis de la auditoria.\n`;
@@ -1129,32 +1147,768 @@ function renderSinModalidadTable() {
         const esCorp = (origen === 'CORPORATIVO' || String(secInf).toUpperCase().includes('CORP'));
 
         const sectorBadge = esCorp
-            ? `<span class="bg-purple-100 text-purple-700 px-2 py-0.5 rounded text-[10px] font-bold border border-purple-200"><i class="fa-solid fa-building mr-1"></i>Corporativo</span>`
-            : `<span class="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-bold border border-indigo-200"><i class="fa-solid fa-hard-hat mr-1"></i>Obras</span>`;
+            ? `<span class="bg-purple-100 text-purple-700 px-2.5 py-1 rounded-full text-[10px] font-bold border border-purple-200 inline-flex items-center gap-1.5"><i class="fa-solid fa-building"></i>Corporativo</span>`
+            : `<span class="bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full text-[10px] font-bold border border-indigo-200 inline-flex items-center gap-1.5"><i class="fa-solid fa-hard-hat"></i>Obras</span>`;
 
         const nodoOrig = item['Nodo Original'] || item['Nodo'] || item['NODO'] || '';
-        const estOrig = item['Estado (Original Excel)'] || '';
+        const estOrig = item['Estado (Original Excel)'] || item['Estado Original'] || item['_PRISTINE_ESTADO'] || '-';
+        const contratista = item['Contratista'] || item['CONTRATISTA'] || item['_N_CONTRATISTA'] || item['Empresa'] || '-';
+
+        // Badge estilizado de Estado de Avance
+        const estInfo = (typeof stateColorMap !== 'undefined' && stateColorMap[estOrig])
+            ? stateColorMap[estOrig]
+            : null;
+        const estBadge = estInfo
+            ? `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${estInfo.badge} inline-block">${estOrig}</span>`
+            : `<span class="bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full text-[10px] font-bold border border-slate-200 inline-block">${estOrig}</span>`;
 
         const tr = document.createElement('tr');
         tr.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors text-xs';
         tr.innerHTML = `
             <td class="p-3 border-r border-slate-100 text-slate-400 font-mono text-center">${index + 1}</td>
-            <td class="p-3 border-r border-slate-100">${sectorBadge}</td>
-            <td class="p-3 border-r border-slate-100 font-medium text-slate-800">${item['Nodo'] || item['NODO'] || '-'}</td>
-            <td class="p-3 border-r border-slate-100 text-slate-600">${item['Estado (Original Excel)'] || '-'}</td>
-            <td class="p-3 border-r border-slate-100 text-center bg-rose-50/30">
-                <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-bold border border-red-200" title="Requiere registrar modalidad">
-                    <i class="fa-solid fa-triangle-exclamation mr-1 text-[9px]"></i>SIN MOD
+            <td class="p-3 border-r border-slate-100 whitespace-nowrap">${sectorBadge}</td>
+            <td class="p-3 border-r border-slate-100 font-mono font-bold text-slate-800 text-xs">${item['Nodo'] || item['NODO'] || '-'}</td>
+            <td class="p-3 border-r border-slate-100 text-slate-700 text-xs">${contratista}</td>
+            <td class="p-3 border-r border-slate-100 whitespace-nowrap">${estBadge}</td>
+            <td class="p-3 border-r border-slate-100 text-center bg-rose-50/20 whitespace-nowrap">
+                <span class="bg-rose-100 text-rose-800 px-2.5 py-1 rounded-full text-[10px] font-bold border border-rose-200 inline-flex items-center gap-1 shadow-2xs" title="Se requiere definir si liquida por LEGAJO o TAREA">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-600 text-[9px]"></i> Pendiente (LEGAJO / TAREA)
                 </span>
             </td>
-            <td class="p-3 text-center">
+            <td class="p-3 text-center whitespace-nowrap">
                 <button type="button" onclick="openEditModal('${nodoOrig}', '${estOrig}', '')" 
-                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-2.5 py-1 rounded text-[11px] font-bold transition-colors shadow-sm flex items-center gap-1 mx-auto"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 mx-auto"
                     title="Definir o forzar modalidad">
-                    <i class="fa-solid fa-pen-to-square"></i> Asignar
+                    <i class="fa-solid fa-pen-to-square text-[10px]"></i> Asignar
                 </button>
             </td>
         `;
         tbody.appendChild(tr);
     });
 }
+
+// =========================================================================
+// PRE-AUDITORÍA: INCOHERENCIAS EN NOMBRE POR TAREA (BROWNFIELD)
+// =========================================================================
+
+function analizarIncoherenciaNombreTarea(item) {
+    if (!item) return null;
+
+    const modalidad = String(item['Modalidad de Liquidación Calculada'] || item['Modalidad de Liquidación'] || item['MODALIDAD DE LIQUIDACIÓN'] || item['_N_MODALIDAD'] || item['Modalidad'] || '').trim().toUpperCase();
+    if (!modalidad.includes('TAREA')) {
+        return null;
+    }
+
+    const estadoOriginal = String(item['Estado (Original Excel)'] || item['Estado Original'] || item['Estado'] || item['_PRISTINE_ESTADO'] || '').toUpperCase();
+    const estadoCalculado = String(item['Estado de Avance (Calculado)'] || item['Estado Calculado'] || item['_N_ESTADO'] || '').toUpperCase();
+    if (estadoOriginal === 'CANCELADA' || estadoCalculado === 'CANCELADA') {
+        return null;
+    }
+
+    const nodoRaw = String(item['Nodo'] || item['NODO'] || item['nodo'] || item['Nodo Original'] || '').trim();
+    const proyectoRaw = String(item['Proyecto'] || item['PROYECTO'] || '').trim();
+    const etapaRaw = String(item['Etapa'] || item['ETAPA'] || '').trim();
+    const nombreTareaRaw = String(item['Nombre por TAREA'] || item['NOMBRE POR TAREA'] || item['_N_NOMBRE_POR_TAREA'] || '').trim();
+
+    if (!nodoRaw && !proyectoRaw) {
+        return null;
+    }
+
+    let baseProyecto = proyectoRaw.toUpperCase();
+    let baseEtapa = etapaRaw.toUpperCase();
+
+    if (!baseProyecto && nodoRaw) {
+        const parts = nodoRaw.split(/\s+/);
+        baseProyecto = parts[0] ? parts[0].toUpperCase() : '';
+        if (parts.length > 1) {
+            baseEtapa = parts[1].toUpperCase();
+        }
+    }
+
+    const nodoLimpio = nodoRaw.replace(/\s+/g, '').toUpperCase();
+    const nodo7 = nodoLimpio.substring(0, 7);
+    const ntUpper = nombreTareaRaw.toUpperCase().replace(/\s+/g, '');
+
+    // Regla de Negocio: Si los primeros 7 caracteres de Nodo (sin espacios) coinciden con Nombre por TAREA, no está mal
+    if (ntUpper && (ntUpper === nodo7 || ntUpper === nodoLimpio)) {
+        return null;
+    }
+
+    let nombreEsperado = '';
+    if (nodo7.length === 7) {
+        nombreEsperado = nodo7;
+    } else if (baseProyecto.length >= 7) {
+        nombreEsperado = baseProyecto.substring(0, 7);
+    } else if (baseProyecto) {
+        let s = baseProyecto;
+        if (baseEtapa) s += baseEtapa.replace(/[^A-Z0-9]/g, '');
+        if (s.length < 7) s += 'FO';
+        nombreEsperado = s.substring(0, 7);
+    } else if (nodoRaw) {
+        if (nodoLimpio.includes('FO')) {
+            nombreEsperado = nodoLimpio.split('FO')[0] + 'FO';
+        } else if (nodoLimpio.includes('OC')) {
+            nombreEsperado = nodoLimpio.split('OC')[0] + 'FO';
+        } else {
+            nombreEsperado = nodoLimpio.substring(0, 5) + 'FO';
+        }
+    }
+
+    const espUpper = nombreEsperado.toUpperCase().replace(/\s+/g, '');
+
+    if (ntUpper && ntUpper === espUpper) {
+        return null;
+    }
+
+    let tipoError = '';
+    let detalleError = '';
+    let badgeColor = '';
+
+    const sufijoEsperado = nombreEsperado.length > baseProyecto.length 
+        ? nombreEsperado.substring(baseProyecto.length) 
+        : '';
+
+    if (!nombreTareaRaw) {
+        tipoError = 'SIN_NOMBRE_TAREA';
+        detalleError = `Campo vacío (debe indicar '${nombreEsperado}')`;
+        badgeColor = 'bg-slate-100 text-slate-700 border-slate-300';
+    } else if (ntUpper.includes('OC') && espUpper.includes('FO')) {
+        tipoError = 'ERROR_SUFIJO_OC';
+        detalleError = `Pusieron 'OC' en lugar de 'FO' (figura '${nombreTareaRaw}', debe ser '${nombreEsperado}')`;
+        badgeColor = 'bg-rose-100 text-rose-700 border-rose-300';
+    } else if (ntUpper.includes('FO') && espUpper.includes('OC')) {
+        tipoError = 'ERROR_SUFIJO_FO';
+        detalleError = `Pusieron 'FO' en lugar de 'OC' (figura '${nombreTareaRaw}', debe ser '${nombreEsperado}')`;
+        badgeColor = 'bg-rose-100 text-rose-700 border-rose-300';
+    } else if (ntUpper === baseProyecto && sufijoEsperado) {
+        tipoError = 'FALTA_SUFIJO';
+        detalleError = `Falta sufijo '${sufijoEsperado}' (figura '${nombreTareaRaw}', debe ser '${nombreEsperado}')`;
+        badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+    } else if (sufijoEsperado && !ntUpper.endsWith(sufijoEsperado)) {
+        tipoError = 'FALTA_SUFIJO';
+        detalleError = `No termina en '${sufijoEsperado}' (figura '${nombreTareaRaw}', debe ser '${nombreEsperado}')`;
+        badgeColor = 'bg-amber-100 text-amber-800 border-amber-300';
+    } else {
+        tipoError = 'NOMBRE_DISCORDANTE';
+        detalleError = `Discrepancia con Nodo (figura '${nombreTareaRaw}', debe ser '${nombreEsperado}')`;
+        badgeColor = 'bg-indigo-100 text-indigo-700 border-indigo-300';
+    }
+
+    return {
+        itemOriginal: item,
+        zona: item['Zona'] || item['ZONA'] || '-',
+        partido: item['Partido'] || item['PARTIDO'] || item['Localidad'] || item['LOCALIDAD'] || '-',
+        proyecto: baseProyecto || '-',
+        etapa: baseEtapa || '-',
+        nodo: nodoRaw || '-',
+        estado: item['Estado (Original Excel)'] || item['Estado Original'] || item['Estado'] || item['Estado de Avance (Calculado)'] || '-',
+        avance: item['% Avance'] || item['% AVANCE'] || '0%',
+        contratista: item['CONTRATISTA'] || item['Contratista'] || item['Empresa'] || item['_N_CONTRATISTA'] || '-',
+        nombreTareaActual: nombreTareaRaw || '(Vacío)',
+        nombreEsperado: nombreEsperado,
+        tipoError: tipoError,
+        detalleError: detalleError,
+        badgeColor: badgeColor
+    };
+}
+
+// --- CLASIFICACIÓN Y FILTRADO AVANZADO DE INCOHERENCIAS TAREA ---
+let incoherenciasTareaActiveFilter = 'prioritarias';
+
+function getItemCerrados(item) {
+    if (!item) return 0;
+    const orig = item.itemOriginal || {};
+    let c = parseInt(orig['TAREA - Cerrados'] || orig['_N_CERRADOS'] || orig['Cerrados'] || 0) || 0;
+    if (c === 0 && (typeof dataTarea !== 'undefined' && Array.isArray(dataTarea))) {
+        const matchT = dataTarea.find(t => {
+            const k = String(t['_N_OBRA_BF'] || t['Obra BF'] || t['OBRA_BF'] || '').trim().toUpperCase();
+            return k === (item.nombreEsperado || '').toUpperCase() || k === (item.nodo || '').replace(/\s+/g, '').toUpperCase();
+        });
+        if (matchT) {
+            c = parseInt(matchT['_N_CERRADOS'] || matchT['CERRADOS'] || matchT['Cerrados'] || 0) || 0;
+        }
+    }
+    return c;
+}
+
+function classifyIncoherenciaTarea(item) {
+    if (!item) return 'otro';
+    // 1. Obras mal tipeadas (cualquiera sea el estado)
+    if (item.tipoError !== 'SIN_NOMBRE_TAREA') {
+        return 'mal_tipeadas';
+    }
+
+    const estNorm = String(item.estado || '').toUpperCase();
+    const esIniciadaTerminada = estNorm.includes('EJECUCI') || 
+                               estNorm.includes('TERMINAD') || 
+                               estNorm.includes('FINALIZAD') || 
+                               estNorm.includes('CIERRE') || 
+                               estNorm.includes('TECNIC');
+
+    // 2. Obras iniciadas / terminadas sin nombre
+    if (esIniciadaTerminada) {
+        return 'iniciadas_terminadas';
+    }
+
+    // 3. A EJECUTAR con tickets cerrados
+    const cerrados = getItemCerrados(item);
+    if (cerrados > 0) {
+        return 'a_ejecutar_tickets';
+    }
+
+    // 4. A EJECUTAR sin tickets cerrados (informativas no prioritarias)
+    return 'a_ejecutar_sin_tickets';
+}
+
+function setIncoherenciasTareaFilter(filterType) {
+    incoherenciasTareaActiveFilter = filterType;
+    
+    // Conmutar estilos activos en las píldoras de filtrado
+    const filters = ['prioritarias', 'mal_tipeadas', 'iniciadas_terminadas', 'a_ejecutar_tickets', 'a_ejecutar_sin_tickets', 'todas'];
+    filters.forEach(f => {
+        const btn = document.getElementById(`btnIncFiltro_${f}`);
+        if (!btn) return;
+        if (f === filterType) {
+            btn.className = 'inc-filter-pill active px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 shadow-2xs border border-amber-500 bg-amber-600 text-white cursor-pointer';
+        } else {
+            btn.className = 'inc-filter-pill px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 cursor-pointer';
+        }
+    });
+
+    renderIncoherenciasTareaTable();
+}
+
+function getFilteredIncoherenciasTareaList() {
+    const data = (typeof dataConsolidada !== 'undefined' && Array.isArray(dataConsolidada)) 
+        ? dataConsolidada 
+        : (window.dataConsolidada || []);
+    if (!data || data.length === 0) return [];
+
+    const all = data.map(analizarIncoherenciaNombreTarea).filter(Boolean);
+
+    // Filtrar según categoría seleccionada
+    let list = all;
+    if (incoherenciasTareaActiveFilter === 'prioritarias') {
+        list = all.filter(item => {
+            const cat = classifyIncoherenciaTarea(item);
+            return cat === 'mal_tipeadas' || cat === 'iniciadas_terminadas' || cat === 'a_ejecutar_tickets';
+        });
+    } else if (incoherenciasTareaActiveFilter === 'mal_tipeadas') {
+        list = all.filter(item => classifyIncoherenciaTarea(item) === 'mal_tipeadas');
+    } else if (incoherenciasTareaActiveFilter === 'iniciadas_terminadas') {
+        list = all.filter(item => classifyIncoherenciaTarea(item) === 'iniciadas_terminadas');
+    } else if (incoherenciasTareaActiveFilter === 'a_ejecutar_tickets') {
+        list = all.filter(item => classifyIncoherenciaTarea(item) === 'a_ejecutar_tickets');
+    } else if (incoherenciasTareaActiveFilter === 'a_ejecutar_sin_tickets') {
+        list = all.filter(item => classifyIncoherenciaTarea(item) === 'a_ejecutar_sin_tickets');
+    }
+
+    // Filtrar por término de búsqueda en tiempo real
+    const searchInput = document.getElementById('incoherenciasTareaSearch');
+    const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    if (!q) return list;
+
+    return list.filter(item => {
+        const combined = `${item.nodo} ${item.proyecto} ${item.etapa} ${item.nombreTareaActual} ${item.nombreEsperado} ${item.contratista} ${item.detalleError} ${item.estado}`.toLowerCase();
+        return combined.includes(q);
+    });
+}
+
+function renderIncoherenciasTareaTable() {
+    const data = (typeof dataConsolidada !== 'undefined' && Array.isArray(dataConsolidada)) 
+        ? dataConsolidada 
+        : (window.dataConsolidada || []);
+    if (!data) return;
+
+    const allIncoherencias = data.map(analizarIncoherenciaNombreTarea).filter(Boolean);
+
+    // Conteo por categorías
+    let countMalTipeadas = 0;
+    let countIniciadasTerm = 0;
+    let countConTickets = 0;
+    let countSinTickets = 0;
+
+    allIncoherencias.forEach(item => {
+        const cat = classifyIncoherenciaTarea(item);
+        if (cat === 'mal_tipeadas') countMalTipeadas++;
+        else if (cat === 'iniciadas_terminadas') countIniciadasTerm++;
+        else if (cat === 'a_ejecutar_tickets') countConTickets++;
+        else if (cat === 'a_ejecutar_sin_tickets') countSinTickets++;
+    });
+
+    const countPrioritarias = countMalTipeadas + countIniciadasTerm + countConTickets;
+
+    // Actualizar badges en las píldoras de filtrado
+    const bPrio = document.getElementById('badgeCountPrioritarias');
+    if (bPrio) bPrio.textContent = countPrioritarias;
+    const bMal = document.getElementById('badgeCountMalTipeadas');
+    if (bMal) bMal.textContent = countMalTipeadas;
+    const bIni = document.getElementById('badgeCountIniciadas');
+    if (bIni) bIni.textContent = countIniciadasTerm;
+    const bCon = document.getElementById('badgeCountConTickets');
+    if (bCon) bCon.textContent = countConTickets;
+    const bSin = document.getElementById('badgeCountSinTickets');
+    if (bSin) bSin.textContent = countSinTickets;
+    const bTodas = document.getElementById('badgeCountTodas');
+    if (bTodas) bTodas.textContent = allIncoherencias.length;
+
+    // Actualizar el badge de la solapa / dropdown EXCLUSIVAMENTE con el conteo de Prioritarias
+    if (typeof setTabBadge === 'function') {
+        setTabBadge('tabIncoherenciasTareaCount', countPrioritarias);
+    }
+
+    const filtered = getFilteredIncoherenciasTareaList();
+    const countTextEl = document.getElementById('incoherenciasTareaCountText');
+    if (countTextEl) {
+        if (incoherenciasTareaActiveFilter === 'prioritarias') {
+            countTextEl.textContent = `${countPrioritarias} inconsistencia${countPrioritarias === 1 ? '' : 's'} prioritaria${countPrioritarias === 1 ? '' : 's'}`;
+        } else {
+            countTextEl.textContent = `${filtered.length} visible${filtered.length === 1 ? '' : 's'} (${countPrioritarias} prioritarias)`;
+        }
+    }
+
+    const tbody = document.getElementById('incoherenciasTareaTableBody');
+    const emptyState = document.getElementById('emptyIncoherenciasTareaState');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    if (filtered.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        return;
+    }
+    if (emptyState) emptyState.classList.add('hidden');
+
+    filtered.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-100 hover:bg-slate-50 transition-colors text-xs';
+        tr.innerHTML = `
+            <td class="p-3 border-r border-slate-100 text-slate-400 font-mono text-center">${index + 1}</td>
+            <td class="p-3 border-r border-slate-100 font-mono font-bold text-amber-900 bg-amber-50/30 text-xs">${item.nodo}</td>
+            <td class="p-3 border-r border-slate-100 text-slate-700 text-xs">${item.proyecto} / ${item.etapa}</td>
+            <td class="p-3 border-r border-slate-100 font-mono font-bold text-rose-700 bg-rose-50/20 text-xs">
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-100 text-rose-800 border border-rose-200">
+                    <i class="fa-solid fa-xmark text-rose-500"></i> ${item.nombreTareaActual || '(Vacío)'}
+                </span>
+            </td>
+            <td class="p-3 border-r border-slate-100 font-mono font-bold text-emerald-800 bg-emerald-50/20 text-xs">
+                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                    <i class="fa-solid fa-check text-emerald-600"></i> ${item.nombreEsperado}
+                </span>
+            </td>
+            <td class="p-3 border-r border-slate-100 whitespace-nowrap">
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold border ${item.badgeColor} inline-flex items-center gap-1 shadow-2xs">
+                    <i class="fa-solid fa-triangle-exclamation text-[9px]"></i> ${item.detalleError}
+                </span>
+            </td>
+            <td class="p-3 border-r border-slate-100 text-slate-700 text-xs">${item.estado}</td>
+            <td class="p-3 border-r border-slate-100 text-center font-semibold text-slate-700 text-xs">${item.avance}</td>
+            <td class="p-3 text-slate-700 text-xs whitespace-nowrap">${item.contratista}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function exportIncoherenciasTareaToExcel() {
+    const list = getFilteredIncoherenciasTareaList();
+    if (!list || list.length === 0) {
+        showToast("No hay inconsistencias en Nombre por TAREA para exportar.", "info");
+        return;
+    }
+
+    const rows = [
+        ["#", "Nodo (Oficial)", "Proyecto", "Etapa", "Nombre por TAREA (Informado)", "Nombre Esperado (Sugerido)", "Inconsistencia Detectada", "Estado", "% Avance", "Contratista"]
+    ];
+
+    list.forEach((item, idx) => {
+        rows.push([
+            idx + 1,
+            item.nodo,
+            item.proyecto,
+            item.etapa,
+            item.nombreTareaActual,
+            item.nombreEsperado,
+            item.detalleError,
+            item.estado,
+            item.avance,
+            item.contratista
+        ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Incoherencias TAREA");
+
+    const today = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `Incoherencias_Nombre_TAREA_${today}.xlsx`);
+    showToast("Excel de Incoherencias Nombre por TAREA exportado exitosamente.", "success");
+}
+
+function enviarMailIncoherenciasTarea() {
+    const list = getFilteredIncoherenciasTareaList();
+    if (!list || list.length === 0) {
+        showToast("No hay inconsistencias en la vista actual para notificar.", "info");
+        return;
+    }
+
+    // 1. Obtener lista completa de incoherencias para conteos globales
+    const allIncoherencias = (typeof dataConsolidada !== 'undefined' && Array.isArray(dataConsolidada))
+        ? dataConsolidada.map(analizarIncoherenciaNombreTarea).filter(Boolean)
+        : list;
+
+    // Helper para verificar tickets cerrados
+    const getCerrados = (item) => {
+        const orig = item.itemOriginal || {};
+        let c = parseInt(orig['TAREA - Cerrados'] || orig['_N_CERRADOS'] || orig['Cerrados'] || 0) || 0;
+        if (c === 0 && (typeof dataTarea !== 'undefined' && Array.isArray(dataTarea))) {
+            const matchT = dataTarea.find(t => {
+                const k = String(t['_N_OBRA_BF'] || t['Obra BF'] || t['OBRA_BF'] || '').trim().toUpperCase();
+                return k === item.nombreEsperado.toUpperCase() || k === item.nodo.replace(/\s+/g, '').toUpperCase();
+            });
+            if (matchT) {
+                c = parseInt(matchT['_N_CERRADOS'] || matchT['CERRADOS'] || matchT['Cerrados'] || 0) || 0;
+            }
+        }
+        return c;
+    };
+
+    // Clasificación de los 3 grupos sobre 'list'
+    const grupo1MalTipeadas = [];
+    const grupo2IniciadasTerminadas = [];
+    const grupo3AEjecutarConTickets = [];
+
+    list.forEach(item => {
+        // Punto 1: Obras mal tipeadas (no vacías)
+        if (item.tipoError !== 'SIN_NOMBRE_TAREA') {
+            grupo1MalTipeadas.push(item);
+            return;
+        }
+
+        // Para obras con campo vacío: evaluar estado de avance
+        const estNorm = String(item.estado || '').toUpperCase();
+        const esIniciadaTerminada = estNorm.includes('EJECUCI') || 
+                                   estNorm.includes('TERMINAD') || 
+                                   estNorm.includes('FINALIZAD') || 
+                                   estNorm.includes('CIERRE') || 
+                                   estNorm.includes('TECNIC');
+
+        if (esIniciadaTerminada) {
+            // Punto 2: Obras Iniciadas / Terminadas sin nombre informado
+            grupo2IniciadasTerminadas.push(item);
+            return;
+        }
+
+        // Punto 3: Obras que figuran 'A EJECUTAR' pero tienen tickets CERRADOS
+        const esAEjecutar = estNorm.includes('A EJECUTAR');
+        const cerrados = getCerrados(item);
+
+        if (esAEjecutar && cerrados > 0) {
+            grupo3AEjecutarConTickets.push({ ...item, cerrados: cerrados });
+        }
+    });
+
+    // Conteo de obras A EJECUTAR sin nombre y sin tickets cerrados (global)
+    const cantAEjecutarSinTickets = allIncoherencias.filter(item => {
+        if (item.tipoError !== 'SIN_NOMBRE_TAREA') return false;
+        const estNorm = String(item.estado || '').toUpperCase();
+        if (!estNorm.includes('A EJECUTAR')) return false;
+        return getCerrados(item) === 0;
+    }).length;
+
+    // Si no hay obras en ninguno de los 3 grupos, informar
+    if (grupo1MalTipeadas.length === 0 && grupo2IniciadasTerminadas.length === 0 && grupo3AEjecutarConTickets.length === 0) {
+        showToast("No hay inconsistencias operativas (mal tipeadas, iniciadas/terminadas o con tickets cerrados) para notificar por correo.", "info");
+        return;
+    }
+
+    const contratista = list.find(i => i.contratista && i.contratista !== '-')?.contratista || 'CONTRATISTA';
+    const asunto = `Regularización de 'Nombre por TAREA' y Estados de Avance - ${contratista}`;
+
+    let currentIncoherenciasMailPayload = null;
+
+    // --- 1. CUERPO LIGERO PARA mailto: (evita límite de 2048 caracteres en Windows/Outlook) ---
+    let cuerpoMailto = `Estimados,\n\n`;
+    cuerpoMailto += `Se solicita la revisión y regularización en la carga del campo 'Nombre por TAREA' y los estados de avance para las siguientes obras bajo modalidad TAREA de ${contratista}.\n\n`;
+    cuerpoMailto += `Resumen de inconsistencias detectadas:\n`;
+    cuerpoMailto += `• Obras con error de tipeo / sufijo: ${grupo1MalTipeadas.length} obras\n`;
+    cuerpoMailto += `• Obras Iniciadas o Terminadas sin nombre informado: ${grupo2IniciadasTerminadas.length} obras\n`;
+    cuerpoMailto += `• Obras 'A EJECUTAR' con tickets cerrados en curso: ${grupo3AEjecutarConTickets.length} obras\n`;
+    cuerpoMailto += `• Total en 'A EJECUTAR' sin nombre: ${cantAEjecutarSinTickets} obras\n\n`;
+    cuerpoMailto += `[El detalle completo con las tablas maquetadas ha sido copiado a su portapapeles. Presione Ctrl + V para insertarlas]\n\n`;
+    cuerpoMailto += `Saludos cordiales.`;
+
+    // --- 2. CUERPO COMPLETO EN TEXTO PLANO (para fallback) ---
+    let cuerpo = `Estimados,\n\n`;
+    cuerpo += `Se solicita la revisión y regularización en la carga del campo 'Nombre por TAREA' y los estados de avance para las siguientes obras bajo modalidad TAREA.\n`;
+    cuerpo += `Se detalla a continuación el nombre estimado según nomenclatura de cada nodo para su validación y asignación correspondiente:\n\n`;
+
+    // 1. Obras con error de tipeo
+    cuerpo += `1. OBRAS CON DIFERENCIAS O ERROR DE TIPEO EN 'NOMBRE POR TAREA':\n`;
+    if (grupo1MalTipeadas.length > 0) {
+        grupo1MalTipeadas.slice(0, 30).forEach(item => {
+            cuerpo += `• Nodo: ${item.nodo} | Informado: '${item.nombreTareaActual}' -> Nombre estimado según Nodo: '${item.nombreEsperado}' (validar) | Motivo: ${item.detalleError} | Estado: ${item.estado}\n`;
+        });
+        if (grupo1MalTipeadas.length > 30) {
+            cuerpo += `  (... y ${grupo1MalTipeadas.length - 30} obras adicionales con error de tipeo)\n`;
+        }
+    } else {
+        cuerpo += `No se registran obras con error de tipeo.\n`;
+    }
+    cuerpo += `\n`;
+
+    // 2. Obras iniciadas / terminadas sin nombre
+    cuerpo += `2. OBRAS INICIADAS / TERMINADAS SIN 'NOMBRE POR TAREA' INFORMADO:\n`;
+    if (grupo2IniciadasTerminadas.length > 0) {
+        grupo2IniciadasTerminadas.slice(0, 40).forEach(item => {
+            cuerpo += `• ${item.nodo} (${item.estado}) -> Nombre estimado: ${item.nombreEsperado} (validar y asignar)\n`;
+        });
+        if (grupo2IniciadasTerminadas.length > 40) {
+            cuerpo += `  (... y ${grupo2IniciadasTerminadas.length - 40} obras adicionales iniciadas/terminadas)\n`;
+        }
+    } else {
+        cuerpo += `No se registran obras iniciadas o terminadas sin nombre informado.\n`;
+    }
+    cuerpo += `\nTotal de obras en estado 'A EJECUTAR' sin Nombre por TAREA informado (sin tickets cerrados aún): ${cantAEjecutarSinTickets} obras.\n\n`;
+
+    // 3. Inconsistencia en avance (A EJECUTAR con tickets cerrados)
+    cuerpo += `3. INCONSISTENCIA EN ESTADO DE AVANCE (INFORMADAS 'A EJECUTAR' CON TICKETS CERRADOS):\n`;
+    cuerpo += `Las siguientes obras figuran en Avance como 'A EJECUTAR', pero registran tickets cerrados en el sistema TAREA (se encuentran efectivamente en curso):\n`;
+    if (grupo3AEjecutarConTickets.length > 0) {
+        grupo3AEjecutarConTickets.slice(0, 30).forEach(item => {
+            cuerpo += `• Nodo: ${item.nodo} | Tickets Cerrados: ${item.cerrados} | Nombre estimado: ${item.nombreEsperado} (validar y regularizar avance)\n`;
+        });
+        if (grupo3AEjecutarConTickets.length > 30) {
+            cuerpo += `  (... y ${grupo3AEjecutarConTickets.length - 30} obras adicionales en esta condición)\n`;
+        }
+    } else {
+        cuerpo += `No se registran obras 'A EJECUTAR' con tickets cerrados.\n`;
+    }
+    cuerpo += `\n`;
+    cuerpo += `Agradecemos gestionar las validaciones y correcciones correspondientes a la brevedad.\n\nSaludos cordiales.`;
+
+    // --- 3. CUERPO EN HTML ENRIQUECIDO CON TABLAS ESTILIZADAS (para portapapeles) ---
+    const tableStyle = 'border-collapse:collapse;width:100%;max-width:960px;font-family:Calibri,Segoe UI,Arial,sans-serif;font-size:12px;margin:8px 0 16px 0;';
+    const thStyle = 'background-color:#ffffff;color:#0f172a;padding:8px 10px;border:1px solid #94a3b8;border-bottom:2px solid #0f172a;text-align:left;font-weight:bold;font-size:12px;';
+    const tdStyle = 'padding:6px 10px;border:1px solid #cbd5e1;font-size:12px;color:#334155;';
+    const tdAltStyle = 'padding:6px 10px;border:1px solid #cbd5e1;font-size:12px;color:#334155;background-color:#f8fafc;';
+
+    let htmlCuerpo = `<div style="font-family:Calibri,Segoe UI,Arial,sans-serif;font-size:13px;color:#1e293b;line-height:1.5;">`;
+    htmlCuerpo += `<p>Estimados,</p>`;
+    htmlCuerpo += `<p>Se solicita la revisión y regularización en la carga del campo <strong>'Nombre por TAREA'</strong> y los estados de avance para las siguientes obras bajo modalidad TAREA.<br>`;
+    htmlCuerpo += `Se detalla a continuación el <strong>nombre estimado según nomenclatura de cada nodo</strong> para su validación y asignación correspondiente:</p>`;
+
+    // Tabla Punto 1
+    htmlCuerpo += `<h3 style="color:#0f172a;margin:20px 0 6px 0;font-size:14px;border-bottom:2px solid #cbd5e1;padding-bottom:4px;">1. OBRAS CON DIFERENCIAS O ERROR DE TIPEO EN 'NOMBRE POR TAREA'</h3>`;
+    if (grupo1MalTipeadas.length > 0) {
+        htmlCuerpo += `<table style="${tableStyle}"><thead><tr>`;
+        htmlCuerpo += `<th style="${thStyle}">Nodo</th>`;
+        htmlCuerpo += `<th style="${thStyle}">Nombre Informado</th>`;
+        htmlCuerpo += `<th style="${thStyle}">Nombre Estimado (Validar)</th>`;
+        htmlCuerpo += `<th style="${thStyle}">Motivo / Diagnóstico</th>`;
+        htmlCuerpo += `<th style="${thStyle}">Estado de Avance</th>`;
+        htmlCuerpo += `</tr></thead><tbody>`;
+        grupo1MalTipeadas.slice(0, 50).forEach((item, idx) => {
+            const rowBg = idx % 2 === 1 ? tdAltStyle : tdStyle;
+            htmlCuerpo += `<tr>`;
+            htmlCuerpo += `<td style="${rowBg}font-weight:bold;color:#0f172a;">${item.nodo}</td>`;
+            htmlCuerpo += `<td style="${rowBg}color:#dc2626;font-weight:bold;background-color:#fef2f2;">${item.nombreTareaActual || '(Vacío)'}</td>`;
+            htmlCuerpo += `<td style="${rowBg}color:#15803d;font-weight:bold;background-color:#f0fdf4;">${item.nombreEsperado}</td>`;
+            htmlCuerpo += `<td style="${rowBg}">${item.detalleError}</td>`;
+            htmlCuerpo += `<td style="${rowBg}">${item.estado}</td>`;
+            htmlCuerpo += `</tr>`;
+        });
+        htmlCuerpo += `</tbody></table>`;
+        if (grupo1MalTipeadas.length > 50) {
+            htmlCuerpo += `<p style="font-size:11px;color:#64748b;font-style:italic;">(... y ${grupo1MalTipeadas.length - 50} obras adicionales con error de tipeo)</p>`;
+        }
+    } else {
+        htmlCuerpo += `<p style="color:#64748b;font-style:italic;">No se registran obras con error de tipeo.</p>`;
+    }
+
+    // Tabla Punto 2
+    htmlCuerpo += `<h3 style="color:#0f172a;margin:22px 0 6px 0;font-size:14px;border-bottom:2px solid #cbd5e1;padding-bottom:4px;">2. OBRAS INICIADAS / TERMINADAS SIN 'NOMBRE POR TAREA' INFORMADO</h3>`;
+    if (grupo2IniciadasTerminadas.length > 0) {
+        htmlCuerpo += `<table style="${tableStyle}"><thead><tr>`;
+        htmlCuerpo += `<th style="${thStyle}">Nodo</th>`;
+        htmlCuerpo += `<th style="${thStyle}">Estado de Avance</th>`;
+        htmlCuerpo += `<th style="${thStyle}">Nombre Estimado según Nodo (Validar y Asignar)</th>`;
+        htmlCuerpo += `</tr></thead><tbody>`;
+        grupo2IniciadasTerminadas.slice(0, 60).forEach((item, idx) => {
+            const rowBg = idx % 2 === 1 ? tdAltStyle : tdStyle;
+            htmlCuerpo += `<tr>`;
+            htmlCuerpo += `<td style="${rowBg}font-weight:bold;color:#0f172a;">${item.nodo}</td>`;
+            htmlCuerpo += `<td style="${rowBg}font-weight:600;color:#0369a1;">${item.estado}</td>`;
+            htmlCuerpo += `<td style="${rowBg}color:#15803d;font-weight:bold;background-color:#f0fdf4;">${item.nombreEsperado}</td>`;
+            htmlCuerpo += `</tr>`;
+        });
+        htmlCuerpo += `</tbody></table>`;
+        if (grupo2IniciadasTerminadas.length > 60) {
+            htmlCuerpo += `<p style="font-size:11px;color:#64748b;font-style:italic;">(... y ${grupo2IniciadasTerminadas.length - 60} obras adicionales iniciadas/terminadas)</p>`;
+        }
+    } else {
+        htmlCuerpo += `<p style="color:#64748b;font-style:italic;">No se registran obras iniciadas o terminadas sin nombre informado.</p>`;
+    }
+    htmlCuerpo += `<p style="margin:10px 0 16px 0;color:#475569;"><strong>Total de obras en estado 'A EJECUTAR' sin Nombre por TAREA informado (sin tickets cerrados aún):</strong> ${cantAEjecutarSinTickets} obras.</p>`;
+
+    // Tabla Punto 3
+    htmlCuerpo += `<h3 style="color:#0f172a;margin:22px 0 6px 0;font-size:14px;border-bottom:2px solid #cbd5e1;padding-bottom:4px;">3. INCONSISTENCIA EN ESTADO DE AVANCE (INFORMADAS 'A EJECUTAR' CON TICKETS CERRADOS)</h3>`;
+    htmlCuerpo += `<p style="margin:4px 0 8px 0;color:#475569;">Las siguientes obras figuran en Avance como 'A EJECUTAR', pero registran tickets cerrados en el sistema TAREA (se encuentran efectivamente en curso):</p>`;
+    if (grupo3AEjecutarConTickets.length > 0) {
+        htmlCuerpo += `<table style="${tableStyle}"><thead><tr>`;
+        htmlCuerpo += `<th style="${thStyle}">Nodo</th>`;
+        htmlCuerpo += `<th style="${thStyle}">Tickets Cerrados en TAREA</th>`;
+        htmlCuerpo += `<th style="${thStyle}">Nombre Estimado (Validar)</th>`;
+        htmlCuerpo += `<th style="${thStyle}">Acción Requerida</th>`;
+        htmlCuerpo += `</tr></thead><tbody>`;
+        grupo3AEjecutarConTickets.slice(0, 50).forEach((item, idx) => {
+            const rowBg = idx % 2 === 1 ? tdAltStyle : tdStyle;
+            htmlCuerpo += `<tr>`;
+            htmlCuerpo += `<td style="${rowBg}font-weight:bold;color:#0f172a;">${item.nodo}</td>`;
+            htmlCuerpo += `<td style="${rowBg}text-align:center;font-weight:bold;color:#b91c1c;background-color:#fef2f2;">${item.cerrados}</td>`;
+            htmlCuerpo += `<td style="${rowBg}color:#15803d;font-weight:bold;background-color:#f0fdf4;">${item.nombreEsperado}</td>`;
+            htmlCuerpo += `<td style="${rowBg}color:#b45309;font-weight:600;">Validar y regularizar estado de avance</td>`;
+            htmlCuerpo += `</tr>`;
+        });
+        htmlCuerpo += `</tbody></table>`;
+        if (grupo3AEjecutarConTickets.length > 50) {
+            htmlCuerpo += `<p style="font-size:11px;color:#64748b;font-style:italic;">(... y ${grupo3AEjecutarConTickets.length - 50} obras adicionales en esta condición)</p>`;
+        }
+    } else {
+        htmlCuerpo += `<p style="color:#64748b;font-style:italic;">No se registran obras 'A EJECUTAR' con tickets cerrados.</p>`;
+    }
+
+    htmlCuerpo += `<p style="margin-top:20px;">Agradecemos gestionar las validaciones y correcciones correspondientes a la brevedad.</p>`;
+    htmlCuerpo += `<p style="margin-top:10px;">Saludos cordiales.</p>`;
+    htmlCuerpo += `</div>`;
+
+    // Guardar payload global para recopiar o reabrir
+    window._lastIncoherenciasMailPayload = {
+        contratista,
+        asunto,
+        cuerpoMailto,
+        cuerpoCompletoTexto: cuerpo,
+        htmlCuerpo
+    };
+
+    // --- 4. COPIAR HTML AL PORTAPAPELES (Con soporte dual ClipboardItem + Fallback DOM) ---
+    copiarTablasIncoherenciasAlPortapapeles(htmlCuerpo, cuerpo);
+
+    // --- 5. ABRIR CARTEL / MODAL PROFESIONAL DE NOTIFICACIÓN ---
+    const modalEl = document.getElementById('incoherenciasMailModal');
+    if (modalEl) {
+        const contrEl = document.getElementById('incoherenciasModalContratistaText');
+        if (contrEl) contrEl.textContent = `Contratista: ${contratista}`;
+        const p1El = document.getElementById('incoherenciasModalCountP1');
+        if (p1El) p1El.textContent = grupo1MalTipeadas.length;
+        const p2El = document.getElementById('incoherenciasModalCountP2');
+        if (p2El) p2El.textContent = grupo2IniciadasTerminadas.length;
+        const p3El = document.getElementById('incoherenciasModalCountP3');
+        if (p3El) p3El.textContent = grupo3AEjecutarConTickets.length;
+        modalEl.classList.remove('hidden');
+    }
+
+    // --- 6. ABRIR CLIENTE DE CORREO (mailto: seguro < 2048 chars) ---
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpoMailto)}`;
+    window.location.href = mailtoLink;
+}
+
+// Helper robusto para copiado al portapapeles enriquecido con fallback
+function copiarTablasIncoherenciasAlPortapapeles(htmlCuerpo, textoPlano) {
+    if (navigator.clipboard && window.ClipboardItem) {
+        try {
+            const textBlob = new Blob([textoPlano], { type: 'text/plain' });
+            const htmlBlob = new Blob([htmlCuerpo], { type: 'text/html' });
+            const item = new ClipboardItem({
+                'text/plain': textBlob,
+                'text/html': htmlBlob
+            });
+            navigator.clipboard.write([item]).then(() => {
+                showToast("¡Tablas con formato copiadas! Dale 'Ctrl + V' en el cuerpo del correo.", "success", 6000);
+            }).catch(err => {
+                console.warn("ClipboardItem write falló, usando fallback DOM:", err);
+                copiarHtmlFallbackDOM(htmlCuerpo, textoPlano);
+            });
+            return;
+        } catch (e) {
+            console.warn("Excepción en ClipboardItem:", e);
+        }
+    }
+    copiarHtmlFallbackDOM(htmlCuerpo, textoPlano);
+}
+
+// Fallback universal mediante selección DOM temporal (funciona incluso en file:///)
+function copiarHtmlFallbackDOM(htmlCuerpo, textoPlano) {
+    try {
+        const container = document.createElement('div');
+        container.style.position = 'fixed';
+        container.style.left = '-9999px';
+        container.style.top = '0';
+        container.style.opacity = '0';
+        container.style.pointerEvents = 'none';
+        container.innerHTML = htmlCuerpo;
+        document.body.appendChild(container);
+
+        const range = document.createRange();
+        range.selectNodeContents(container);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        const success = document.execCommand('copy');
+        selection.removeAllRanges();
+        document.body.removeChild(container);
+
+        if (success) {
+            showToast("¡Tablas con formato copiadas! Dale 'Ctrl + V' en el cuerpo del correo.", "success", 6000);
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textoPlano);
+            showToast("Texto copiado al portapapeles.", "info");
+        }
+    } catch (err) {
+        console.error("Error en copiarHtmlFallbackDOM:", err);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textoPlano);
+        }
+    }
+}
+
+// Manejadores del Modal de Notificación de Incoherencias
+function closeIncoherenciasMailModal() {
+    const modalEl = document.getElementById('incoherenciasMailModal');
+    if (modalEl) modalEl.classList.add('hidden');
+}
+
+function copiarTablasIncoherenciasNuevamente() {
+    const p = window._lastIncoherenciasMailPayload;
+    if (p && p.htmlCuerpo) {
+        copiarTablasIncoherenciasAlPortapapeles(p.htmlCuerpo, p.cuerpoCompletoTexto);
+        showToast("¡Tablas recopiladas en el portapapeles exitosamente!", "success");
+    } else {
+        showToast("No hay tablas activas para copiar.", "warning");
+    }
+}
+
+function reabrirMailIncoherencias() {
+    const p = window._lastIncoherenciasMailPayload;
+    if (p && p.asunto) {
+        const mailtoLink = `mailto:?subject=${encodeURIComponent(p.asunto)}&body=${encodeURIComponent(p.cuerpoMailto)}`;
+        window.location.href = mailtoLink;
+        showToast("Reabriendo cliente de correo...", "info");
+    } else {
+        showToast("No hay datos de correo preparados.", "warning");
+    }
+}
+
+// --- AUTO-EXPORTS FOR HTML EVENT HANDLERS ---
+if (typeof procesarConsolidacion !== 'undefined') window.procesarConsolidacion = procesarConsolidacion;
+if (typeof limpiarEtapa2 !== 'undefined') window.limpiarEtapa2 = limpiarEtapa2;
+if (typeof exportSinModalidadToExcel !== 'undefined') window.exportSinModalidadToExcel = exportSinModalidadToExcel;
+if (typeof enviarMailReclamoSinModalidad !== 'undefined') window.enviarMailReclamoSinModalidad = enviarMailReclamoSinModalidad;
+if (typeof toggleSinModHeader !== 'undefined') window.toggleSinModHeader = toggleSinModHeader;
+if (typeof filterSinModBySector !== 'undefined') window.filterSinModBySector = filterSinModBySector;
+if (typeof renderIncoherenciasTareaTable !== 'undefined') window.renderIncoherenciasTareaTable = renderIncoherenciasTareaTable;
+if (typeof exportIncoherenciasTareaToExcel !== 'undefined') window.exportIncoherenciasTareaToExcel = exportIncoherenciasTareaToExcel;
+if (typeof enviarMailIncoherenciasTarea !== 'undefined') window.enviarMailIncoherenciasTarea = enviarMailIncoherenciasTarea;
+if (typeof closeIncoherenciasMailModal !== 'undefined') window.closeIncoherenciasMailModal = closeIncoherenciasMailModal;
+if (typeof copiarTablasIncoherenciasNuevamente !== 'undefined') window.copiarTablasIncoherenciasNuevamente = copiarTablasIncoherenciasNuevamente;
+if (typeof reabrirMailIncoherencias !== 'undefined') window.reabrirMailIncoherencias = reabrirMailIncoherencias;
+if (typeof setIncoherenciasTareaFilter !== 'undefined') window.setIncoherenciasTareaFilter = setIncoherenciasTareaFilter;

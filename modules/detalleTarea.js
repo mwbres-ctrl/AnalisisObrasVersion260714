@@ -196,3 +196,9 @@ function exportarDetalleTareas() {
     XLSX.writeFile(wb, "Analisis_BF_Tickets.xlsx");
     showToast("Reporte de Tareas exportado con éxito.", "success");
 }
+
+
+// --- AUTO-EXPORTS FOR HTML EVENT HANDLERS ---
+if (typeof exportarDetalleTareas !== 'undefined') window.exportarDetalleTareas = exportarDetalleTareas;
+if (typeof limpiarFiltrosDetalleTareas !== 'undefined') window.limpiarFiltrosDetalleTareas = limpiarFiltrosDetalleTareas;
+if (typeof closeDetalleTareaModal !== 'undefined') window.closeDetalleTareaModal = closeDetalleTareaModal;

@@ -7,7 +7,12 @@ function procesarHistorialTareas(rawData) {
         cerradoValue: "CERRADO",
         columnaPermitir: "Permite Declarar Material",
         valorPermitir: "Si",
-        excluirEstados: ["CANCELADA", "ANULADA", "DUPLICADA"]
+        excluirEstados: [
+            "CANCELAD", "CANCELADA", "CANCELADO", "CANCEL",
+            "ANULAD", "ANULADA", "ANULADO", "ANUL",
+            "DUPLICAD", "DUPLICADA", "DUPLICADO", "DUPLIC",
+            "BAJA", "RECHAZAD"
+        ]
     };
 
     if (!rawData || rawData.length === 0) return [];
@@ -21,20 +26,31 @@ function procesarHistorialTareas(rawData) {
     const sample = rawData[0];
     const keys = Object.keys(sample);
 
-    const colPermitir = keys.find(k => normalizeKey(k).includes("PERMITE_DECLARAR") || normalizeKey(k).includes("PERMITIR_DECLARAR")) || "Permite Declarar Material";
-    const colObraBF = keys.find(k => normalizeKey(k) === "OBRA_BF") || "Obra BF";
-    const colEstadoDecl = keys.find(k => normalizeKey(k).includes("DECLARA") || normalizeKey(k).includes("ESTADO_DECL")) || "Estado Declaración";
-    const colEstadoTarea = keys.find(k => normalizeKey(k) === "ESTADO_TAREA") || "Estado Tarea";
+    const colPermitir = keys.find(k => {
+        const norm = normalizeKey(k);
+        return norm.includes("PERMITE_DECLARAR") || norm.includes("PERMITIR_DECLARAR") || (norm.includes("PERMITE") && norm.includes("MATERIAL"));
+    }) || "Permite Declarar Material";
+
+    const colObraBF = keys.find(k => normalizeKey(k) === "OBRA_BF" || normalizeKey(k) === "OBRA") || "Obra BF";
+    const colEstadoDecl = keys.find(k => {
+        const norm = normalizeKey(k);
+        return (norm.includes("ESTADO") && (norm.includes("DECL") || norm.includes("DECLARA"))) || norm === "ESTADO_DECLARACION";
+    }) || "Estado Declaración";
+    const colEstadoTarea = keys.find(k => {
+        const norm = normalizeKey(k);
+        return norm === "ESTADO_TAREA" || (norm.includes("ESTADO") && norm.includes("TAREA"));
+    }) || "Estado Tarea";
     const colEstadoObraBF = keys.find(k => normalizeKey(k) === "ESTADO_OBRA_BF") || "Estado Obra BF";
     const colContratista = keys.find(k => normalizeKey(k) === "CONTRATISTA" || normalizeKey(k) === "NOMBRE_PROV" || normalizeKey(k) === "PROVEEDOR") || "Contratista";
+    const colCuenta = keys.find(k => normalizeKey(k).includes("CUENTA_DE_TAREA") || normalizeKey(k).includes("CUENTA_TAREA")) || "Cuenta de Tarea";
 
     // Agrupar
     const grupos = {};
 
     rawData.forEach(row => {
-        // 2. Filtrar donde "Permite Declarar Material" sea "Si" (tolerante a mayúsculas y tildes)
+        // 2. Filtrar donde "Permite Declarar Material" sea estrictamente "Si" (alineado con Sistema 1 v9.3.3)
         const valPermitir = String(row[colPermitir] || '').trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (colPermitir in row && valPermitir && valPermitir !== "SI") return;
+        if (valPermitir !== "SI") return;
 
         // 3. Excluir registros por estados
         const valEstadoTarea = String(row[colEstadoTarea] || '').trim().toUpperCase();
@@ -63,50 +79,54 @@ function procesarHistorialTareas(rawData) {
             };
         }
 
+        const cant = parseInt(row[colCuenta]) || 1;
         const isCerrado = valEstadoDecl.includes(config.cerradoValue);
+        const isTktCompletado = valEstadoTarea === "COMPLETADA" || valEstadoTarea === "COMPLETADO";
 
         grupos[obraBF].tickets.push({
             estadoTarea: valEstadoTarea,
-            isCerrado: isCerrado
+            declEstado: valEstadoDecl,
+            isCerrado: isCerrado,
+            isTktCompletado: isTktCompletado,
+            cant: cant
         });
 
         if (valContratista) {
             grupos[obraBF].contratistas.add(valContratista);
         }
 
-        if (valEstadoTarea) {
-            grupos[obraBF].statsTarea[valEstadoTarea] = (grupos[obraBF].statsTarea[valEstadoTarea] || 0) + 1;
-        }
-
-        if (valEstadoObraBF) {
-            grupos[obraBF].statsObra[valEstadoObraBF] = (grupos[obraBF].statsObra[valEstadoObraBF] || 0) + 1;
-        }
+        const tktKey = valEstadoTarea || "(VACÍO)";
+        const obraKey = valEstadoObraBF || "(VACÍO)";
+        grupos[obraBF].statsTarea[tktKey] = (grupos[obraBF].statsTarea[tktKey] || 0) + cant;
+        grupos[obraBF].statsObra[obraKey] = (grupos[obraBF].statsObra[obraKey] || 0) + cant;
     });
 
     const resultado = [];
 
-    // 5. Evaluar cada grupo (obra)
+    // 5. Evaluar cada grupo (obra) según matriz Sistema 1 v9.3.3
     for (const [obraBF, data] of Object.entries(grupos)) {
         const tickets = data.tickets;
         if (tickets.length === 0) continue;
 
-        const totalCerrados = tickets.filter(t => t.isCerrado).length;
+        const totalCerrados = tickets.filter(t => t.isCerrado).reduce((acc, t) => acc + (t.cant || 1), 0);
+        const totalTickets = tickets.reduce((acc, t) => acc + (t.cant || 1), 0);
 
-        const allAsignadaOrAgendada = tickets.every(t => t.estadoTarea === "ASIGNADA" || t.estadoTarea === "AGENDADA");
-        const anyCerrado = tickets.some(t => t.isCerrado);
-        const allClosed = tickets.every(t => t.isCerrado);
-        const allCompletada = tickets.every(t => t.estadoTarea === "COMPLETADA");
+        const todasTareasCompletadas = tickets.every(t => t.isTktCompletado);
+        const todasTareasCerradas = tickets.every(t => t.isCerrado);
+        const algunasTareasCerradas = tickets.some(t => t.isCerrado);
+        const todoEnAsignada = tickets.every(t => t.estadoTarea === "ASIGNADA" || t.estadoTarea === "AGENDADA");
 
         let resultadoFinal = "EN CURSO";
 
-        // Lógica condicional estricta
-        if (allAsignadaOrAgendada && !anyCerrado) {
+        // Reglas oficiales Sistema 1 (Analizador Estado de Obra BF v9.3.3)
+        if (todoEnAsignada && !algunasTareasCerradas) {
             resultadoFinal = "A EJECUTAR";
-        } else if (allCompletada && allClosed) {
+        } else if (todasTareasCerradas || (todasTareasCompletadas && todasTareasCerradas)) {
+            // Si todos los tickets están cerrados, la obra es FINALIZADA CON CONSUMO TOTAL
             resultadoFinal = "FINALIZADA CON CONSUMO TOTAL";
-        } else if (allCompletada && !allClosed && anyCerrado) {
+        } else if (todasTareasCompletadas && algunasTareasCerradas) {
             resultadoFinal = "FINALIZADA CON CONSUMO PARCIAL";
-        } else if (anyCerrado && !allCompletada) {
+        } else if (algunasTareasCerradas) {
             resultadoFinal = "EN CURSO CON CONSUMO PARCIAL";
         } else {
             resultadoFinal = "EN CURSO";
@@ -116,12 +136,19 @@ function procesarHistorialTareas(rawData) {
 
         resultado.push({
             _N_OBRA_BF: obraBF,
+            "Obra BF": obraBF,
+            "OBRA_BF": obraBF,
             _N_RESULTADO_FINAL: resultadoFinal,
+            "Resultado Final": resultadoFinal,
+            "DETALLE OBRA BF": resultadoFinal,
+            "Detalle Obra BF": resultadoFinal,
             _N_CERRADOS: totalCerrados,
+            "Cerrados": totalCerrados,
+            "Tkt Material": totalTickets,
             Contratista: contratista,
             statsTarea: data.statsTarea,
             statsObra: data.statsObra,
-            totalTickets: tickets.length
+            totalTickets: totalTickets
         });
     }
 

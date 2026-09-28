@@ -158,3 +158,8 @@ function closeDetailsModal() {
     document.getElementById('detailsModalContent').classList.add('translate-x-full');
     setTimeout(() => document.getElementById('detailsModal').classList.add('hidden'), 300);
 }
+
+
+// --- AUTO-EXPORTS FOR HTML EVENT HANDLERS ---
+if (typeof openDetailsModal !== 'undefined') window.openDetailsModal = openDetailsModal;
+if (typeof closeDetailsModal !== 'undefined') window.closeDetailsModal = closeDetailsModal;
